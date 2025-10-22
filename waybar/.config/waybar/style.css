@@ -1,0 +1,348 @@
+/* Caleb's Waybar Style */
+/* Managed by GNU Stow from ~/.files/waybar/.config/waybar/style.css */
+/* Theme: Tokyo Night */
+
+/* ========================================================================== */
+/* Color Definitions (Tokyo Night) */
+/* ========================================================================== */
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "JetBrainsMono Nerd Font", "Font Awesome 6 Free", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+}
+
+/* Theme colors */
+@define-color bg0     #1a1b26;
+@define-color bg1     #1f2335;
+@define-color bg2     #24283b;
+@define-color bg3     #414868;
+@define-color bg4     #565f89;
+
+@define-color fg0     #c0caf5;
+@define-color fg1     #a9b1d6;
+@define-color fg2     #9aa5ce;
+@define-color fg3     #787c99;
+@define-color fg4     #565f89;
+
+@define-color red     #f7768e;
+@define-color green   #9ece6a;
+@define-color yellow  #e0af68;
+@define-color blue    #7aa2f7;
+@define-color purple  #bb9af7;
+@define-color cyan    #7dcfff;
+@define-color orange  #ff9e64;
+
+/* ========================================================================== */
+/* General */
+/* ========================================================================== */
+
+window#waybar {
+    background-color: rgba(26, 27, 38, 0.95);
+    color: @fg0;
+    transition-property: background-color;
+    transition-duration: 0.5s;
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+/* ========================================================================== */
+/* Workspaces */
+/* ========================================================================== */
+
+#workspaces {
+    background-color: transparent;
+    margin: 5px 5px 5px 10px;
+    font-family: "JetBrainsMono Nerd Font", sans-serif;
+    font-size: 16px;
+}
+
+#workspaces button {
+    padding: 0 6px;
+    background-color: @bg2;
+    color: @fg2;
+    border-radius: 8px;
+    margin: 0 2px;
+    transition: all 0.3s ease-in-out;
+    min-width: 20px;
+}
+
+#workspaces button:hover {
+    background-color: @bg3;
+    color: @fg1;
+    box-shadow: inherit;
+}
+
+#workspaces button.active {
+    background-color: @blue;
+    color: @bg0;
+    font-weight: bold;
+}
+
+#workspaces button.urgent {
+    background-color: @red;
+    color: @bg0;
+}
+
+/* ========================================================================== */
+/* Window Title */
+/* ========================================================================== */
+
+#window {
+    background-color: transparent;
+    color: @fg1;
+    margin: 5px 10px;
+    padding: 0 10px;
+    font-weight: bold;
+}
+
+/* ========================================================================== */
+/* Taskbar */
+/* ========================================================================== */
+
+#taskbar {
+    background-color: transparent;
+    margin: 5px 5px 5px 10px;
+}
+
+#taskbar button {
+    padding: 0 8px;
+    background-color: @bg2;
+    color: @fg2;
+    border-radius: 8px;
+    margin: 0 3px;
+    transition: all 0.3s ease-in-out;
+    min-width: 30px;
+}
+
+#taskbar button:hover {
+    background-color: @bg3;
+    color: @fg1;
+    box-shadow: inherit;
+}
+
+#taskbar button.active {
+    background-color: @blue;
+    color: @bg0;
+    font-weight: bold;
+}
+
+#taskbar button.minimized {
+    opacity: 0.6;
+}
+
+#taskbar button.urgent {
+    background-color: @red;
+    color: @bg0;
+    animation: blink 0.5s linear infinite;
+}
+
+/* ========================================================================== */
+/* Clock */
+/* ========================================================================== */
+
+#clock {
+    background-color: @bg2;
+    color: @blue;
+    border-radius: 8px;
+    padding: 0 15px;
+    margin: 5px 10px;
+    font-weight: bold;
+}
+
+/* ========================================================================== */
+/* System Tray */
+/* ========================================================================== */
+
+#tray {
+    background-color: @bg2;
+    border-radius: 8px;
+    margin: 5px 5px 5px 10px;
+    padding: 0 10px;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    background-color: @red;
+}
+
+/* ========================================================================== */
+/* Modules - Common Styling */
+/* ========================================================================== */
+
+#bluetooth,
+#keyboard-state,
+#idle_inhibitor,
+#pulseaudio,
+#network,
+#cpu,
+#memory,
+#temperature,
+#battery,
+#battery.bat2 {
+    background-color: @bg2;
+    color: @fg1;
+    border-radius: 8px;
+    padding: 0 12px;
+    margin: 5px 5px;
+}
+
+/* ========================================================================== */
+/* Bluetooth */
+/* ========================================================================== */
+
+#bluetooth {
+    color: @blue;
+}
+
+#bluetooth.disabled,
+#bluetooth.off {
+    color: @fg4;
+}
+
+#bluetooth.connected {
+    color: @cyan;
+}
+
+/* ========================================================================== */
+/* Keyboard State */
+/* ========================================================================== */
+
+#keyboard-state {
+    color: @fg2;
+}
+
+#keyboard-state label.locked {
+    color: @yellow;
+}
+
+/* ========================================================================== */
+/* Idle Inhibitor */
+/* ========================================================================== */
+
+#idle_inhibitor {
+    color: @fg2;
+}
+
+#idle_inhibitor.activated {
+    background-color: @green;
+    color: @bg0;
+}
+
+/* ========================================================================== */
+/* PulseAudio */
+/* ========================================================================== */
+
+#pulseaudio {
+    color: @blue;
+}
+
+#pulseaudio.muted {
+    background-color: @bg3;
+    color: @fg4;
+}
+
+/* ========================================================================== */
+/* Network */
+/* ========================================================================== */
+
+#network {
+    color: @green;
+}
+
+#network.disconnected {
+    background-color: @bg3;
+    color: @red;
+}
+
+/* ========================================================================== */
+/* CPU */
+/* ========================================================================== */
+
+#cpu {
+    color: @cyan;
+}
+
+/* ========================================================================== */
+/* Memory */
+/* ========================================================================== */
+
+#memory {
+    color: @purple;
+}
+
+/* ========================================================================== */
+/* Temperature */
+/* ========================================================================== */
+
+#temperature {
+    color: @yellow;
+}
+
+#temperature.critical {
+    background-color: @red;
+    color: @bg0;
+    animation: blink 0.5s linear infinite;
+}
+
+/* ========================================================================== */
+/* Battery */
+/* ========================================================================== */
+
+#battery {
+    color: @green;
+}
+
+#battery.charging,
+#battery.plugged {
+    color: @cyan;
+    background-color: @bg2;
+}
+
+#battery.critical:not(.charging) {
+    background-color: @red;
+    color: @bg0;
+    animation: blink 0.5s linear infinite;
+}
+
+#battery.warning:not(.charging) {
+    background-color: @orange;
+    color: @bg0;
+}
+
+#battery.bat2 {
+    color: @green;
+}
+
+/* ========================================================================== */
+/* Animations */
+/* ========================================================================== */
+
+@keyframes blink {
+    to {
+        opacity: 0.5;
+    }
+}
+
+/* ========================================================================== */
+/* Tooltip */
+/* ========================================================================== */
+
+tooltip {
+    background: @bg1;
+    border: 2px solid @yellow;
+    border-radius: 8px;
+    color: @fg1;
+}
+
+tooltip label {
+    color: @fg1;
+}

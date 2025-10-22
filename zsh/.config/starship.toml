@@ -1,0 +1,236 @@
+# Caleb's Starship Configuration
+# Managed by GNU Stow from ~/.files/zsh/.config/starship.toml
+
+# Prompt format
+add_newline = false
+
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$python\
+$dotnet\
+$nodejs\
+$lua\
+$rust\
+$fill\
+$cmd_duration\
+$time
+$character
+"""
+
+# Character
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold yellow)"
+vimcmd_replace_one_symbol = "[❮](bold purple)"
+vimcmd_replace_symbol = "[❮](bold purple)"
+vimcmd_visual_symbol = "[❮](bold cyan)"
+
+# Username
+[username]
+disabled = true
+show_always = false
+format = "[$user]($style) "
+style_user = "bold yellow"
+style_root = "bold red"
+
+# Hostname
+[hostname]
+disabled = true
+ssh_only = true
+format = "[@$hostname]($style) "
+style = "bold green"
+
+# Directory
+[directory]
+truncation_length = 3
+truncation_symbol = "…/"
+truncate_to_repo = true
+fish_style_pwd_dir_length = 1
+read_only = " "
+read_only_style = "red"
+format = "[$path]($style)[$read_only]($read_only_style) "
+style = "bold cyan"
+home_symbol = "~"
+
+[directory.substitutions]
+"Documents" = " "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "
+"Videos" = " "
+
+# Git branch
+[git_branch]
+symbol = " "
+format = "[$symbol$branch]($style) "
+style = "bold purple"
+truncation_length = 30
+truncation_symbol = "…"
+
+# Git status
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+style = "purple"
+conflicted = "=${count} "
+ahead = "⇡${count} "
+behind = "⇣${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
+untracked = "?${count} "
+stashed = "$${count} "
+modified = "!${count} "
+staged = "+${count} "
+renamed = "»${count} "
+deleted = "✘${count} "
+
+# Git commit
+[git_commit]
+commit_hash_length = 7
+tag_symbol = " "
+format = "[\\($hash$tag\\)]($style) "
+style = "bold green"
+only_detached = true
+disabled = false
+
+# Git metrics
+[git_metrics]
+disabled = true
+
+# Fill
+[fill]
+symbol = " "
+
+# Command duration
+[cmd_duration]
+min_time = 1000
+format = "[ $duration]($style) "
+style = "bold yellow"
+show_milliseconds = false
+show_notifications = false
+
+# Time
+[time]
+disabled = false
+format = "[ $time]($style) "
+time_format = "%H:%M"
+style = "bold blue"
+use_12hr = false
+
+# Python
+[python]
+symbol = " "
+pyenv_version_name = true
+pyenv_prefix = "venv "
+python_binary = ["python3", "python", "python2"]
+detect_extensions = ["py"]
+detect_files = [".python-version", "Pipfile", "pyproject.toml", "requirements.txt", "setup.py", "tox.ini"]
+detect_folders = []
+format = '[${symbol}${version}( \($virtualenv\))]($style) '
+style = "bold green"
+
+# .NET
+[dotnet]
+symbol = " "
+heuristic = true
+detect_extensions = ["csproj", "fsproj", "xproj", "sln"]
+detect_files = ["global.json", "project.json", "Directory.Build.props", "Directory.Build.targets", "Packages.props"]
+detect_folders = []
+format = "[${symbol}${version}]($style) "
+style = "bold blue"
+
+# Node.js
+[nodejs]
+symbol = " "
+detect_extensions = ["js", "mjs", "cjs", "ts"]
+detect_files = ["package.json", ".node-version"]
+detect_folders = ["node_modules"]
+format = "[$symbol$version]($style) "
+style = "bold green"
+
+# Lua
+[lua]
+symbol = " "
+detect_extensions = ["lua"]
+detect_files = [".lua-version"]
+detect_folders = ["lua"]
+format = "[$symbol$version]($style) "
+style = "bold blue"
+
+# Rust
+[rust]
+symbol = " "
+detect_extensions = ["rs"]
+detect_files = ["Cargo.toml"]
+detect_folders = []
+format = "[$symbol$version]($style) "
+style = "bold red"
+
+# Go
+[golang]
+symbol = " "
+detect_extensions = ["go"]
+detect_files = ["go.mod", "go.sum", "glide.yaml", "Gopkg.yml", "Gopkg.lock", ".go-version"]
+detect_folders = ["Godeps"]
+format = "[$symbol$version]($style) "
+style = "bold cyan"
+
+# Java
+[java]
+symbol = " "
+detect_extensions = ["java", "class", "jar", "gradle", "clj", "cljc"]
+detect_files = ["pom.xml", "build.gradle.kts", "build.sbt", ".java-version", "deps.edn", "project.clj", "build.boot"]
+detect_folders = []
+format = "[$symbol$version]($style) "
+style = "bold red"
+
+# C/C++
+[c]
+symbol = " "
+detect_extensions = ["c", "h"]
+detect_files = []
+detect_folders = []
+format = "[$symbol$version]($style) "
+style = "bold blue"
+
+# Docker
+[docker_context]
+symbol = " "
+format = "[$symbol$context]($style) "
+style = "bold blue"
+only_with_files = true
+detect_extensions = []
+detect_files = ["docker-compose.yml", "docker-compose.yaml", "Dockerfile"]
+detect_folders = []
+
+# Package version
+[package]
+symbol = " "
+format = "[$symbol$version]($style) "
+style = "bold yellow"
+disabled = false
+
+# Memory usage
+[memory_usage]
+disabled = true
+threshold = 75
+symbol = " "
+format = "$symbol[$ram( | $swap)]($style) "
+style = "bold dimmed white"
+
+# Battery
+[battery]
+disabled = true
+
+# Line break
+[line_break]
+disabled = false
+
+# Status
+[status]
+disabled = false
+format = '[\[$status\]]($style) '
+style = "bold red"

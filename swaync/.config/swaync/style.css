@@ -1,0 +1,362 @@
+/* Caleb's SwayNC Style */
+/* Managed by GNU Stow from ~/.files/swaync/.config/swaync/style.css */
+/* Gruvbox Dark Theme */
+
+/* ========================================================================== */
+/* Color Definitions (Gruvbox Dark Hard) */
+/* ========================================================================== */
+
+* {
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 14px;
+}
+
+/* Gruvbox colors */
+@define-color bg0     #1d2021;
+@define-color bg1     #282828;
+@define-color bg2     #3c3836;
+@define-color bg3     #504945;
+@define-color bg4     #665c54;
+
+@define-color fg0     #fbf1c7;
+@define-color fg1     #ebdbb2;
+@define-color fg2     #d5c4a1;
+@define-color fg3     #bdae93;
+@define-color fg4     #a89984;
+
+@define-color red     #fb4934;
+@define-color green   #8ec07c;
+@define-color yellow  #fabd2f;
+@define-color blue    #83a598;
+@define-color purple  #d3869b;
+@define-color aqua    #8ec07c;
+@define-color orange  #fe8019;
+
+/* ========================================================================== */
+/* Main Window */
+/* ========================================================================== */
+
+.notification-row {
+  outline: none;
+}
+
+.notification-row:focus,
+.notification-row:hover {
+  background: @bg2;
+}
+
+.notification {
+  border-radius: 10px;
+  margin: 6px 12px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.7),
+    0 2px 6px 2px rgba(0, 0, 0, 0.3);
+  padding: 0;
+}
+
+/* ========================================================================== */
+/* Notification */
+/* ========================================================================== */
+
+.notification-content {
+  background: transparent;
+  padding: 6px;
+  border-radius: 10px;
+}
+
+.close-button {
+  background: @red;
+  color: @bg0;
+  text-shadow: none;
+  padding: 0;
+  border-radius: 100%;
+  margin-top: 10px;
+  margin-right: 16px;
+  box-shadow: none;
+  border: none;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.close-button:hover {
+  box-shadow: none;
+  background: @orange;
+  transition: all 0.15s ease-in-out;
+  border: none;
+}
+
+.close-button:active {
+  background: @yellow;
+}
+
+.notification-default-action,
+.notification-action {
+  padding: 4px;
+  margin: 0;
+  box-shadow: none;
+  background: @bg1;
+  border: 1px solid @bg3;
+  color: @fg1;
+  transition: all 0.15s ease-in-out;
+}
+
+.notification-default-action:hover,
+.notification-action:hover {
+  -gtk-icon-effect: none;
+  background: @bg2;
+}
+
+.notification-default-action {
+  border-radius: 10px;
+}
+
+/* When alternative actions are visible */
+.notification-default-action:not(:only-child) {
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+.notification-action {
+  border-radius: 0px;
+  border-top: none;
+  border-right: none;
+}
+
+.notification-action:first-child {
+  border-bottom-left-radius: 10px;
+}
+
+.notification-action:last-child {
+  border-bottom-right-radius: 10px;
+  border-right: 1px solid @bg3;
+}
+
+.inline-reply {
+  margin-top: 8px;
+}
+
+.inline-reply-entry {
+  background: @bg2;
+  color: @fg1;
+  caret-color: @fg1;
+  border: 1px solid @bg3;
+  border-radius: 10px;
+}
+
+.inline-reply-button {
+  margin-left: 4px;
+  background: @blue;
+  border: 1px solid @bg3;
+  border-radius: 10px;
+  color: @bg0;
+}
+
+.inline-reply-button:disabled {
+  background: initial;
+  color: @fg4;
+  border: 1px solid transparent;
+}
+
+.inline-reply-button:hover {
+  background: @aqua;
+}
+
+.image {
+}
+
+.body-image {
+  margin-top: 6px;
+  background-color: @bg0;
+  border-radius: 10px;
+}
+
+.summary {
+  font-size: 16px;
+  font-weight: bold;
+  background: transparent;
+  color: @fg0;
+  text-shadow: none;
+}
+
+.time {
+  font-size: 12px;
+  font-weight: bold;
+  background: transparent;
+  color: @fg3;
+  text-shadow: none;
+  margin-right: 18px;
+}
+
+.body {
+  font-size: 14px;
+  font-weight: normal;
+  background: transparent;
+  color: @fg1;
+  text-shadow: none;
+}
+
+/* ========================================================================== */
+/* Control Center */
+/* ========================================================================== */
+
+.control-center {
+  background: @bg1;
+  border: 2px solid @yellow;
+  border-radius: 10px;
+  margin: 10px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.7),
+    0 2px 6px 2px rgba(0, 0, 0, 0.3);
+}
+
+.control-center-list {
+  background: transparent;
+}
+
+.control-center-list-placeholder {
+  opacity: 0.5;
+}
+
+.floating-notifications {
+  background: transparent;
+}
+
+/* ========================================================================== */
+/* Widgets */
+/* ========================================================================== */
+
+.widget-title {
+  margin: 8px;
+  font-size: 20px;
+  font-weight: bold;
+  color: @fg0;
+}
+
+.widget-title > button {
+  font-size: 14px;
+  color: @fg1;
+  text-shadow: none;
+  background: @bg2;
+  border: 1px solid @bg3;
+  box-shadow: none;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.widget-title > button:hover {
+  background: @bg3;
+}
+
+.widget-title > button:active {
+  background: @bg4;
+}
+
+.widget-dnd {
+  margin: 8px;
+  font-size: 14px;
+  color: @fg1;
+  text-shadow: none;
+  background: @bg2;
+  border: 1px solid @bg3;
+  box-shadow: none;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.widget-dnd:hover {
+  background: @bg3;
+}
+
+.widget-dnd:checked {
+  background: @orange;
+  color: @bg0;
+}
+
+.widget-label {
+  margin: 8px;
+}
+
+.widget-label > label {
+  font-size: 14px;
+  color: @fg1;
+}
+
+.widget-mpris {
+  /* The parent to all players */
+}
+
+.widget-mpris-player {
+  padding: 8px;
+  margin: 8px;
+  background: @bg2;
+  border: 1px solid @bg3;
+  border-radius: 10px;
+}
+
+.widget-mpris-title {
+  font-weight: bold;
+  font-size: 16px;
+  color: @fg0;
+}
+
+.widget-mpris-subtitle {
+  font-size: 14px;
+  color: @fg2;
+}
+
+.widget-buttons-grid {
+  font-size: 14px;
+  padding: 8px;
+  margin: 8px;
+  border-radius: 10px;
+  background: @bg2;
+  border: 1px solid @bg3;
+}
+
+.widget-buttons-grid>flowbox>flowboxchild>button {
+  margin: 3px;
+  background: @bg3;
+  border-radius: 10px;
+  color: @fg1;
+}
+
+.widget-buttons-grid>flowbox>flowboxchild>button:hover {
+  background: @bg4;
+  color: @fg0;
+}
+
+.widget-menubar>box>.menu-button-bar>button {
+  border: none;
+  background: transparent;
+}
+
+/* ========================================================================== */
+/* Urgency */
+/* ========================================================================== */
+
+.notification.low {
+  background: @bg2;
+}
+
+.notification.normal {
+  background: @bg2;
+}
+
+.notification.critical {
+  background: @red;
+}
+
+.notification.critical .notification-content {
+  background: @red;
+}
+
+.notification.critical .summary {
+  color: @bg0;
+}
+
+.notification.critical .time {
+  color: @bg0;
+}
+
+.notification.critical .body {
+  color: @bg0;
+}

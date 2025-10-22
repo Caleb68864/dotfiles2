@@ -1,0 +1,67 @@
+# Core utilities
+vlc
+git
+curl
+wget
+aria2
+python
+python-pip
+mpv
+neovim
+tmux
+ranger
+zsh
+libreoffice-fresh
+htop
+ripgrep
+fzf
+unzip
+zip
+bat
+eza
+
+# Stow and Starship
+stow
+starship
+
+# Dev stacks
+base-devel
+nodejs-lts-jod
+dotnet-sdk
+mono
+clang
+cmake
+make
+
+# Hyprland stack
+hyprland
+waybar
+wofi
+hyprlock
+hypridle
+hyprpaper
+swaync
+alacritty
+kitty
+
+# Additional tools
+xdg-utils
+wl-clipboard
+hyprshot
+brightnessctl
+playerctl
+cliphist
+vivaldi
+dolphin
+pavucontrol
+polkit-gnome
+
+# Fonts
+ttf-font-awesome
+
+# Applications
+steam
+discord
+
+# Debuggers
+netcoredbg

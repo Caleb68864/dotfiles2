@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Undeploy a dotfile package using GNU Stow
+
+DOTFILES_DIR="$HOME/.files"
+
+if [ ! -d "$DOTFILES_DIR" ]; then
+    DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <package>"
+    echo ""
+    echo "Available packages:"
+    echo "  zsh, tmux, nvim, hypr, waybar, wofi, hyprpaper, hyprlock, hypridle, swaync, git, fonts"
+    echo ""
+    echo "Example:"
+    echo "  $0 nvim"
+    exit 1
+fi
+
+PACKAGE="$1"
+
+cd "$DOTFILES_DIR" || exit 1
+
+if [ ! -d "$PACKAGE" ]; then
+    echo "Error: Package '$PACKAGE' not found in $DOTFILES_DIR"
+    exit 1
+fi
+
+echo "Removing symlinks for $PACKAGE..."
+stow -Dvt "$HOME" "$PACKAGE"
+
+echo ""
+echo "Package '$PACKAGE' has been undeployed."
+echo ""

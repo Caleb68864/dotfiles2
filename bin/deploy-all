@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Deploy all dotfile packages using GNU Stow
+
+DOTFILES_DIR="$HOME/.files"
+
+if [ ! -d "$DOTFILES_DIR" ]; then
+    DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
+
+cd "$DOTFILES_DIR" || exit 1
+
+PACKAGES=(
+    "zsh"
+    "tmux"
+    "nvim"
+    "hypr"
+    "waybar"
+    "wofi"
+    "hyprpaper"
+    "hyprlock"
+    "hypridle"
+    "swaync"
+    "git"
+    "fonts"
+)
+
+echo "Deploying all dotfile packages..."
+echo ""
+
+for package in "${PACKAGES[@]}"; do
+    if [ -d "$package" ]; then
+        echo "Deploying $package..."
+        stow -vRt "$HOME" "$package"
+    else
+        echo "Warning: $package directory not found, skipping"
+    fi
+done
+
+echo ""
+echo "Refreshing font cache..."
+fc-cache -rv "$HOME/.local/share/fonts"
+
+echo ""
+echo "All packages deployed successfully!"
+echo ""
+echo "Usage:"
+echo "  Deploy single package:  stow -vRt \$HOME <package>"
+echo "  Remove package:         stow -DvRt \$HOME <package>"
+echo "  Dry run:                stow -nvt \$HOME <package>"
+echo ""
