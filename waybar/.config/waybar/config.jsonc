@@ -116,11 +116,11 @@
     },
 
     "bluetooth": {
-        "format": "",
-        "format-disabled": "",
-        "format-off": "",
-        "format-on": "",
-        "format-connected": " {num_connections}",
+        "format": "",
+        "format-disabled": "",
+        "format-off": "",
+        "format-on": "",
+        "format-connected": " {num_connections}",
         "tooltip-format": "Bluetooth",
         "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
         "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
@@ -136,16 +136,16 @@
             "capslock": "C {icon}"
         },
         "format-icons": {
-            "locked": "",
-            "unlocked": ""
+            "locked": "",
+            "unlocked": "",
         }
     },
 
     "idle_inhibitor": {
         "format": "{icon}",
         "format-icons": {
-            "activated": "",
-            "deactivated": ""
+            "activated": "",
+            "deactivated": "",
         },
         "tooltip": true,
         "tooltip-format-activated": "Idle inhibitor: ON (screen stays awake)",
@@ -155,19 +155,19 @@
     "pulseaudio": {
         "scroll-step": 5,
         "format": "{icon} {volume}%",
-        "format-muted": " Muted",
+        "format-muted": " Muted",
         "format-bluetooth": "{icon} {volume}%",
-        "format-bluetooth-muted": " Muted",
-        "format-source": " {volume}%",
-        "format-source-muted": "",
+        "format-bluetooth-muted": " Muted",
+        "format-source": " {volume}%",
+        "format-source-muted": "",
         "format-icons": {
-            "headphone": "",
-            "hands-free": "",
-            "headset": "",
-            "phone": "",
-            "portable": "",
-            "car": "",
-            "default": ["", "", ""]
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
         },
         "on-click": "pavucontrol",
         "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
@@ -175,9 +175,9 @@
 
     "network": {
         "interval": 2,
-        "format-wifi": " {essid} ({signalStrength}%)",
-        "format-ethernet": " {ipaddr}/{cidr}",
-        "format-linked": " {ifname} (No IP)",
+        "format-wifi": " {essid} ({signalStrength}%)",
+        "format-ethernet": " {ipaddr}/{cidr}",
+        "format-linked": " {ifname} (No IP)",
         "format-disconnected": "⚠ Disconnected",
         "format-alt": "{ifname}: {ipaddr}/{cidr}",
         "tooltip-format": "{ifname} via {gwaddr}",
@@ -189,14 +189,14 @@
 
     "cpu": {
         "interval": 2,
-        "format": " {usage}%",
+        "format": " {usage}%",
         "tooltip": true,
         "on-click": "kitty -e htop"
     },
 
     "memory": {
         "interval": 2,
-        "format": " {percentage}%",
+        "format": " {percentage}%",
         "tooltip-format": "RAM: {used:0.1f}G / {total:0.1f}G\nSwap: {swapUsed:0.1f}G / {swapTotal:0.1f}G",
         "on-click": "kitty -e htop"
     },
@@ -207,7 +207,7 @@
         "critical-threshold": 80,
         "interval": 2,
         "format": "{icon} {temperatureC}°C",
-        "format-icons": ["", "", "", "", ""],
+        "format-icons": ["", "", "", "", ""],
         "tooltip": true
     },
 
@@ -222,7 +222,7 @@
         "format-charging": " {capacity}%",
         "format-plugged": " {capacity}%",
         "format-full": " {capacity}%",
-        "format-icons": ["", "", "", "", ""],
+        "format-icons": ["", "", "", "", ""],
         "tooltip-format": "{timeTo}\nPower: {power}W"
     },
 
@@ -237,7 +237,7 @@
         "format-charging": " {capacity}%",
         "format-plugged": " {capacity}%",
         "format-full": " {capacity}%",
-        "format-icons": ["", "", "", "", ""],
+        "format-icons": ["", "", "", "", ""],
         "tooltip-format": "{timeTo}\nPower: {power}W"
     }
 }
