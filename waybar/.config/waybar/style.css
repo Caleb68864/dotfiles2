@@ -62,13 +62,14 @@ window#waybar.hidden {
 }
 
 #workspaces button {
-    padding: 0 6px;
+    padding: 0 4px;
     background-color: @bg2;
     color: @fg2;
     border-radius: 8px;
     margin: 0 1px;
     transition: all 0.3s ease-in-out;
     min-width: 20px;
+    text-align: center;
 }
 
 #workspaces button:hover {
