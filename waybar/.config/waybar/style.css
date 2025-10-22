@@ -69,7 +69,6 @@ window#waybar.hidden {
     margin: 0 1px;
     transition: all 0.3s ease-in-out;
     min-width: 20px;
-    text-align: center;
 }
 
 #workspaces button:hover {
