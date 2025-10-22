@@ -10,6 +10,7 @@
     // Module order
     "modules-left": [
         "hyprland/workspaces",
+        "custom/hyprland-layout",
         "hyprland/window"
     ],
     "modules-center": [
@@ -61,6 +62,14 @@
             "(.*) - Visual Studio Code": "󰨞 $1",
             "(.*)nvim (.*)": " $2"
         }
+    },
+
+    "custom/hyprland-layout": {
+        "format": "{}",
+        "exec": "~/.config/waybar/scripts/hyprland-layout.sh",
+        "return-type": "json",
+        "interval": 2,
+        "on-click": "hyprctl keyword general:layout $([[ $(hyprctl getoption general:layout | grep -oP '(?<=str: )\\w+') == \"dwindle\" ]] && echo \"master\" || echo \"dwindle\")"
     },
 
     "wlr/taskbar": {

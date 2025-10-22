@@ -62,7 +62,7 @@ window#waybar.hidden {
 }
 
 #workspaces button {
-    padding: 0 4px;
+    padding: 0 4px 0 2px;
     background-color: @bg2;
     color: @fg2;
     border-radius: 8px;
@@ -86,6 +86,27 @@ window#waybar.hidden {
 #workspaces button.urgent {
     background-color: @red;
     color: @bg0;
+}
+
+/* ========================================================================== */
+/* Hyprland Layout Indicator */
+/* ========================================================================== */
+
+#custom-hyprland-layout {
+    background-color: @bg2;
+    color: @purple;
+    border-radius: 8px;
+    padding: 0 12px;
+    margin: 5px 1px;
+    font-weight: bold;
+}
+
+#custom-hyprland-layout.master {
+    color: @cyan;
+}
+
+#custom-hyprland-layout.dwindle {
+    color: @purple;
 }
 
 /* ========================================================================== */

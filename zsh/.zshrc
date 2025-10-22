@@ -148,11 +148,28 @@ zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza -1 --color=always --ico
 [ -f ~/.zsh/keybindings.zsh ] && source ~/.zsh/keybindings.zsh
 
 # ============================================================================
+# Auto-ls After cd
+# ============================================================================
+
+# Automatically run ls after cd
+function cd() {
+    builtin cd "$@" && ls
+}
+
+# ============================================================================
+# Keybindings
+# ============================================================================
+
+# Ctrl+K to go up a directory
+bindkey -s '^K' 'cd ..\n'
+
+# ============================================================================
 # Tmux Auto-Start
 # ============================================================================
 
 # Auto-start or attach to tmux session "command-center"
-if command -v tmux &> /dev/null && [ -z "$TMUX" ] && [ -z "$SSH_CONNECTION" ]; then
+# Works for both local and SSH sessions
+if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
     # Check if session "command-center" exists
     if tmux has-session -t command-center 2>/dev/null; then
         # Session exists, attach to it
