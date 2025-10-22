@@ -161,7 +161,7 @@ window#waybar.hidden {
 #tray {
     background-color: @bg2;
     border-radius: 8px;
-    margin: 5px 5px 5px 10px;
+    margin: 5px 2px 5px 10px;
     padding: 0 10px;
 }
 
@@ -192,7 +192,7 @@ window#waybar.hidden {
     color: @fg1;
     border-radius: 8px;
     padding: 0 12px;
-    margin: 5px 5px;
+    margin: 5px 2px;
 }
 
 /* ========================================================================== */
