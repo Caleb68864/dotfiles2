@@ -133,7 +133,6 @@ CONFLICT_ITEMS=(
     "$HOME/.config/nvim"
     "$HOME/.config/hypr"
     "$HOME/.config/waybar"
-    "$HOME/.config/wofi"
     "$HOME/.config/swaync"
     "$HOME/.local/share/fonts"
 )
@@ -169,13 +168,13 @@ PACKAGES=(
     "kitty"
     "hypr"
     "waybar"
-    "wofi"
     "hyprpaper"
     "hyprlock"
     "hypridle"
     "swaync"
     "git"
     "fonts"
+    "scripts"
 )
 
 for package in "${PACKAGES[@]}"; do

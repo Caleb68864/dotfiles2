@@ -36,12 +36,11 @@ make
 # Hyprland stack
 hyprland
 waybar
-wofi
+hyprlauncher
 hyprlock
 hypridle
 hyprpaper
 swaync
-alacritty
 kitty
 
 # Additional tools
@@ -55,6 +54,17 @@ vivaldi
 dolphin
 pavucontrol
 polkit-gnome
+atuin
+yazi
+lazygit
+ruff
+swww
+grim
+slurp
+grimblast
+satty
+hyprpicker
+wf-recorder
 
 # Fonts
 ttf-font-awesome

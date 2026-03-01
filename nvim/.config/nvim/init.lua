@@ -441,6 +441,55 @@ require("lazy").setup({
     },
   },
 
+  -- Diffview - Git diff viewer, history browser, merge conflict UI
+  {
+    "sindrets/diffview.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      require("diffview").setup()
+    end,
+  },
+
+  -- Harpoon 2 - Per-project file bookmarks with instant switching
+  {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      local harpoon = require("harpoon")
+      harpoon:setup()
+
+      vim.keymap.set("n", "<leader>ha", function() harpoon:list():add() end, { desc = "[h]arpoon [a]dd file" })
+      vim.keymap.set("n", "<leader>hl", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, { desc = "[h]arpoon [l]ist" })
+      vim.keymap.set("n", "<leader>1", function() harpoon:list():select(1) end, { desc = "Harpoon file 1" })
+      vim.keymap.set("n", "<leader>2", function() harpoon:list():select(2) end, { desc = "Harpoon file 2" })
+      vim.keymap.set("n", "<leader>3", function() harpoon:list():select(3) end, { desc = "Harpoon file 3" })
+      vim.keymap.set("n", "<leader>4", function() harpoon:list():select(4) end, { desc = "Harpoon file 4" })
+    end,
+  },
+
+  -- Lazygit - TUI git client floating inside Neovim
+  {
+    "kdheepak/lazygit.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    keys = {
+      { "<leader>lg", "<cmd>LazyGit<CR>", desc = "[l]azy[g]it" },
+    },
+  },
+
+  -- Yazi - Terminal file manager integration
+  {
+    "mikavilpas/yazi.nvim",
+    event = "VeryLazy",
+    keys = {
+      { "<leader>y", "<cmd>Yazi<CR>", desc = "[y]azi (current file)" },
+      { "<leader>Y", "<cmd>Yazi cwd<CR>", desc = "[Y]azi (working dir)" },
+    },
+    opts = {
+      open_for_directories = true,
+    },
+  },
+
   -- Statusline
   {
     "nvim-lualine/lualine.nvim",
@@ -510,6 +559,253 @@ require("lazy").setup({
     config = function()
       require("better_escape").setup()
     end,
+  },
+
+  -- ============================================================================
+  -- Python Development Enhancements
+  -- ============================================================================
+
+  -- DAP Virtual Text - Show variable values inline during debugging
+  {
+    "theHamsta/nvim-dap-virtual-text",
+    dependencies = { "mfussenegger/nvim-dap", "nvim-treesitter/nvim-treesitter" },
+    opts = {
+      enabled = true,
+      enabled_commands = true,
+      highlight_changed_variables = true,
+      highlight_new_as_changed = false,
+      show_stop_reason = true,
+      commented = false,
+      only_first_definition = true,
+      all_references = false,
+      filter_references_pattern = '<module',
+      virt_text_pos = 'eol',
+      all_frames = false,
+      virt_lines = false,
+      virt_text_win_col = nil,
+    },
+  },
+
+  -- Neotest - Modern test runner with UI
+  {
+    "nvim-neotest/neotest",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      "antoinemadec/FixCursorHold.nvim",
+      "nvim-neotest/nvim-nio",
+      "nvim-neotest/neotest-python",
+    },
+    config = function()
+      require("neotest").setup({
+        adapters = {
+          require("neotest-python")({
+            dap = { justMyCode = false },
+            args = { "--log-level", "DEBUG" },
+            runner = "pytest",
+          }),
+        },
+        icons = {
+          running = "",
+          passed = "",
+          failed = "",
+        },
+      })
+    end,
+  },
+
+  -- Conform.nvim - Modern formatter
+  {
+    "stevearc/conform.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    config = function()
+      require("conform").setup({
+        formatters_by_ft = {
+          -- ruff replaces both isort and black: faster (Rust-based) and identical output
+          python = { "ruff_organize_imports", "ruff_format" },
+          lua = { "stylua" },
+          javascript = { "prettier" },
+          typescript = { "prettier" },
+          json = { "prettier" },
+          yaml = { "prettier" },
+          markdown = { "prettier" },
+          sh = { "shfmt" },
+        },
+        format_on_save = {
+          timeout_ms = 500,
+          lsp_fallback = true,
+        },
+      })
+    end,
+  },
+
+  -- Trouble - Better diagnostics UI
+  {
+    "folke/trouble.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    opts = {
+      position = "bottom",
+      height = 10,
+      icons = true,
+      mode = "workspace_diagnostics",
+      fold_open = "",
+      fold_closed = "",
+      indent_lines = true,
+      auto_open = false,
+      auto_close = false,
+      auto_preview = true,
+      auto_fold = false,
+      use_diagnostic_signs = true,
+    },
+  },
+
+  -- Aerial - Code outline sidebar
+  {
+    "stevearc/aerial.nvim",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-tree/nvim-web-devicons",
+    },
+    opts = {
+      backends = { "treesitter", "lsp", "markdown" },
+      layout = {
+        max_width = { 40, 0.2 },
+        width = nil,
+        min_width = 20,
+        default_direction = "prefer_right",
+      },
+      attach_mode = "window",
+      filter_kind = false,
+      show_guides = true,
+      guides = {
+        mid_item = "├─",
+        last_item = "└─",
+        nested_top = "│ ",
+        whitespace = "  ",
+      },
+    },
+  },
+
+  -- Refactoring - Automated refactoring operations
+  {
+    "ThePrimeagen/refactoring.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    config = function()
+      require("refactoring").setup({})
+    end,
+  },
+
+  -- Spectre - Project-wide find and replace
+  {
+    "nvim-pack/nvim-spectre",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+    },
+    config = function()
+      require("spectre").setup({
+        color_devicons = true,
+        highlight = {
+          ui = "String",
+          search = "DiffChange",
+          replace = "DiffDelete",
+        },
+      })
+    end,
+  },
+
+  -- Todo Comments - Highlight and search TODO comments
+  {
+    "folke/todo-comments.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    opts = {
+      signs = true,
+      sign_priority = 8,
+      keywords = {
+        FIX = { icon = " ", color = "error", alt = { "FIXME", "BUG", "FIXIT", "ISSUE" } },
+        TODO = { icon = " ", color = "info" },
+        HACK = { icon = " ", color = "warning" },
+        WARN = { icon = " ", color = "warning", alt = { "WARNING", "XXX" } },
+        PERF = { icon = " ", alt = { "OPTIM", "PERFORMANCE", "OPTIMIZE" } },
+        NOTE = { icon = " ", color = "hint", alt = { "INFO" } },
+        TEST = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
+      },
+      highlight = {
+        before = "",
+        keyword = "wide",
+        after = "fg",
+        pattern = [[.*<(KEYWORDS)\s*:]],
+        comments_only = true,
+        max_line_len = 400,
+        exclude = {},
+      },
+    },
+  },
+
+  -- UFO - Better code folding
+  {
+    "kevinhwang91/nvim-ufo",
+    dependencies = {
+      "kevinhwang91/promise-async",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    config = function()
+      vim.o.foldcolumn = "1"
+      vim.o.foldlevel = 99
+      vim.o.foldlevelstart = 99
+      vim.o.foldenable = true
+
+      require("ufo").setup({
+        provider_selector = function(bufnr, filetype, buftype)
+          return { "treesitter", "indent" }
+        end,
+      })
+    end,
+  },
+
+  -- Tmux Navigator - Seamless navigation between vim and tmux
+  {
+    "christoomey/vim-tmux-navigator",
+    cmd = {
+      "TmuxNavigateLeft",
+      "TmuxNavigateDown",
+      "TmuxNavigateUp",
+      "TmuxNavigateRight",
+      "TmuxNavigatePrevious",
+    },
+    keys = {
+      { "<c-h>", "<cmd><C-U>TmuxNavigateLeft<cr>" },
+      { "<c-j>", "<cmd><C-U>TmuxNavigateDown<cr>" },
+      { "<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>" },
+      { "<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>" },
+      { "<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>" },
+    },
+  },
+
+  -- Colorizer - Show hex colors
+  {
+    "NvChad/nvim-colorizer.lua",
+    opts = {
+      filetypes = { "*" },
+      user_default_options = {
+        RGB = true,
+        RRGGBB = true,
+        names = false,
+        RRGGBBAA = false,
+        AARRGGBB = false,
+        rgb_fn = false,
+        hsl_fn = false,
+        css = false,
+        css_fn = false,
+        mode = "background",
+        tailwind = false,
+        sass = { enable = false },
+        virtualtext = "■",
+      },
+      buftypes = {},
+    },
   },
 
 }, {
@@ -585,11 +881,9 @@ dap.configurations.cs = {
 -- Keymaps
 -- ============================================================================
 
--- Better window navigation
-vim.keymap.set("n", "<C-h>", "<C-w>h")
-vim.keymap.set("n", "<C-j>", "<C-w>j")
-vim.keymap.set("n", "<C-k>", "<C-w>k")
-vim.keymap.set("n", "<C-l>", "<C-w>l")
+-- Window navigation now handled by vim-tmux-navigator plugin
+-- This provides seamless navigation between Neovim and Tmux panes
+-- Keybinds: Ctrl+h/j/k/l to navigate, Ctrl+\ for previous pane
 
 -- Resize windows
 vim.keymap.set("n", "<C-Up>", ":resize -2<CR>")
@@ -641,6 +935,59 @@ vim.keymap.set({ "n", "v" }, "<leader>cc", "<cmd>CodeCompanionChat<CR>", { desc 
 vim.keymap.set({ "n", "v" }, "<leader>ci", "<cmd>CodeCompanion<CR>", { desc = "[c]ode[c]ompanion [i]nline" })
 vim.keymap.set("n", "<leader>ca", "<cmd>CodeCompanionActions<CR>", { desc = "[c]ode[c]ompanion [a]ctions" })
 
+-- Neotest
+local neotest = require("neotest")
+vim.keymap.set("n", "<leader>tt", function() neotest.run.run() end, { desc = "[t]est run neares[t]" })
+vim.keymap.set("n", "<leader>tf", function() neotest.run.run(vim.fn.expand("%")) end, { desc = "[t]est run [f]ile" })
+vim.keymap.set("n", "<leader>td", function() neotest.run.run({strategy = "dap"}) end, { desc = "[t]est [d]ebug nearest" })
+vim.keymap.set("n", "<leader>ts", function() neotest.summary.toggle() end, { desc = "[t]est [s]ummary" })
+vim.keymap.set("n", "<leader>to", function() neotest.output.open({ enter = true }) end, { desc = "[t]est [o]utput" })
+vim.keymap.set("n", "<leader>tO", function() neotest.output_panel.toggle() end, { desc = "[t]est [O]utput panel" })
+vim.keymap.set("n", "<leader>tS", function() neotest.run.stop() end, { desc = "[t]est [S]top" })
+
+-- Trouble
+vim.keymap.set("n", "<leader>xx", "<cmd>Trouble<CR>", { desc = "Trouble toggle" })
+vim.keymap.set("n", "<leader>xw", "<cmd>Trouble workspace_diagnostics<CR>", { desc = "Trouble [w]orkspace diagnostics" })
+vim.keymap.set("n", "<leader>xd", "<cmd>Trouble document_diagnostics<CR>", { desc = "Trouble [d]ocument diagnostics" })
+vim.keymap.set("n", "<leader>xl", "<cmd>Trouble loclist<CR>", { desc = "Trouble [l]ocation list" })
+vim.keymap.set("n", "<leader>xq", "<cmd>Trouble quickfix<CR>", { desc = "Trouble [q]uickfix" })
+vim.keymap.set("n", "gR", "<cmd>Trouble lsp_references<CR>", { desc = "Trouble LSP references" })
+
+-- Aerial (code outline)
+vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<CR>", { desc = "[a]erial code outline" })
+
+-- Refactoring
+vim.keymap.set("x", "<leader>re", ":Refactor extract ", { desc = "[r]efactor [e]xtract function" })
+vim.keymap.set("x", "<leader>rf", ":Refactor extract_to_file ", { desc = "[r]efactor extract to [f]ile" })
+vim.keymap.set("x", "<leader>rv", ":Refactor extract_var ", { desc = "[r]efactor extract [v]ariable" })
+vim.keymap.set({ "n", "x" }, "<leader>ri", ":Refactor inline_var", { desc = "[r]efactor [i]nline variable" })
+vim.keymap.set("n", "<leader>rI", ":Refactor inline_func", { desc = "[r]efactor [I]nline function" })
+vim.keymap.set("n", "<leader>rb", ":Refactor extract_block", { desc = "[r]efactor extract [b]lock" })
+vim.keymap.set("n", "<leader>rbf", ":Refactor extract_block_to_file", { desc = "[r]efactor extract [b]lock to [f]ile" })
+
+-- Spectre (find and replace)
+vim.keymap.set("n", "<leader>S", '<cmd>lua require("spectre").toggle()<CR>', { desc = "[S]pectre toggle" })
+vim.keymap.set("n", "<leader>sw", '<cmd>lua require("spectre").open_visual({select_word=true})<CR>', { desc = "[s]earch current [w]ord" })
+vim.keymap.set("v", "<leader>sw", '<esc><cmd>lua require("spectre").open_visual()<CR>', { desc = "[s]earch selection" })
+vim.keymap.set("n", "<leader>sp", '<cmd>lua require("spectre").open_file_search({select_word=true})<CR>', { desc = "[s]earch in current file" })
+
+-- Diffview (git diff/history viewer)
+vim.keymap.set("n", "<leader>gd", "<cmd>DiffviewOpen<CR>", { desc = "[g]it [d]iffview open" })
+vim.keymap.set("n", "<leader>gc", "<cmd>DiffviewClose<CR>", { desc = "[g]it diffview [c]lose" })
+vim.keymap.set("n", "<leader>gh", "<cmd>DiffviewFileHistory %<CR>", { desc = "[g]it file [h]istory" })
+vim.keymap.set("n", "<leader>gH", "<cmd>DiffviewFileHistory<CR>", { desc = "[g]it repo [H]istory" })
+
+-- Todo Comments
+vim.keymap.set("n", "]t", function() require("todo-comments").jump_next() end, { desc = "Next todo comment" })
+vim.keymap.set("n", "[t", function() require("todo-comments").jump_prev() end, { desc = "Previous todo comment" })
+vim.keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<CR>", { desc = "[f]ind [t]odos" })
+
+-- UFO (folding)
+vim.keymap.set("n", "zR", require("ufo").openAllFolds, { desc = "Open all folds" })
+vim.keymap.set("n", "zM", require("ufo").closeAllFolds, { desc = "Close all folds" })
+vim.keymap.set("n", "zr", require("ufo").openFoldsExceptKinds, { desc = "Open folds except kinds" })
+vim.keymap.set("n", "zm", require("ufo").closeFoldsWith, { desc = "Close folds with" })
+
 -- ============================================================================
 -- Autocommands
 -- ============================================================================
@@ -662,10 +1009,5 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   end,
 })
 
--- Format on save for certain filetypes
-vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = { "*.lua", "*.py", "*.cs" },
-  callback = function()
-    vim.lsp.buf.format({ async = false })
-  end,
-})
+-- Format on save is now handled by conform.nvim (configured in plugin setup)
+-- The LSP formatter keymap (<leader>f) is still available for manual formatting

@@ -1,5 +1,5 @@
 # Caleb's Zsh Aliases
-# Managed by GNU Stow from ~/.files/zsh/.zsh/aliases.zsh
+# Managed by GNU Stow from ~/dotfiles/zsh/.zsh/aliases.zsh
 
 # ============================================================================
 # Editor Aliases

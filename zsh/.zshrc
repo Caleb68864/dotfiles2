@@ -1,10 +1,12 @@
 # Caleb's .zshrc
-# Managed by GNU Stow from ~/.files/zsh/.zshrc
+# Managed by GNU Stow from ~/dotfiles/zsh/.zshrc
 
 # ============================================================================
 # Oh-My-Zsh Configuration
 # ============================================================================
 export ZSH="$HOME/.oh-my-zsh"
+
+export HYPRLAND_INSTANCE_SIGNATURE=$(/usr/bin/ls -1 /run/user/1000/hypr/ | grep '^[a-f0-9]' | sort -t_ -k2 -n | tail -1)
 
 # Theme - Using Starship instead of Oh-My-Zsh themes
 # To use Powerlevel10k instead, uncomment the line below and comment out the Starship init at the bottom
@@ -183,6 +185,9 @@ fi
 # ============================================================================
 # Prompt
 # ============================================================================
+
+# Initialize Atuin (enhanced shell history — replaces Ctrl+R)
+eval "$(atuin init zsh)"
 
 # Initialize Starship prompt (default)
 eval "$(starship init zsh)"
