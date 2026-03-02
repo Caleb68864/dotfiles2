@@ -1,11 +1,11 @@
-# Neovim Setup Notes — What to Add on Windows
+# Neovim Setup Notes — What to Add on Windows / WSL
 
-This document captures the plugins and tools added to the Linux (EndeavourOS/Hyprland) Neovim setup
-that are worth replicating on Windows. Includes the why and how for each.
+This document captures plugins and tools added to the Linux (EndeavourOS/Hyprland) Neovim setup
+that are worth replicating on Windows or Ubuntu under WSL. Includes the why and how for each.
 
 ---
 
-## Plugins Added (Linux — replicate on Windows)
+## Neovim Plugins (replicate on Windows / WSL)
 
 ### 1. `sindrets/diffview.nvim` — Git Diff Viewer
 
@@ -46,11 +46,6 @@ Diffview fills all three gaps.
 you're actively working in during a session — switch between them instantly with a single keypress
 instead of fuzzy-finding every time.
 
-**What it gives you:**
-- Mark files to a per-project list with `<leader>ha`
-- Jump to marked files 1-4 with `<leader>1` through `<leader>4`
-- Open the list with `<leader>hl` to reorder/remove
-
 **Keybinds:**
 | Key | Action |
 |-----|--------|
@@ -70,7 +65,6 @@ instead of fuzzy-finding every time.
   config = function()
     local harpoon = require("harpoon")
     harpoon:setup()
-
     vim.keymap.set("n", "<leader>ha", function() harpoon:list():add() end, { desc = "[h]arpoon [a]dd file" })
     vim.keymap.set("n", "<leader>hl", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, { desc = "[h]arpoon [l]ist" })
     vim.keymap.set("n", "<leader>1", function() harpoon:list():select(1) end, { desc = "Harpoon file 1" })
@@ -91,7 +85,8 @@ for browsing history/diffs, lazygit for making commits and managing branches).
 
 **Requirement:** Install `lazygit` separately:
 - Windows: `winget install JesseDuffield.lazygit` or `scoop install lazygit`
-- Linux: `yay -S lazygit`
+- Ubuntu/WSL: `sudo apt install lazygit` or build from source
+- Arch: `yay -S lazygit`
 
 **Keybinds:**
 | Key | Action |
@@ -114,12 +109,19 @@ for browsing history/diffs, lazygit for making commits and managing branches).
 ### 4. `mikavilpas/yazi.nvim` — Yazi File Manager Integration
 
 **Why:** Yazi is a terminal file manager (like Ranger but faster, written in Rust). This plugin
-lets you open it in a floating window inside Neovim and jump to files from it. More powerful than
-nvim-tree for bulk operations (rename, move, copy multiple files) while staying in Neovim.
+lets you open it in a floating window inside Neovim and jump to files from it.
 
 **Requirement:** Install `yazi` separately:
 - Windows: `scoop install yazi` or `winget install sxyazi.yazi`
-- Linux: `yay -S yazi`
+- Ubuntu/WSL: download binary from [yazi releases](https://github.com/sxyazi/yazi/releases)
+- Arch: `yay -S yazi`
+
+**Note on yazi config:** The Linux dotfiles include `~/.config/yazi/` with keymap, theme
+(Tokyo Night), and preview settings. Copy that directory across — just skip or stub out the
+`ripdrag` keybind (Alt+D) since ripdrag is Wayland-only and won't work on Windows/WSL.
+
+**Yazi keymap syntax (v26.x):** Use `[[mgr.prepend_keymap]]`, NOT `[[manager.prepend_keymap]]`.
+The old section name is silently ignored in newer versions.
 
 **Keybinds:**
 | Key | Action |
@@ -146,13 +148,13 @@ nvim-tree for bulk operations (rename, move, copy multiple files) while staying 
 
 ### 5. Ruff instead of isort + black (Python formatter)
 
-**Why:** Ruff is a drop-in replacement for both `isort` (import sorting) and `black` (formatting),
-written in Rust. It's 10-100x faster, produces identical output, and is actively maintained.
-No reason to run both isort and black when ruff does both in one pass.
+**Why:** Ruff is a drop-in replacement for both `isort` and `black`, written in Rust.
+10-100x faster and actively maintained.
 
-**Requirement:** Install `ruff`:
+**Requirement:**
 - Windows: `pip install ruff` or `winget install Astral.Ruff`
-- Linux: `yay -S ruff`
+- Ubuntu/WSL: `pip install ruff`
+- Arch: `yay -S ruff`
 
 **conform.nvim change (in init.lua):**
 ```lua
@@ -163,49 +165,104 @@ python = { "isort", "black" },
 python = { "ruff_organize_imports", "ruff_format" },
 ```
 
-`ruff_organize_imports` = equivalent to isort
-`ruff_format` = equivalent to black
-
 ---
 
-## Shell Tools (Linux-specific, reference for WSL/Windows Terminal)
+## Shell Tools (Linux / WSL Ubuntu)
 
 ### Atuin — Shell History Replacement
 
 **Why:** Replaces `Ctrl+R` history search. Stores history with context (directory, exit code,
-duration), deduplicates across sessions, and gives a much better fuzzy search UI.
-Optionally syncs history across machines.
+duration), deduplicates across sessions, fuzzy search UI. Optionally syncs history across machines.
 
-**Setup (Linux/WSL):**
+**Install:**
+- Ubuntu/WSL: `curl --proto '=https' --tlsv1.2 -LsSf https://setup.atuin.sh | sh`
+- Arch: `yay -S atuin`
+
+**Shell init (add to `.zshrc` / `.bashrc`):**
 ```bash
-yay -S atuin
-# Add to .zshrc / .bashrc:
-eval "$(atuin init zsh)"
+eval "$(atuin init zsh)"   # or bash
 ```
 
-**Usage:** Press `Ctrl+R` — atuin's UI replaces the default reverse search.
+**Config file** (`~/.config/atuin/config.toml`) — copy from dotfiles or create:
+```toml
+search_mode = "fuzzy"
+filter_mode = "global"
+style = "compact"
+inline_height = 20
+show_preview = true
+enter_accept = true
+exit_mode = "return-original"
+secrets_filter = true
+
+[stats]
+common_subcommands = ["cargo", "docker", "git", "go", "kubectl", "npm", "systemctl", "tmux"]
+
+[sync]
+records = true
+```
+
+**Usage:** `Ctrl+R` — atuin's UI replaces the default reverse search.
+
+---
+
+### fzf — Fuzzy Finder with Tokyo Night Colors
+
+**Install:**
+- Ubuntu/WSL: `sudo apt install fzf` or `git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install`
+- Arch: `yay -S fzf`
+
+**Shell init (add to `.zshrc`):**
+```bash
+# Source Tokyo Night palette
+[ -f ~/.config/themes/tokyo-night.conf ] && source ~/.config/themes/tokyo-night.conf
+
+export FZF_DEFAULT_OPTS="
+  --height=40%
+  --layout=reverse
+  --border
+  --color=fg:${THEME_FG0},bg:${THEME_BG0},hl:${THEME_YELLOW}
+  --color=fg+:${THEME_FG0},bg+:${THEME_BG2},hl+:${THEME_BLUE}
+  --color=info:${THEME_FG4},prompt:${THEME_BLUE},pointer:${THEME_PURPLE}
+  --color=marker:${THEME_GREEN},spinner:${THEME_CYAN},header:${THEME_FG2}
+  --color=border:${THEME_BG3},gutter:${THEME_BG0}
+"
+```
+
+Copy `themes/tokyo-night.conf` from dotfiles to `~/.config/themes/tokyo-night.conf`.
+
+---
 
 ### Yazi — Terminal File Manager
 
 **Why:** Faster than Ranger, image previews in terminal, bulk rename/move, strong plugin ecosystem.
-Pairs with yazi.nvim to jump to files from within Neovim.
+
+**Install:**
+- Ubuntu/WSL: download binary from [yazi releases](https://github.com/sxyazi/yazi/releases)
+- Arch: `yay -S yazi`
+
+**Image previews in WSL:** Use `chafa` for image preview in WSL (ueberzugpp may not work):
+```bash
+sudo apt install chafa
+```
+
+**ripdrag (drag-and-drop):** Linux/Wayland only — skip this on Windows/WSL. Remove or
+comment out the `Alt+D` ripdrag binding from `~/.config/yazi/keymap.toml`.
 
 ---
 
-## Tmux Tools (Linux — not applicable on Windows unless using WSL)
+## Tmux (Linux / WSL — not applicable on native Windows)
 
 ### tmux-resurrect + tmux-continuum
 
 **Why:** Without these, every tmux session layout is lost on reboot. resurrect saves/restores
-session layouts (windows, panes, working directories, even running programs). continuum
-auto-saves every 15 minutes and auto-restores on tmux start.
+session layouts; continuum auto-saves every 15 minutes.
 
 **Setup:**
 ```bash
 # Install TPM first:
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
-# In .tmux.conf (at the bottom):
+# Add to .tmux.conf:
 set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-continuum'
@@ -221,3 +278,16 @@ run '~/.tmux/plugins/tpm/tpm'
 **Key binds (after install):**
 - `prefix + Ctrl+s` — save session manually
 - `prefix + Ctrl+r` — restore session manually
+
+---
+
+## What Doesn't Port to Windows / WSL
+
+| Feature | Why |
+|---------|-----|
+| Hyprland, Waybar, Hyprlock, etc. | Wayland compositor — Linux only |
+| hyprpaper / random wallpaper | Hyprland-specific |
+| ripdrag (Yazi Alt+D) | Wayland drag-and-drop — Linux only |
+| swaync | Wayland notification daemon — Linux only |
+| hypridle / hyprshot / hyprpicker | Hyprland ecosystem — Linux only |
+| GDK_SCALE=2 env var | HiDPI Wayland workaround — not needed on Windows |

@@ -25,18 +25,21 @@ A dotfiles configuration for **EndeavourOS/Arch Linux** featuring **Hyprland**, 
 
 ### Shell & Terminal
 - **Zsh** - Powerful shell with Oh-My-Zsh
-- **Tmux** - Terminal multiplexer with auto-attach to "battlestation" session
+- **Tmux** - Terminal multiplexer with auto-attach to "command-center" session
 - **Starship** - Fast, minimal prompt
-- **fzf** - Fuzzy finder with custom keybindings
+- **Atuin** - Enhanced shell history (fuzzy search, context, deduplication)
+- **fzf** - Fuzzy finder with Tokyo Night colors
 - **bat** - Cat clone with syntax highlighting
 - **eza** - Modern ls replacement
 
 ### Tools & Utilities
 - **Git** - Version control with custom configuration
+- **Atuin** - Shell history replacement with fuzzy search (replaces Ctrl+R)
+- **Yazi** - Terminal file manager with image/PDF previews and ripdrag support
 - **ripgrep** - Fast search tool
 - **hyprshot** - Screenshot utility
 - **hyprpicker** - Color picker
-- **Gruvbox Dark Hard** - Color scheme throughout
+- **Tokyo Night** - Color scheme throughout
 
 ## Quick Start
 
@@ -110,16 +113,19 @@ bash install.sh
 ```bash
 cd ~/dotfiles
 
-# Packages that stow to ~/.config/<app>
-stow -Rv -t "$HOME/.config/hypr"    hypr
-stow -Rv -t "$HOME/.config/waybar"  waybar
-stow -Rv -t "$HOME/.config/nvim"    nvim
-stow -Rv -t "$HOME/.config/kitty"   kitty
-stow -Rv -t "$HOME/.config/swaync"  swaync
-stow -Rv -t "$HOME/.local/share/fonts" fonts
+# Packages with config-specific targets
+stow -Rv -t "$HOME/.config/hypr"         hypr
+stow -Rv -t "$HOME/.config/waybar"       waybar
+stow -Rv -t "$HOME/.config/nvim"         nvim
+stow -Rv -t "$HOME/.config/kitty"        kitty
+stow -Rv -t "$HOME/.config/swaync"       swaync
+stow -Rv -t "$HOME/.config/yazi"         yazi
+stow -Rv -t "$HOME/.config/atuin"        atuin
+stow -Rv -t "$HOME/.config/themes"       themes
+stow -Rv -t "$HOME/.local/share/fonts"   fonts
 
 # Packages that stow to $HOME
-stow -Rv -t "$HOME" zsh tmux git scripts bin themes
+stow -Rv -t "$HOME" zsh tmux git scripts bin
 ```
 
 ### Remove a Package
@@ -138,18 +144,20 @@ stow -nv -t "$HOME/.config/nvim" nvim
 
 | Package | Stow Target | Contents |
 |---------|-------------|----------|
-| `hypr` | `~/.config/hypr` | hyprland.conf, hyprpaper.conf, hypridle.conf, hyprlock.conf, scripts/ |
+| `hypr` | `~/.config/hypr` | hyprland.conf, hyprpaper.conf, hypridle.conf, hyprlock.conf, theme.conf, scripts/ |
 | `waybar` | `~/.config/waybar` | config.jsonc, style.css, scripts/ |
 | `nvim` | `~/.config/nvim` | init.lua, lazy-lock.json |
 | `kitty` | `~/.config/kitty` | kitty.conf |
 | `swaync` | `~/.config/swaync` | config.json, style.css |
+| `yazi` | `~/.config/yazi` | keymap.toml, theme.toml, yazi.toml |
+| `atuin` | `~/.config/atuin` | config.toml |
+| `themes` | `~/.config/themes` | tokyo-night.conf, gruvbox.conf |
 | `fonts` | `~/.local/share/fonts` | JetBrainsMono Nerd Font variants |
 | `zsh` | `$HOME` | .zshrc, .zsh/, .config/starship.toml |
 | `tmux` | `$HOME` | .tmux.conf |
 | `git` | `$HOME` | .gitconfig |
 | `scripts` | `$HOME` | setup-github-ssh.sh |
 | `bin` | `$HOME` | get-fonts.sh, switch-theme.sh, deploy-all, undeploy |
-| `themes` | `$HOME` | gruvbox.conf, tokyo-night.conf |
 
 ## Key Bindings
 
@@ -162,7 +170,9 @@ stow -nv -t "$HOME/.config/nvim" nvim
 | `Super + Return` | Open terminal (Kitty) |
 | `Super + Space` | Open application launcher (hyprlauncher) |
 | `Super + W` | Open web browser (Vivaldi) |
-| `Super + E` | Open file manager (Dolphin) |
+| `Super + E` | Open file manager (Thunar) |
+| `Super + Y` | Open Yazi (floating) |
+| `Super + Shift + Y` | Open Yazi (workspace 3) |
 | `Super + L` | Lock screen (Hyprlock) |
 | `Super + M` | Exit Hyprland |
 
@@ -170,7 +180,7 @@ stow -nv -t "$HOME/.config/nvim" nvim
 
 | Key Combo | Action |
 |-----------|--------|
-| `Super + Q` | Close active window |
+| `Super + Shift + C` | Close active window |
 | `Super + F` | Toggle fullscreen |
 | `Super + V` | Toggle floating |
 | `Super + P` | Pseudo tile (dwindle) |
@@ -208,12 +218,11 @@ Workspaces are organized by purpose with icons in Waybar:
 
 | Workspace | Purpose | Auto-assigned Applications |
 |-----------|---------|---------------------------|
-| 1 | Web Browsers | Firefox, Vivaldi, Chromium |
+| 1 | Web Browsers | Vivaldi |
 | 2 | Terminals | Kitty |
-| 3 | File Managers | Dolphin, Thunar |
+| 3 | File Managers | Thunar, Yazi (Super+Shift+Y) |
 | 4 | Communication | Discord, Vesktop, Element |
-| 5 | Entertainment | Spotify, Steam |
-| 6 | Development | VS Code |
+| 7 | Gaming | Steam |
 | 8 | Games | Heroic Games Launcher |
 
 Only shows workspaces with open windows. Click workspace icon in Waybar to switch.
@@ -230,7 +239,7 @@ Only shows workspaces with open windows. Click workspace icon in Waybar to switc
 
 ### Tmux
 
-**Auto-Start:** Zsh automatically starts or attaches to a tmux session called **"battlestation"** when you open a terminal.
+**Auto-Start:** Zsh automatically starts or attaches to a tmux session called **"command-center"** when you open a terminal.
 
 #### Prefix Key
 The prefix key is `Ctrl + a` (instead of default `Ctrl + b`)
@@ -526,7 +535,7 @@ MIT License - Feel free to use and modify as you wish.
 
 ## Credits
 
-- Color scheme: [Gruvbox](https://github.com/morhetz/gruvbox)
+- Color scheme: [Tokyo Night](https://github.com/folke/tokyonight.nvim)
 - Prompt: [Starship](https://starship.rs/)
 - Window Manager: [Hyprland](https://hyprland.org/)
 - Editor: [Neovim](https://neovim.io/)
