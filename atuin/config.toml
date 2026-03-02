@@ -1,0 +1,51 @@
+# Atuin configuration
+# Managed by GNU Stow from ~/dotfiles/atuin/config.toml
+
+## Search mode: fuzzy gives the best results
+search_mode = "fuzzy"
+
+## Filter mode: global shows history from all sessions/hosts
+filter_mode = "global"
+
+## Use compact style to keep it out of the way
+style = "compact"
+
+## Height of the inline search UI (0 = fullscreen)
+inline_height = 20
+
+## Show a preview of the full command when it's cut off
+show_preview = true
+
+## Press Enter to run immediately; Tab to edit first
+enter_accept = true
+
+## Esc returns to whatever you had typed before invoking Atuin
+exit_mode = "return-original"
+
+## Filter secrets (AWS keys, GitHub tokens, etc.) from history
+secrets_filter = true
+
+## Don't record commands starting with a space (matches zsh HIST_IGNORE_SPACE)
+## Note: zsh handles this before Atuin sees it, but belt-and-suspenders
+history_filter = [
+  "^ ",
+]
+
+[stats]
+common_subcommands = [
+  "cargo",
+  "docker",
+  "git",
+  "go",
+  "kubectl",
+  "npm",
+  "systemctl",
+  "tmux",
+  "yay",
+]
+
+[sync]
+records = true
+
+[keys]
+scroll_exits = true

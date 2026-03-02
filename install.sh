@@ -134,6 +134,7 @@ CONFLICT_ITEMS=(
     "$HOME/.config/hypr"
     "$HOME/.config/waybar"
     "$HOME/.config/swaync"
+    "$HOME/.config/atuin"
     "$HOME/.local/share/fonts"
 )
 
@@ -170,6 +171,7 @@ PACKAGES=(
     "waybar"
     "swaync"
     "yazi"
+    "atuin"
     "git"
     "fonts"
     "scripts"
@@ -184,6 +186,7 @@ declare -A STOW_TARGETS=(
     ["kitty"]="$HOME/.config/kitty"
     ["swaync"]="$HOME/.config/swaync"
     ["yazi"]="$HOME/.config/yazi"
+    ["atuin"]="$HOME/.config/atuin"
     ["fonts"]="$HOME/.local/share/fonts"
 )
 
