@@ -135,16 +135,18 @@ package-name/
 
 ### Theme System
 
-**Gruvbox Dark Hard** is the primary color scheme used across all configs:
-- Waybar: CSS variables in `style.css` (lines 17-36)
-- Hyprland: Border colors in `hyprland.conf`
-- Neovim: Gruvbox theme plugin
+**Tokyo Night** is the primary color scheme used across all configs:
+- Waybar: CSS variables in `style.css`
+- Hyprland: Border colors in `hyprland.conf` (`#7aa2f7` blue / `#bb9af7` purple)
+- Kitty: Full Tokyo Night palette in `kitty.conf`
+- Yazi: `theme.toml` using Tokyo Night palette
+- Neovim: Tokyo Night theme plugin
 
 ### Waybar Architecture
 
 Waybar config is split into two files:
 1. **config.jsonc** - Module configuration, layout, and behavior
-2. **style.css** - Visual styling with Gruvbox colors
+2. **style.css** - Visual styling with Tokyo Night colors
 
 **Key modules in use:**
 - `hyprland/workspaces` - Workspace switcher with icons
