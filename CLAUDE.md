@@ -22,13 +22,14 @@ Each package has a specific stow target. Never use a blanket `stow -t "$HOME"` f
 | `kitty` | `~/.config/kitty` | kitty.conf |
 | `swaync` | `~/.config/swaync` | config.json, style.css |
 | `yazi` | `~/.config/yazi` | yazi.toml, keymap.toml, theme.toml |
+| `atuin` | `~/.config/atuin` | config.toml |
+| `themes` | `~/.config/themes` | tokyo-night.conf, gruvbox.conf |
 | `fonts` | `~/.local/share/fonts` | JetBrainsMono Nerd Font *.ttf |
 | `zsh` | `$HOME` | .zshrc, .zsh/, .config/starship.toml |
 | `tmux` | `$HOME` | .tmux.conf |
 | `git` | `$HOME` | .gitconfig |
 | `scripts` | `$HOME` | setup-github-ssh.sh |
 | `bin` | `$HOME` | get-fonts.sh, switch-theme.sh, deploy-all, undeploy |
-| `themes` | `$HOME` | gruvbox.conf, tokyo-night.conf |
 
 ## Common Commands
 
@@ -46,8 +47,10 @@ stow -Rv -t "$HOME/.config/hypr"   hypr
 stow -Rv -t "$HOME/.config/waybar" waybar
 stow -Rv -t "$HOME/.config/nvim"   nvim
 stow -Rv -t "$HOME/.config/kitty"  kitty
-stow -Rv -t "$HOME/.config/yazi"   yazi
-stow -Rv -t "$HOME"                zsh tmux git
+stow -Rv -t "$HOME/.config/yazi"     yazi
+stow -Rv -t "$HOME/.config/atuin"   atuin
+stow -Rv -t "$HOME/.config/themes"  themes
+stow -Rv -t "$HOME"                 zsh tmux git
 
 # Remove a package
 stow -Dv -t "$HOME/.config/waybar" waybar
@@ -110,6 +113,7 @@ hypr/
 ├── hyprpaper.conf     → ~/.config/hypr/hyprpaper.conf
 ├── hypridle.conf      → ~/.config/hypr/hypridle.conf
 ├── hyprlock.conf      → ~/.config/hypr/hyprlock.conf
+├── theme.conf         → ~/.config/hypr/theme.conf  (Hyprland color vars, sourced by hyprland.conf)
 └── scripts/           → ~/.config/hypr/scripts/
     └── random-wallpaper.sh
 
@@ -133,17 +137,25 @@ There is **no** `.config/app/` nesting inside package directories. The stow targ
 - `~/.config/waybar/style.css` → `~/dotfiles/waybar/style.css`
 - `~/.config/nvim/init.lua` → `~/dotfiles/nvim/init.lua`
 - `~/.config/yazi/yazi.toml` → `~/dotfiles/yazi/yazi.toml`
+- `~/.config/atuin/config.toml` → `~/dotfiles/atuin/config.toml`
+- `~/.config/themes/tokyo-night.conf` → `~/dotfiles/themes/tokyo-night.conf`
+- `~/.config/hypr/theme.conf` → `~/dotfiles/hypr/theme.conf`
 
 Always edit files in `~/dotfiles/` — never edit `~/.config/` directly (those are symlinks).
 
 ### Theme System
 
-**Tokyo Night** is the primary color scheme used across all configs:
-- Waybar: CSS variables in `waybar/style.css`
-- Hyprland: Border colors `#7aa2f7` (blue) / `#bb9af7` (purple) in `hypr/hyprland.conf`
-- Kitty: Full Tokyo Night palette in `kitty/kitty.conf`
-- Yazi: `yazi/theme.toml` using Tokyo Night palette
-- Neovim: Tokyo Night theme plugin
+**Tokyo Night** is the primary color scheme. Colors are centralized where each tool allows it:
+
+| File | Format | Used by |
+|------|--------|---------|
+| `themes/tokyo-night.conf` | Shell vars (`THEME_BLUE=#7aa2f7`) | `.zshrc` sources it for fzf colors |
+| `hypr/theme.conf` | Hyprland vars (`$th_blue = rgba(...)`) | `hyprland.conf` sources it for borders/shadows |
+| `waybar/style.css` | CSS `@define-color` | All waybar CSS styling |
+| `yazi/theme.toml` | Hardcoded hex | Yazi colors (TOML has no variable support) |
+| `waybar/config.jsonc` | Hardcoded hex | Calendar Pango markup (JSONC has no variable support) |
+
+**To change a color:** edit `themes/tokyo-night.conf` (shell/fzf), `hypr/theme.conf` (Hyprland), and `waybar/style.css` (waybar) — then reload each tool.
 
 **Key Tokyo Night colors:**
 - bg: `#1a1b26`, bg1: `#1f2335`, bg2: `#24283b`, bg3: `#414868`
@@ -180,7 +192,7 @@ windowrule = workspace 4 silent, match:class ^(discord)$
 - Workspace 2: Terminals (kitty)
 - Workspace 3: File managers (thunar, yazi-files)
 - Workspace 4: Communication (discord, vesktop, Element, element)
-- Workspace 5: Entertainment (spotify)
+- Workspace 5: (unassigned)
 - Workspace 7: Steam
 - Workspace 8: Games (heroic)
 
@@ -218,10 +230,33 @@ Two file managers are configured:
 - **Yazi** (TUI in Kitty):
   - `Super+Y` → floating 1200×800, stays on current workspace
   - `Super+Shift+Y` → opens on workspace 3
-  - `Shift+D` in Yazi → drag selected files with ripdrag
+  - `Alt+D` in Yazi → drag hovered/selected files with ripdrag
   - Launched with `kitty --class yazi -e yazi` (bypasses tmux auto-start)
   - Image preview via Kitty native protocol (auto-detected)
   - PDF preview via pdftoppm (poppler)
+
+### Yazi Keymap (v26.x)
+
+Critical syntax rules — old syntax is **silently ignored**:
+- Section: `[[mgr.prepend_keymap]]` (NOT `[[manager.prepend_keymap]]`)
+- Single key: `on = "<A-d>"` string (NOT an array `["<A-d>"]`)
+- Multi-key sequence: `on = ["g", "d"]` array
+- File variables: `%h` = hovered file, `%s` = selected files (NOT `$@`)
+- Shell command: `run = "shell -- command %h"` (use `--` then `%h`/`%s`)
+
+### ripdrag (Drag-and-Drop from Yazi)
+
+- Window class: `it.catboy.ripdrag` (use this in Hyprland window rules)
+- Must launch with `env GDK_SCALE=1` — global `GDK_SCALE=2` breaks GTK layout
+- Use `-x` flag (`--and-exit`) so window closes after drop
+- Full command in keymap: `shell -- env GDK_SCALE=1 ripdrag -x %s`
+- Supplementary PUA-A icons (U+F0000+) may not render in GTK — use BMP PUA icons only
+
+### Atuin (Shell History)
+
+- Config: `atuin/config.toml` → `~/.config/atuin/config.toml`
+- Already initialized in `.zshrc`: `eval "$(atuin init zsh)"`
+- `Ctrl+R` opens Atuin fuzzy search; `Enter` runs, `Tab` edits, `Esc` cancels
 
 ### Neovim Configuration
 
@@ -236,7 +271,9 @@ Single-file config: `nvim/init.lua`
 Features Oh-My-Zsh with plugins:
 - zsh-autosuggestions, zsh-syntax-highlighting, fzf-tab
 - Starship prompt
-- Tmux auto-starts "battlestation" session on terminal launch
+- Atuin for shell history (`Ctrl+R`)
+- fzf with Tokyo Night colors (sourced from `~/.config/themes/tokyo-night.conf`)
+- Tmux auto-starts "command-center" session on terminal launch
 - History config: 100k entries, shared across sessions
 
 ### Auto-start Applications (exec-once)
