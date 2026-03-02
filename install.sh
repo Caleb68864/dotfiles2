@@ -177,7 +177,12 @@ PACKAGES=(
 for package in "${PACKAGES[@]}"; do
     if [ -d "$package" ]; then
         status "Stowing $package..."
-        stow -Rv -t "$HOME" "$package"
+        if [ "$package" = "hypr" ]; then
+            mkdir -p "$HOME/.config/hypr"
+            stow -Rv -t "$HOME/.config/hypr" "$package"
+        else
+            stow -Rv -t "$HOME" "$package"
+        fi
         success "$package stowed"
     else
         warning "$package directory not found, skipping"
