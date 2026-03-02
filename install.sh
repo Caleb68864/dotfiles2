@@ -187,6 +187,7 @@ declare -A STOW_TARGETS=(
     ["swaync"]="$HOME/.config/swaync"
     ["yazi"]="$HOME/.config/yazi"
     ["atuin"]="$HOME/.config/atuin"
+    ["themes"]="$HOME/.config/themes"
     ["fonts"]="$HOME/.local/share/fonts"
 )
 

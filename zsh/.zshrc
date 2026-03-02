@@ -86,20 +86,23 @@ export PYTHONUNBUFFERED=1
 # .NET
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 
+# Load Tokyo Night color palette
+[ -f ~/.config/themes/tokyo-night.conf ] && source ~/.config/themes/tokyo-night.conf
+
 # fzf configuration
 export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --no-ignore-vsc 2>/dev/null'
-export FZF_DEFAULT_OPTS='
+export FZF_DEFAULT_OPTS="
   --height=40%
   --layout=reverse
   --border
   --margin=1
   --padding=1
-  --color=fg:#c0caf5,bg:#1a1b26,hl:#e0af68
-  --color=fg+:#c0caf5,bg+:#24283b,hl+:#7aa2f7
-  --color=info:#565f89,prompt:#7aa2f7,pointer:#bb9af7
-  --color=marker:#9ece6a,spinner:#7dcfff,header:#9aa5ce
-  --color=border:#414868,gutter:#1a1b26
-'
+  --color=fg:${THEME_FG0},bg:${THEME_BG0},hl:${THEME_YELLOW}
+  --color=fg+:${THEME_FG0},bg+:${THEME_BG2},hl+:${THEME_BLUE}
+  --color=info:${THEME_FG4},prompt:${THEME_BLUE},pointer:${THEME_PURPLE}
+  --color=marker:${THEME_GREEN},spinner:${THEME_CYAN},header:${THEME_FG2}
+  --color=border:${THEME_BG3},gutter:${THEME_BG0}
+"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_CTRL_T_OPTS='--preview "bat --color=always --style=numbers --line-range=:500 {}"'
 export FZF_ALT_C_OPTS='--preview "eza --tree --level=1 --color=always --icons {}"'
