@@ -22,7 +22,7 @@ Add screenshot, color picker, clipboard history, notifications, and screen recor
 ### Existing tools (already installed)
 - `grim` + `slurp` — base screenshot primitives (used by grimblast)
 - `cliphist` — clipboard history daemon (already running via exec-once)
-- `wofi` — launcher used for clipboard history picker
+- `hyprlauncher` — launcher used for clipboard history picker
 - `swaync` — notification daemon (already running)
 - `obs-studio` — full-featured recorder (stays for streaming/complex work)
 
@@ -85,7 +85,7 @@ All existing workspace binds are unchanged:
 | `Super + Shift + Print` | Full screen → save to file |
 | `Super + C` | Color picker → clipboard |
 | `Super + N` | Toggle swaync notification panel |
-| `Super + Shift + V` | Clipboard history picker (cliphist + wofi) |
+| `Super + Shift + V` | Clipboard history picker (cliphist + hyprlauncher) |
 | `Super + R` | Toggle screen recording (wf-recorder script) |
 
 ### Removed
@@ -98,8 +98,8 @@ All existing workspace binds are unchanged:
 
 ## Files to Change
 
-1. `hypr/.config/hypr/hyprland.conf` — add new binds, replace kill bind
-2. `hypr/.config/hypr/scripts/toggle-record.sh` — new recording toggle script
+1. `hypr/hyprland.conf` — add new binds, replace kill bind
+2. `hypr/scripts/toggle-record.sh` — new recording toggle script
 3. `packages.txt` — add grimblast, satty, hyprpicker, wf-recorder
 
 ---

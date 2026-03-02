@@ -1,23 +1,24 @@
 # Caleb's Dotfiles
 
-A comprehensive dotfiles configuration for **EndeavourOS/Arch Linux** featuring **Hyprland**, **Neovim**, **Zsh** with **Starship** prompt, and a complete development environment for **Python** and **C#**.
+A dotfiles configuration for **EndeavourOS/Arch Linux** featuring **Hyprland**, **Neovim**, **Zsh** with **Starship** prompt, and a complete development environment for **Python** and **C#**.
 
 ## Features
 
 ### Desktop Environment
-- **Hyprland** - Modern Wayland compositor with beautiful animations
-- **Waybar** - Highly customizable status bar with system metrics
-- **Wofi** - Fast and customizable application launcher
-- **Hyprpaper** - Wallpaper manager for Hyprland
-- **Hyprlock** - Screen locker for Hyprland
-- **Hypridle** - Idle management daemon (dims at 5min, locks at 10min)
+- **Hyprland** - Wayland compositor with smooth animations and tiling
+- **Waybar** - Status bar with system metrics, workspaces, and tray
+- **hyprlauncher** - Application launcher
+- **Hyprpaper** - Wallpaper manager with random-on-boot support
+- **Hyprlock** - Screen locker
+- **Hypridle** - Idle management (dims at 5min, locks at 10min)
 - **SwayNC** - Notification daemon with notification center
+- **Kitty** - GPU-accelerated terminal emulator
 
 ### Development
 - **Neovim** - Full IDE setup with LSP, DAP, and AI assistants
   - LSP servers: Pyright (Python), OmniSharp (C#), Lua, TypeScript
   - Debuggers: debugpy (Python), netcoredbg (C#)
-  - AI: CodeCompanion (primary), Claude Code & Avante (optional)
+  - AI: CodeCompanion (primary, requires ANTHROPIC_API_KEY)
   - Treesitter, Completion, File explorer, Fuzzy finder
 - **Python** - Full development stack
 - **C# / .NET** - Complete toolchain with debugging support
@@ -25,8 +26,7 @@ A comprehensive dotfiles configuration for **EndeavourOS/Arch Linux** featuring 
 ### Shell & Terminal
 - **Zsh** - Powerful shell with Oh-My-Zsh
 - **Tmux** - Terminal multiplexer with auto-attach to "battlestation" session
-- **Starship** - Fast, minimal prompt (default)
-- **Kitty** - GPU-accelerated terminal emulator
+- **Starship** - Fast, minimal prompt
 - **fzf** - Fuzzy finder with custom keybindings
 - **bat** - Cat clone with syntax highlighting
 - **eza** - Modern ls replacement
@@ -34,9 +34,9 @@ A comprehensive dotfiles configuration for **EndeavourOS/Arch Linux** featuring 
 ### Tools & Utilities
 - **Git** - Version control with custom configuration
 - **ripgrep** - Fast search tool
-- **htop** - System monitor
-- **hyprshot** - Screenshot utility for Hyprland
-- **Gruvbox** - Color scheme throughout
+- **hyprshot** - Screenshot utility
+- **hyprpicker** - Color picker
+- **Gruvbox Dark Hard** - Color scheme throughout
 
 ## Quick Start
 
@@ -44,10 +44,10 @@ A comprehensive dotfiles configuration for **EndeavourOS/Arch Linux** featuring 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/dotfiles.git ~/.files
+git clone git@github.com:Caleb68864/dotfiles2.git ~/dotfiles
 
 # Navigate to the directory
-cd ~/.files
+cd ~/dotfiles
 
 # Run the installation script
 bash install.sh
@@ -58,9 +58,6 @@ The installation script will:
 2. Install all packages from `packages.txt`
 3. Install Oh-My-Zsh and plugins (zsh-autosuggestions, zsh-syntax-highlighting, fzf-tab)
 4. **Backup existing configurations** to `~/dotfiles-backup-[timestamp]/`
-   - All existing dotfiles and config directories
-   - Preserves directory structure for easy restoration
-   - Only backs up non-symlink files (skips if already stowed)
 5. Deploy dotfiles using GNU Stow
 6. Install lazy.nvim for Neovim
 7. Refresh font cache
@@ -88,109 +85,138 @@ The installation script will:
    git config --global user.email "your.email@example.com"
    ```
 
-4. **Set your wallpaper**:
-   - Place your wallpaper at `~/Pictures/wallpaper.jpg`
-   - Or edit `~/.config/hypr/hyprpaper.conf` to point to your image
+4. **Add wallpapers** (optional):
+   - Drop `.jpg`, `.png`, or `.webp` images into `~/Pictures/Wallpapers/`
+   - A random one is set on each login automatically
+   - If the folder is empty, the EndeavourOS default wallpaper is used
 
 5. **Configure monitors** (if needed):
-   - Edit `~/.config/hypr/hyprland.conf`
+   - Edit `~/dotfiles/hypr/hyprland.conf`
    - Update the monitor configuration section
 
 ## GNU Stow Usage
 
-This repository uses **GNU Stow** for managing symlinks. Each subdirectory is a "package" that can be independently linked or unlinked.
+This repository uses **GNU Stow** for managing symlinks. Each subdirectory is a "package" stowed to a specific target directory. Packages with config files going to `~/.config/<app>/` are stowed directly to that target — no hidden directories in the dotfiles repo.
 
 ### Deploy All Packages
 
 ```bash
-cd ~/.files
-stow -vRt "$HOME" zsh tmux nvim hypr waybar wofi hyprpaper hyprlock hypridle swaync git fonts
+cd ~/dotfiles
+bash install.sh
 ```
 
 ### Deploy a Single Package
 
 ```bash
-stow -vRt "$HOME" nvim
+cd ~/dotfiles
+
+# Packages that stow to ~/.config/<app>
+stow -Rv -t "$HOME/.config/hypr"    hypr
+stow -Rv -t "$HOME/.config/waybar"  waybar
+stow -Rv -t "$HOME/.config/nvim"    nvim
+stow -Rv -t "$HOME/.config/kitty"   kitty
+stow -Rv -t "$HOME/.config/swaync"  swaync
+stow -Rv -t "$HOME/.local/share/fonts" fonts
+
+# Packages that stow to $HOME
+stow -Rv -t "$HOME" zsh tmux git scripts bin themes
 ```
 
 ### Remove a Package
 
 ```bash
-stow -DvRt "$HOME" nvim
+stow -Dv -t "$HOME/.config/hypr" hypr
 ```
 
 ### Dry Run (Preview Changes)
 
 ```bash
-stow -nvt "$HOME" nvim
+stow -nv -t "$HOME/.config/nvim" nvim
 ```
 
 ### Available Packages
 
-- `zsh` - Zsh configuration and Starship config
-- `tmux` - Tmux terminal multiplexer configuration
-- `nvim` - Neovim configuration
-- `hypr` - Hyprland window manager config
-- `waybar` - Status bar configuration
-- `wofi` - Application launcher configuration
-- `hyprpaper` - Wallpaper manager configuration
-- `hyprlock` - Screen locker configuration
-- `hypridle` - Idle management daemon configuration
-- `swaync` - Notification daemon with control center
-- `git` - Git configuration
-- `fonts` - Custom fonts
+| Package | Stow Target | Contents |
+|---------|-------------|----------|
+| `hypr` | `~/.config/hypr` | hyprland.conf, hyprpaper.conf, hypridle.conf, hyprlock.conf, scripts/ |
+| `waybar` | `~/.config/waybar` | config.jsonc, style.css, scripts/ |
+| `nvim` | `~/.config/nvim` | init.lua, lazy-lock.json |
+| `kitty` | `~/.config/kitty` | kitty.conf |
+| `swaync` | `~/.config/swaync` | config.json, style.css |
+| `fonts` | `~/.local/share/fonts` | JetBrainsMono Nerd Font variants |
+| `zsh` | `$HOME` | .zshrc, .zsh/, .config/starship.toml |
+| `tmux` | `$HOME` | .tmux.conf |
+| `git` | `$HOME` | .gitconfig |
+| `scripts` | `$HOME` | setup-github-ssh.sh |
+| `bin` | `$HOME` | get-fonts.sh, switch-theme.sh, deploy-all, undeploy |
+| `themes` | `$HOME` | gruvbox.conf, tokyo-night.conf |
 
 ## Key Bindings
 
 ### Hyprland
 
+#### Apps & System
+
 | Key Combo | Action |
 |-----------|--------|
 | `Super + Return` | Open terminal (Kitty) |
-| `Super + Space` | Open application launcher (Wofi) |
+| `Super + Space` | Open application launcher (hyprlauncher) |
 | `Super + W` | Open web browser (Vivaldi) |
 | `Super + E` | Open file manager (Dolphin) |
-| `Super + N` | Toggle notification center (SwayNC) |
-| `Super + Shift + Q` | Close active window |
+| `Super + L` | Lock screen (Hyprlock) |
 | `Super + M` | Exit Hyprland |
+
+#### Windows
+
+| Key Combo | Action |
+|-----------|--------|
+| `Super + Q` | Close active window |
 | `Super + F` | Toggle fullscreen |
 | `Super + V` | Toggle floating |
-| `Super + L` | Lock screen (Hyprlock) |
-| `Super + 1-0` | Switch to workspace 1-10 |
-| `Super + Shift + 1-0` | Move window to workspace 1-10 |
+| `Super + P` | Pseudo tile (dwindle) |
+| `Super + J` | Toggle split (dwindle) |
 | `Super + Arrow Keys` | Move focus |
-| `Super + Shift + Arrows` | Move window |
+| `Super + Shift + Arrows` | Move window in direction |
 | `Super + Ctrl + Arrows` | Resize window |
+
+#### Utilities
+
+| Key Combo | Action |
+|-----------|--------|
+| `Super + N` | Toggle notification center (SwayNC) |
+| `Super + C` | Color picker → clipboard |
+| `Super + R` | Toggle screen recording |
+| `Super + Shift + V` | Clipboard history picker |
+| `Super + Shift + W` | Reload Waybar |
+| `Print` | Screenshot region → annotate (satty) |
+| `Super + Print` | Screenshot full screen → clipboard |
+| `Super + Shift + Print` | Screenshot full screen → save to file |
+
+#### Workspaces
+
+| Key Combo | Action |
+|-----------|--------|
+| `Super + 1-0` | Switch to workspace 1-10 |
+| `Super + Shift + 1-0` | Move window to workspace silently |
+| `Super + Ctrl + 1-0` | Move window to workspace + follow |
 | `Super + S` | Toggle scratchpad |
-| `Print` | Screenshot region to clipboard |
-| `Shift + Print` | Screenshot window to clipboard |
-| `Super + Print` | Screenshot region to file |
-| `Super + Shift + Print` | Screenshot window to file |
-| `Ctrl + Print` | Screenshot monitor to clipboard |
+| `Super + Shift + S` | Move window to scratchpad |
 
 ### Workspaces
 
-Workspaces are organized by purpose with FontAwesome icons in Waybar:
+Workspaces are organized by purpose with icons in Waybar:
 
-| Workspace | Icon | Purpose | Applications |
-|-----------|------|---------|--------------|
-| 1 |  | Web Browsers | Firefox, Vivaldi, Chromium |
-| 2 |  | Terminals | Kitty, Alacritty |
-| 3 |  | File Managers | Dolphin, Thunar |
-| 4 |  | Communication | Discord, Vesktop |
-| 5 |  | Entertainment | Spotify, Steam |
-| 6 |  | Development | VS Code |
+| Workspace | Purpose | Auto-assigned Applications |
+|-----------|---------|---------------------------|
+| 1 | Web Browsers | Firefox, Vivaldi, Chromium |
+| 2 | Terminals | Kitty |
+| 3 | File Managers | Dolphin, Thunar |
+| 4 | Communication | Discord, Vesktop, Element |
+| 5 | Entertainment | Spotify, Steam |
+| 6 | Development | VS Code |
+| 8 | Games | Heroic Games Launcher |
 
-**Features:**
-- Only shows workspaces with open windows
-- Active workspace has a **●** dot indicator
-- Click workspace icon in Waybar to switch
-- Applications auto-assign to their designated workspace
-
-**To always show certain workspaces** (even when empty), edit `~/.config/waybar/config.jsonc` and uncomment:
-```jsonc
-"persistent-workspaces": { "*": [1, 2, 3, 4, 5, 6] },
-```
+Only shows workspaces with open windows. Click workspace icon in Waybar to switch.
 
 ### Zsh
 
@@ -248,7 +274,7 @@ The prefix key is `Ctrl + a` (instead of default `Ctrl + b`)
 | `Ctrl + a` then `r` | Reload tmux config |
 | `Ctrl + a` then `?` | Show all keybindings |
 
-**Disable Auto-Start:** To disable automatic tmux start, comment out the "Tmux Auto-Start" section in `~/.zshrc`
+**Disable Auto-Start:** Comment out the "Tmux Auto-Start" section in `~/dotfiles/zsh/.zshrc`
 
 ### Neovim
 
@@ -311,87 +337,93 @@ Configured LSP servers (auto-installed via Mason):
 - **bashls** - Bash
 - **jsonls** - JSON
 
-#### Debuggers
+#### AI Assistant
 
-- **Python**: debugpy (auto-configured via nvim-dap-python)
-- **C#**: netcoredbg (configured for .NET debugging)
+**CodeCompanion** requires an Anthropic API key:
+```bash
+export ANTHROPIC_API_KEY="your-key-here"
+```
+Add this to `~/dotfiles/zsh/.zshrc` or `~/.zshenv`.
 
-#### AI Assistants
+### Wallpapers
 
-**Primary: CodeCompanion**
-- Set your API key:
-  ```bash
-  export ANTHROPIC_API_KEY="your-key-here"
-  ```
+Drop images into `~/Pictures/Wallpapers/`. A random one is selected each login via `~/.config/hypr/scripts/random-wallpaper.sh`. Supported formats: jpg, jpeg, png, webp.
 
-**Optional: Claude Code & Avante**
-- Disabled by default in the config
-- Uncomment their plugin blocks in `nvim/.config/nvim/init.lua` to enable
-
-### Zsh & Starship
-
-#### Switching to Powerlevel10k
-
-If you prefer Powerlevel10k over Starship:
-
-1. Edit `~/.zshrc`:
-   ```bash
-   # Comment out Starship
-   # eval "$(starship init zsh)"
-
-   # Uncomment Powerlevel10k
-   ZSH_THEME="powerlevel10k/powerlevel10k"
-   [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-   ```
-
-2. Install Powerlevel10k (uncomment in `install.sh` and re-run)
-
-#### Customizing Starship
-
-Edit `~/.config/starship.toml` to customize your prompt. See [Starship documentation](https://starship.rs/config/) for all options.
+The EndeavourOS default wallpaper is used as a fallback when the folder is empty.
 
 ### Hyprland
 
 #### Animations
 
-The configuration includes smooth animations based on custom bezier curves:
+Smooth animations based on custom bezier curves:
 - `easeOutQuint` - Smooth ease-out
 - `easeInOutCubic` - Balanced ease in/out
 - `almostLinear` - Nearly linear for workspaces
 - `quick` - Fast animations for fades
 
-Edit these in `~/.config/hypr/hyprland.conf` under the `animations` section.
+Edit in `~/dotfiles/hypr/hyprland.conf` under the `animations` section.
 
-#### Blur & Transparency
+#### Screen Recording
 
-- Blur is enabled with `ignore_opacity = true` for better performance
-- Opacity set to 1.0 for focused/unfocused windows
-- Waybar has blur via layer rules
+`Super + R` toggles recording via `~/.config/hypr/scripts/toggle-record.sh`.
+Recordings are saved to `~/Videos/recordings/YYYY-MM-DD_HH-MM-SS.mp4`.
 
-### Fonts
+### Zsh & Starship
 
-#### Installing Fonts
+Edit `~/dotfiles/zsh/.config/starship.toml` to customize the prompt. See [Starship docs](https://starship.rs/config/).
 
-Fonts are managed via the `fonts` Stow package.
+## Directory Structure
 
-**Option 1: Use the helper script**
-```bash
-bash ~/dotfiles/bin/get-fonts.sh
 ```
-
-**Option 2: Manual installation**
-1. Download Nerd Fonts from [nerdfonts.com](https://www.nerdfonts.com/)
-2. Extract to `~/.files/fonts/.local/share/fonts/`
-3. Deploy:
-   ```bash
-   stow -vRt "$HOME" fonts
-   fc-cache -rv
-   ```
-
-**Recommended fonts:**
-- JetBrainsMono Nerd Font (default for terminal/editor)
-- FiraCode Nerd Font
-- Hack Nerd Font
+~/dotfiles/
+├── install.sh                  # Bootstrap installation script
+├── packages.txt                # AUR packages to install
+├── README.md
+├── bin/                        # Helper scripts → $HOME
+│   ├── get-fonts.sh
+│   ├── switch-theme.sh
+│   ├── deploy-all
+│   └── undeploy
+├── fonts/                      # Fonts → ~/.local/share/fonts
+│   └── JetBrainsMonoNerdFont-*.ttf
+├── git/                        # Git config → $HOME
+│   └── .gitconfig
+├── hypr/                       # All Hyprland configs → ~/.config/hypr
+│   ├── hyprland.conf
+│   ├── hyprpaper.conf
+│   ├── hypridle.conf
+│   ├── hyprlock.conf
+│   └── scripts/
+│       ├── random-wallpaper.sh
+│       └── toggle-record.sh    # (planned)
+├── kitty/                      # Kitty terminal → ~/.config/kitty
+│   └── kitty.conf
+├── nvim/                       # Neovim → ~/.config/nvim
+│   ├── init.lua
+│   └── lazy-lock.json
+├── scripts/                    # Utility scripts → $HOME
+│   └── setup-github-ssh.sh
+├── swaync/                     # Notification daemon → ~/.config/swaync
+│   ├── config.json
+│   └── style.css
+├── themes/                     # Theme files → $HOME
+│   ├── gruvbox.conf
+│   └── tokyo-night.conf
+├── tmux/                       # Tmux → $HOME
+│   └── .tmux.conf
+├── waybar/                     # Waybar → ~/.config/waybar
+│   ├── config.jsonc
+│   ├── style.css
+│   └── scripts/
+└── zsh/                        # Zsh → $HOME
+    ├── .zshrc
+    ├── .zsh/
+    │   ├── aliases.zsh
+    │   ├── functions.zsh
+    │   └── keybindings.zsh
+    └── .config/
+        └── starship.toml
+```
 
 ## Troubleshooting
 
@@ -399,32 +431,17 @@ bash ~/dotfiles/bin/get-fonts.sh
 
 The install script automatically backs up conflicting files to `~/dotfiles-backup-[timestamp]/`.
 
-**Manual backup (if needed):**
+**Manual fix:**
 ```bash
-# Backup a specific config
-mkdir ~/manual-backup
-mv ~/.config/hypr ~/manual-backup/
-
-# Then stow
-stow -vRt "$HOME" hypr
+# Remove the conflicting file/dir, then stow
+rm ~/.config/hypr/hyprland.conf
+stow -Rv -t "$HOME/.config/hypr" hypr
 ```
 
 **Restore from backup:**
 ```bash
-# Find your backup
 ls ~/dotfiles-backup-*
-
-# Restore specific files
-cp -r ~/dotfiles-backup-20251021_210530/.config/hypr ~/.config/
-
-# Or unstow and restore everything
-stow -Dt "$HOME" hypr
-mv ~/dotfiles-backup-20251021_210530/.config/hypr ~/.config/
-```
-
-**Dry-run (preview changes):**
-```bash
-stow -nvt "$HOME" zsh
+cp -r ~/dotfiles-backup-20260301_120000/.config/hypr ~/.config/
 ```
 
 ### Neovim Issues
@@ -441,24 +458,11 @@ stow -nvt "$HOME" zsh
 :Lazy clean
 ```
 
-**Python/C# LSP issues:**
-```bash
-# Verify installations
-which pyright
-which omnisharp
-which netcoredbg
-```
-
 ### Hyprland
-
-**Blur performance issues:**
-- Edit `~/.config/hypr/hyprland.conf`
-- Reduce `blur.passes` from 1 to 0 or disable blur entirely
 
 **Waybar not showing:**
 ```bash
-killall waybar
-waybar &
+killall waybar && waybar &
 ```
 
 **Check Hyprland logs:**
@@ -466,19 +470,22 @@ waybar &
 cat /tmp/hypr/$(ls -t /tmp/hypr | head -n 1)/hyprland.log
 ```
 
-### WSL-Specific
+**Reload config:**
+```bash
+hyprctl reload
+```
 
-The `.zshrc` includes WSL detection and clipboard integration:
+### Keyboard State Module (Waybar)
 
-- Uses `clip.exe` for clipboard if available
-- Sets DISPLAY variable
-- Provides `explorer.exe` and `code.exe` aliases
-
-**Hyprland won't work on WSL** - This setup is designed for native Linux with Wayland support.
+The `keyboard-state` module requires the user to be in the `input` group:
+```bash
+sudo usermod -aG input $USER
+# Log out and back in
+```
 
 ## Updating
 
-### Update Packages
+### Update System Packages
 
 ```bash
 yay -Syu
@@ -499,95 +506,11 @@ omz update
 ### Pull Dotfiles Updates
 
 ```bash
-cd ~/.files
+cd ~/dotfiles
 git pull
-# Re-stow updated packages
-stow -Rv -t "$HOME" <package>
+# Re-stow any updated packages (example for hypr)
+stow -Rv -t "$HOME/.config/hypr" hypr
 ```
-
-## Maintenance
-
-### Plugin Maintenance
-
-**Oh-My-Zsh plugins** are located in:
-- `~/.oh-my-zsh/custom/plugins/`
-
-**Neovim plugins** are managed by lazy.nvim:
-- Check status: `:Lazy`
-- Update all: `:Lazy sync`
-- Clean unused: `:Lazy clean`
-
-### Backup
-
-To backup your current configuration:
-
-```bash
-cd ~/.files
-git add .
-git commit -m "Update configurations"
-git push
-```
-
-## Directory Structure
-
-```
-~/.files/
-├── packages.txt              # List of packages to install
-├── install.sh                # Bootstrap installation script
-├── README.md                 # This file
-├── bin/                      # Helper scripts
-│   └── get-fonts.sh          # Font installer
-├── zsh/                      # Zsh package
-│   ├── .zshrc
-│   └── .config/
-│       └── starship.toml
-├── nvim/                     # Neovim package
-│   └── .config/
-│       └── nvim/
-│           └── init.lua
-├── hypr/                     # Hyprland package
-│   └── .config/
-│       └── hypr/
-│           └── hyprland.conf
-├── waybar/                   # Waybar package
-│   └── .config/
-│       └── waybar/
-│           ├── config.jsonc
-│           └── style.css
-├── wofi/                     # Wofi package
-│   └── .config/
-│       └── wofi/
-│           ├── config
-│           └── style.css
-├── hyprpaper/                # Hyprpaper package
-│   └── .config/
-│       └── hypr/
-│           └── hyprpaper.conf
-├── hyprlock/                 # Hyprlock package
-│   └── .config/
-│       └── hypr/
-│           └── hyprlock.conf
-├── dunst/                    # Dunst package
-│   └── .config/
-│       └── dunst/
-│           └── dunstrc
-├── git/                      # Git package
-│   └── .gitconfig
-└── fonts/                    # Fonts package
-    └── .local/
-        └── share/
-            └── fonts/
-                └── README.md
-```
-
-## Customization
-
-Feel free to customize any configuration:
-
-1. **Colors**: Most configs use Gruvbox colors - search for color definitions
-2. **Keybindings**: Edit the respective config files
-3. **Applications**: Update the `$terminal`, `$fileManager`, `$webbrowser` variables
-4. **Plugins**: Add/remove plugins in Neovim's `init.lua` or Zsh's `.zshrc`
 
 ## Resources
 

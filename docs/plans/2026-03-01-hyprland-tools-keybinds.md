@@ -4,9 +4,9 @@
 
 **Goal:** Install screenshot/annotation/color-picker/recorder tools and refactor Hyprland keybinds into a consistent mnemonic convention.
 
-**Architecture:** All changes land in `hypr/.config/hypr/hyprland.conf` (symlinked via Stow), a new toggle-record script, and `packages.txt`. No new stow packages needed — the `hypr` package already exists.
+**Architecture:** All changes land in `hypr/hyprland.conf` (symlinked via Stow), a new toggle-record script, and `packages.txt`. No new stow packages needed — the `hypr` package already exists.
 
-**Tech Stack:** Hyprland, grimblast, satty, hyprpicker, wf-recorder, cliphist, wofi, swaync, yay (AUR helper)
+**Tech Stack:** Hyprland, grimblast, satty, hyprpicker, wf-recorder, cliphist, hyprlauncher, swaync, yay (AUR helper)
 
 **Design doc:** `docs/plans/2026-03-01-hyprland-tools-keybinds-design.md`
 
@@ -58,17 +58,17 @@ git commit -m "feat: add grimblast, satty, hyprpicker, wf-recorder packages"
 ### Task 2: Create screen recording toggle script
 
 **Files:**
-- Create: `hypr/.config/hypr/scripts/toggle-record.sh`
+- Create: `hypr/scripts/toggle-record.sh`
 
 **Step 1: Create scripts directory**
 
 ```bash
-mkdir -p ~/dotfiles/hypr/.config/hypr/scripts
+mkdir -p ~/dotfiles/hypr/scripts
 ```
 
 **Step 2: Write the toggle script**
 
-Create `hypr/.config/hypr/scripts/toggle-record.sh`:
+Create `hypr/scripts/toggle-record.sh`:
 
 ```bash
 #!/bin/bash
@@ -97,7 +97,7 @@ fi
 **Step 3: Make it executable**
 
 ```bash
-chmod +x ~/dotfiles/hypr/.config/hypr/scripts/toggle-record.sh
+chmod +x ~/dotfiles/hypr/scripts/toggle-record.sh
 ```
 
 **Step 4: Verify the symlink resolves correctly**
@@ -111,7 +111,7 @@ Expected: symlink pointing into dotfiles.
 
 ```bash
 cd ~/dotfiles
-git add hypr/.config/hypr/scripts/toggle-record.sh
+git add hypr/scripts/toggle-record.sh
 git commit -m "feat: add wf-recorder toggle script"
 ```
 
@@ -120,7 +120,7 @@ git commit -m "feat: add wf-recorder toggle script"
 ### Task 3: Refactor existing keybinds
 
 **Files:**
-- Modify: `hypr/.config/hypr/hyprland.conf` (lines ~256–276, the keybindings section)
+- Modify: `hypr/hyprland.conf` (lines ~256–276, the keybindings section)
 
 The goal is:
 - Replace `Super+Shift+C` (killactive) with `Super+Q`
@@ -173,7 +173,7 @@ Expected: `ok` — if you see errors, recheck the edited lines for typos.
 
 ```bash
 cd ~/dotfiles
-git add hypr/.config/hypr/hyprland.conf
+git add hypr/hyprland.conf
 git commit -m "refactor: reorganize keybinds - Super+Q kill, Super+F fullscreen, Shift+arrows move window"
 ```
 
@@ -182,7 +182,7 @@ git commit -m "refactor: reorganize keybinds - Super+Q kill, Super+F fullscreen,
 ### Task 4: Add screenshot keybinds
 
 **Files:**
-- Modify: `hypr/.config/hypr/hyprland.conf` — add to the keybindings section
+- Modify: `hypr/hyprland.conf` — add to the keybindings section
 
 **Step 1: Add screenshot binds**
 
@@ -214,7 +214,7 @@ Expected: `ok`
 
 ```bash
 cd ~/dotfiles
-git add hypr/.config/hypr/hyprland.conf
+git add hypr/hyprland.conf
 git commit -m "feat: add screenshot keybinds (Print, Super+Print, Super+Shift+Print)"
 ```
 
@@ -223,7 +223,7 @@ git commit -m "feat: add screenshot keybinds (Print, Super+Print, Super+Shift+Pr
 ### Task 5: Add utility keybinds
 
 **Files:**
-- Modify: `hypr/.config/hypr/hyprland.conf` — add after screenshot section
+- Modify: `hypr/hyprland.conf` — add after screenshot section
 
 **Step 1: Add utility binds**
 
@@ -234,7 +234,7 @@ bind = $mainMod, C, exec, hyprpicker -a
 # Super+N: toggle swaync notification panel
 bind = $mainMod, N, exec, swaync-client -t
 # Super+Shift+V: clipboard history picker
-bind = $mainMod SHIFT, V, exec, cliphist list | wofi --dmenu | cliphist decode | wl-copy
+bind = $mainMod SHIFT, V, exec, cliphist list | hyprlauncher --dmenu | cliphist decode | wl-copy
 # Super+R: toggle screen recording
 bind = $mainMod, R, exec, ~/.config/hypr/scripts/toggle-record.sh
 ```
@@ -249,14 +249,14 @@ Expected: `ok`
 **Step 3: Test each utility bind**
 - `Super+C` — cursor should turn into a picker; click a color and the hex value should be in clipboard (`wl-paste` to verify)
 - `Super+N` — swaync notification panel should slide open/close
-- `Super+Shift+V` — wofi should appear with clipboard history
+- `Super+Shift+V` — hyprlauncher should appear with clipboard history
 - `Super+R` — a notification should appear saying "Recording started..."; press again to stop
 
 **Step 4: Commit**
 
 ```bash
 cd ~/dotfiles
-git add hypr/.config/hypr/hyprland.conf
+git add hypr/hyprland.conf
 git commit -m "feat: add utility keybinds (color picker, notifications, clipboard history, screen recording)"
 ```
 
