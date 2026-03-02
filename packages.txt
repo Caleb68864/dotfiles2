@@ -51,11 +51,11 @@ brightnessctl
 playerctl
 cliphist
 vivaldi
-dolphin
+thunar
+yazi
 pavucontrol
 polkit-gnome
 atuin
-yazi
 ueberzugpp
 chafa
 ffmpegthumbnailer
