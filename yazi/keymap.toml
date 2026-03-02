@@ -3,5 +3,5 @@
 
 [[mgr.prepend_keymap]]
 on   = "<A-d>"
-run  = "shell -- env GDK_SCALE=1 ripdrag -x $@"
+run  = "shell -- env GDK_SCALE=1 ripdrag -x %h"
 desc = "Drag selected files with ripdrag"
