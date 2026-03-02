@@ -56,6 +56,11 @@ pavucontrol
 polkit-gnome
 atuin
 yazi
+ueberzugpp
+chafa
+ffmpegthumbnailer
+imagemagick
+ripdrag
 lazygit
 ruff
 swww
