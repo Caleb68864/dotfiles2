@@ -1,20 +1,11 @@
 /* Caleb's Waybar Style */
-/* Managed by GNU Stow from ~/.files/waybar/.config/waybar/style.css */
+/* Managed by GNU Stow from ~/dotfiles/waybar/style.css */
 /* Theme: Tokyo Night */
 
 /* ========================================================================== */
-/* Color Definitions (Tokyo Night) */
+/* Tokyo Night Color Palette                                                   */
 /* ========================================================================== */
 
-* {
-    border: none;
-    border-radius: 0;
-    font-family: "JetBrainsMono Nerd Font", "Font Awesome 6 Free", sans-serif;
-    font-size: 13px;
-    min-height: 0;
-}
-
-/* Theme colors */
 @define-color bg0     #1a1b26;
 @define-color bg1     #1f2335;
 @define-color bg2     #24283b;
@@ -36,14 +27,21 @@
 @define-color orange  #ff9e64;
 
 /* ========================================================================== */
-/* General */
+/* Base                                                                        */
 /* ========================================================================== */
 
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "JetBrainsMono Nerd Font", "Font Awesome 6 Free", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+}
+
 window#waybar {
-    background-color: rgba(26, 27, 38, 0.95);
+    background-color: @bg0;
     color: @fg0;
-    transition-property: background-color;
-    transition-duration: 0.5s;
+    border-bottom: 2px solid @bg3;
 }
 
 window#waybar.hidden {
@@ -51,36 +49,35 @@ window#waybar.hidden {
 }
 
 /* ========================================================================== */
-/* Workspaces */
+/* Workspaces                                                                  */
 /* ========================================================================== */
 
 #workspaces {
     background-color: transparent;
-    margin: 5px 1px 5px 10px;
-    font-family: "JetBrainsMono Nerd Font", sans-serif;
+    margin: 4px 2px 4px 8px;
     font-size: 16px;
 }
 
 #workspaces button {
-    padding: 0 4px 0 2px;
-    background-color: @bg2;
-    color: @fg2;
-    border-radius: 8px;
-    margin: 0 1px;
-    transition: all 0.3s ease-in-out;
-    min-width: 20px;
+    padding: 0 6px;
+    background-color: transparent;
+    color: @fg4;
+    border-radius: 6px;
+    margin: 2px 1px;
+    transition: all 0.2s ease;
+    min-width: 24px;
 }
 
 #workspaces button:hover {
-    background-color: @bg3;
+    background-color: @bg2;
     color: @fg1;
-    box-shadow: inherit;
 }
 
 #workspaces button.active {
     background-color: @blue;
     color: @bg0;
     font-weight: bold;
+    padding: 0 8px;
 }
 
 #workspaces button.urgent {
@@ -89,101 +86,59 @@ window#waybar.hidden {
 }
 
 /* ========================================================================== */
-/* Hyprland Layout Indicator */
+/* Hyprland Layout Indicator                                                   */
 /* ========================================================================== */
 
 #custom-hyprland-layout {
-    background-color: @bg2;
-    color: @purple;
-    border-radius: 8px;
-    padding: 0 12px;
-    margin: 5px 1px;
-    font-weight: bold;
-}
-
-#custom-hyprland-layout.master {
-    color: @cyan;
+    background-color: transparent;
+    color: @fg4;
+    padding: 0 8px;
+    margin: 4px 2px;
+    font-size: 12px;
 }
 
 #custom-hyprland-layout.dwindle {
     color: @purple;
 }
 
+#custom-hyprland-layout.master {
+    color: @cyan;
+}
+
 /* ========================================================================== */
-/* Window Title */
+/* Window Title                                                                */
 /* ========================================================================== */
 
 #window {
     background-color: transparent;
-    color: @fg1;
-    margin: 5px 10px 5px 1px;
-    padding: 0 10px;
-    font-weight: bold;
-}
-
-/* ========================================================================== */
-/* Taskbar */
-/* ========================================================================== */
-
-#taskbar {
-    background-color: transparent;
-    margin: 5px 5px 5px 10px;
-}
-
-#taskbar button {
-    padding: 0 8px;
-    background-color: @bg2;
     color: @fg2;
-    border-radius: 8px;
-    margin: 0 3px;
-    transition: all 0.3s ease-in-out;
-    min-width: 30px;
-}
-
-#taskbar button:hover {
-    background-color: @bg3;
-    color: @fg1;
-    box-shadow: inherit;
-}
-
-#taskbar button.active {
-    background-color: @blue;
-    color: @bg0;
-    font-weight: bold;
-}
-
-#taskbar button.minimized {
-    opacity: 0.6;
-}
-
-#taskbar button.urgent {
-    background-color: @red;
-    color: @bg0;
-    animation: blink 0.5s linear infinite;
+    margin: 4px 8px 4px 2px;
+    padding: 0 8px;
+    font-style: italic;
 }
 
 /* ========================================================================== */
-/* Clock */
+/* Clock                                                                       */
 /* ========================================================================== */
 
 #clock {
-    background-color: @bg2;
+    background-color: @bg1;
     color: @blue;
-    border-radius: 8px;
-    padding: 0 15px;
-    margin: 5px 10px;
+    border-radius: 6px;
+    padding: 0 16px;
+    margin: 4px 8px;
     font-weight: bold;
+    border: 1px solid @bg3;
 }
 
 /* ========================================================================== */
-/* System Tray */
+/* System Tray                                                                 */
 /* ========================================================================== */
 
 #tray {
-    background-color: @bg2;
-    border-radius: 8px;
-    margin: 5px 1px 5px 10px;
-    padding: 0 10px;
+    background-color: transparent;
+    margin: 4px 2px 4px 8px;
+    padding: 0 6px;
 }
 
 #tray > .passive {
@@ -193,10 +148,11 @@ window#waybar.hidden {
 #tray > .needs-attention {
     -gtk-icon-effect: highlight;
     background-color: @red;
+    border-radius: 6px;
 }
 
 /* ========================================================================== */
-/* Modules - Common Styling */
+/* Right Modules — shared base                                                 */
 /* ========================================================================== */
 
 #bluetooth,
@@ -209,15 +165,14 @@ window#waybar.hidden {
 #temperature,
 #battery,
 #battery.bat2 {
-    background-color: @bg2;
+    background-color: transparent;
     color: @fg1;
-    border-radius: 8px;
-    padding: 0 12px;
-    margin: 5px 1px;
+    padding: 0 10px;
+    margin: 4px 1px;
 }
 
 /* ========================================================================== */
-/* Bluetooth */
+/* Bluetooth                                                                   */
 /* ========================================================================== */
 
 #bluetooth {
@@ -234,32 +189,33 @@ window#waybar.hidden {
 }
 
 /* ========================================================================== */
-/* Keyboard State */
+/* Keyboard State                                                              */
 /* ========================================================================== */
 
 #keyboard-state {
-    color: @fg2;
+    color: @fg3;
 }
 
 #keyboard-state label.locked {
     color: @yellow;
+    font-weight: bold;
 }
 
 /* ========================================================================== */
-/* Idle Inhibitor */
+/* Idle Inhibitor                                                              */
 /* ========================================================================== */
 
 #idle_inhibitor {
-    color: @fg2;
+    color: @fg3;
 }
 
 #idle_inhibitor.activated {
-    background-color: @green;
-    color: @bg0;
+    color: @green;
+    font-weight: bold;
 }
 
 /* ========================================================================== */
-/* PulseAudio */
+/* PulseAudio                                                                  */
 /* ========================================================================== */
 
 #pulseaudio {
@@ -267,12 +223,11 @@ window#waybar.hidden {
 }
 
 #pulseaudio.muted {
-    background-color: @bg3;
     color: @fg4;
 }
 
 /* ========================================================================== */
-/* Network */
+/* Network                                                                     */
 /* ========================================================================== */
 
 #network {
@@ -280,12 +235,11 @@ window#waybar.hidden {
 }
 
 #network.disconnected {
-    background-color: @bg3;
     color: @red;
 }
 
 /* ========================================================================== */
-/* CPU */
+/* CPU                                                                         */
 /* ========================================================================== */
 
 #cpu {
@@ -293,7 +247,7 @@ window#waybar.hidden {
 }
 
 /* ========================================================================== */
-/* Memory */
+/* Memory                                                                      */
 /* ========================================================================== */
 
 #memory {
@@ -301,7 +255,7 @@ window#waybar.hidden {
 }
 
 /* ========================================================================== */
-/* Temperature */
+/* Temperature                                                                 */
 /* ========================================================================== */
 
 #temperature {
@@ -309,13 +263,13 @@ window#waybar.hidden {
 }
 
 #temperature.critical {
-    background-color: @red;
-    color: @bg0;
+    color: @red;
+    font-weight: bold;
     animation: blink 0.5s linear infinite;
 }
 
 /* ========================================================================== */
-/* Battery */
+/* Battery                                                                     */
 /* ========================================================================== */
 
 #battery {
@@ -325,18 +279,16 @@ window#waybar.hidden {
 #battery.charging,
 #battery.plugged {
     color: @cyan;
-    background-color: @bg2;
-}
-
-#battery.critical:not(.charging) {
-    background-color: @red;
-    color: @bg0;
-    animation: blink 0.5s linear infinite;
 }
 
 #battery.warning:not(.charging) {
-    background-color: @orange;
-    color: @bg0;
+    color: @orange;
+}
+
+#battery.critical:not(.charging) {
+    color: @red;
+    font-weight: bold;
+    animation: blink 0.5s linear infinite;
 }
 
 #battery.bat2 {
@@ -344,26 +296,25 @@ window#waybar.hidden {
 }
 
 /* ========================================================================== */
-/* Animations */
+/* Animations                                                                  */
 /* ========================================================================== */
 
 @keyframes blink {
-    to {
-        opacity: 0.5;
-    }
+    to { opacity: 0.4; }
 }
 
 /* ========================================================================== */
-/* Tooltip */
+/* Tooltip                                                                     */
 /* ========================================================================== */
 
 tooltip {
     background: @bg1;
-    border: 2px solid @yellow;
-    border-radius: 8px;
+    border: 1px solid @bg3;
+    border-radius: 6px;
     color: @fg1;
 }
 
 tooltip label {
     color: @fg1;
+    padding: 2px 4px;
 }
