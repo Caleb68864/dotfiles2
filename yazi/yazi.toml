@@ -1,0 +1,20 @@
+# Yazi configuration
+# Managed by GNU Stow from ~/dotfiles/yazi/yazi.toml
+
+[manager]
+sort_by = "alphabetical"
+sort_sensitive = false
+sort_reverse = false
+sort_dir_first = true
+show_hidden = false
+
+[preview]
+# Use lanczos3 for best image quality (slower but nicer than default)
+image_filter = "lanczos3"
+image_quality = 80
+# Max preview dimensions
+max_width = 1000
+max_height = 900
+# Image protocol: auto-detects Kitty native protocol when running in Kitty
+# Falls back to ueberzugpp → sixel → chafa in order
+# pdftoppm (poppler) handles PDF previews automatically
