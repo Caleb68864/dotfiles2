@@ -94,10 +94,11 @@ export FZF_DEFAULT_OPTS='
   --border
   --margin=1
   --padding=1
-  --color=fg:#ebdbb2,bg:#282828,hl:#fabd2f
-  --color=fg+:#ebdbb2,bg+:#3c3836,hl+:#fabd2f
-  --color=info:#83a598,prompt:#bdae93,pointer:#fb4934
-  --color=marker:#8ec07c,spinner:#fabd2f,header:#83a598
+  --color=fg:#c0caf5,bg:#1a1b26,hl:#e0af68
+  --color=fg+:#c0caf5,bg+:#24283b,hl+:#7aa2f7
+  --color=info:#565f89,prompt:#7aa2f7,pointer:#bb9af7
+  --color=marker:#9ece6a,spinner:#7dcfff,header:#9aa5ce
+  --color=border:#414868,gutter:#1a1b26
 '
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_CTRL_T_OPTS='--preview "bat --color=always --style=numbers --line-range=:500 {}"'
