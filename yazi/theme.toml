@@ -1,0 +1,135 @@
+# Yazi theme - Tokyo Night
+# Managed by GNU Stow from ~/dotfiles/yazi/theme.toml
+# Colors sourced from kitty.conf Tokyo Night palette
+
+[manager]
+cwd = { fg = "#7aa2f7" }
+
+# Hovered item
+hovered         = { fg = "#1a1b26", bg = "#7aa2f7" }
+preview_hovered = { underline = true }
+
+# Find / search
+find_keyword  = { fg = "#e0af68", bold = true, italic = true, underline = true }
+find_position = { fg = "#ff9e64", bold = true, italic = true }
+
+# Selection markers (left-edge stripe)
+marker_selected = { fg = "#9ece6a", bg = "#9ece6a" }
+marker_copied   = { fg = "#e0af68", bg = "#e0af68" }
+marker_cut      = { fg = "#f7768e", bg = "#f7768e" }
+
+# Tabs
+tab_active   = { fg = "#1a1b26", bg = "#7aa2f7", bold = true }
+tab_inactive = { fg = "#a9b1d6", bg = "#1f2335" }
+tab_width    = 1
+
+# Pane border
+border_symbol = "│"
+border_style  = { fg = "#414868" }
+
+[status]
+mode_normal = { bg = "#7aa2f7", fg = "#1a1b26", bold = true }
+mode_select = { bg = "#9ece6a", fg = "#1a1b26", bold = true }
+mode_unset  = { bg = "#f7768e", fg = "#1a1b26", bold = true }
+
+progress_label  = { bold = true }
+progress_normal = { fg = "#7aa2f7", bg = "#1f2335" }
+progress_error  = { fg = "#f7768e", bg = "#1f2335" }
+
+perm_type  = { fg = "#7aa2f7" }
+perm_read  = { fg = "#e0af68" }
+perm_write = { fg = "#f7768e" }
+perm_exec  = { fg = "#9ece6a" }
+perm_sep   = { fg = "#414868" }
+
+[input]
+border   = { fg = "#7aa2f7" }
+title    = { fg = "#7aa2f7" }
+value    = { fg = "#c0caf5" }
+selected = { reversed = true }
+
+[select]
+border   = { fg = "#7aa2f7" }
+active   = { fg = "#bb9af7" }
+inactive = { fg = "#565f89" }
+
+[which]
+mask            = { bg = "#1f2335" }
+cand            = { fg = "#7dcfff" }
+rest            = { fg = "#565f89" }
+desc            = { fg = "#bb9af7" }
+separator       = "  "
+separator_style = { fg = "#414868" }
+
+[notify]
+title_info  = { fg = "#9ece6a" }
+title_warn  = { fg = "#e0af68" }
+title_error = { fg = "#f7768e" }
+
+icon_info  = ""
+icon_warn  = ""
+icon_error = ""
+
+[help]
+on      = { fg = "#7aa2f7" }
+run     = { fg = "#bb9af7" }
+desc    = { fg = "#a9b1d6" }
+hovered = { bg = "#1f2335", bold = true }
+footer  = { bg = "#1f2335", fg = "#a9b1d6" }
+
+[filetype]
+rules = [
+  # Directories
+  { name = "*/", fg = "#7aa2f7" },
+
+  # Images
+  { mime = "image/*", fg = "#7dcfff" },
+  # Video
+  { mime = "video/*", fg = "#bb9af7" },
+  # Audio
+  { mime = "audio/*", fg = "#e0af68" },
+
+  # Archives
+  { mime = "application/zip",              fg = "#f7768e" },
+  { mime = "application/gzip",             fg = "#f7768e" },
+  { mime = "application/x-tar",            fg = "#f7768e" },
+  { mime = "application/x-bzip2",          fg = "#f7768e" },
+  { mime = "application/x-7z-compressed",  fg = "#f7768e" },
+  { mime = "application/x-rar",            fg = "#f7768e" },
+  { mime = "application/zstd",             fg = "#f7768e" },
+
+  # Documents
+  { mime = "application/pdf",              fg = "#f7768e" },
+  { mime = "application/msword",           fg = "#7aa2f7" },
+  { mime = "application/vnd.*",            fg = "#7aa2f7" },
+
+  # Code / scripts
+  { name = "*.sh",                         fg = "#9ece6a" },
+  { name = "*.bash",                       fg = "#9ece6a" },
+  { name = "*.zsh",                        fg = "#9ece6a" },
+  { name = "*.py",                         fg = "#9ece6a" },
+  { name = "*.lua",                        fg = "#9ece6a" },
+
+  # Config files
+  { name = "*.toml",                       fg = "#e0af68" },
+  { name = "*.yaml",                       fg = "#e0af68" },
+  { name = "*.yml",                        fg = "#e0af68" },
+  { name = "*.json",                       fg = "#e0af68" },
+  { name = "*.jsonc",                      fg = "#e0af68" },
+  { name = "*.ini",                        fg = "#e0af68" },
+  { name = "*.conf",                       fg = "#e0af68" },
+
+  # Dotfiles / hidden
+  { name = ".*",                           fg = "#565f89" },
+
+  # Special file types
+  { name = "*", is = "orphan",             fg = "#f7768e" },
+  { name = "*", is = "exec",               fg = "#9ece6a" },
+  { name = "*", is = "block",              fg = "#e0af68" },
+  { name = "*", is = "char",               fg = "#e0af68" },
+  { name = "*", is = "fifo",               fg = "#e0af68" },
+  { name = "*", is = "sock",               fg = "#bb9af7" },
+
+  # Fallback
+  { name = "*",                            fg = "#c0caf5" },
+]
