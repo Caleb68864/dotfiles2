@@ -172,17 +172,25 @@ PACKAGES=(
     "git"
     "fonts"
     "scripts"
+    "bin"
+    "themes"
+)
+
+declare -A STOW_TARGETS=(
+    ["hypr"]="$HOME/.config/hypr"
+    ["waybar"]="$HOME/.config/waybar"
+    ["nvim"]="$HOME/.config/nvim"
+    ["kitty"]="$HOME/.config/kitty"
+    ["swaync"]="$HOME/.config/swaync"
+    ["fonts"]="$HOME/.local/share/fonts"
 )
 
 for package in "${PACKAGES[@]}"; do
     if [ -d "$package" ]; then
         status "Stowing $package..."
-        if [ "$package" = "hypr" ]; then
-            mkdir -p "$HOME/.config/hypr"
-            stow -Rv -t "$HOME/.config/hypr" "$package"
-        else
-            stow -Rv -t "$HOME" "$package"
-        fi
+        target="${STOW_TARGETS[$package]:-$HOME}"
+        mkdir -p "$target"
+        stow -Rv -t "$target" "$package"
         success "$package stowed"
     else
         warning "$package directory not found, skipping"
