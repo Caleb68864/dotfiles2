@@ -33,7 +33,7 @@
 * {
     border: none;
     border-radius: 0;
-    font-family: "JetBrainsMono Nerd Font", "Font Awesome 6 Free", sans-serif;
+    font-family: "JetBrainsMono Nerd Font", "Symbols Nerd Font Mono", "Font Awesome 6 Free", monospace;
     font-size: 13px;
     min-height: 0;
 }
