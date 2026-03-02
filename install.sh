@@ -169,6 +169,7 @@ PACKAGES=(
     "hypr"
     "waybar"
     "swaync"
+    "yazi"
     "git"
     "fonts"
     "scripts"
@@ -182,6 +183,7 @@ declare -A STOW_TARGETS=(
     ["nvim"]="$HOME/.config/nvim"
     ["kitty"]="$HOME/.config/kitty"
     ["swaync"]="$HOME/.config/swaync"
+    ["yazi"]="$HOME/.config/yazi"
     ["fonts"]="$HOME/.local/share/fonts"
 )
 
