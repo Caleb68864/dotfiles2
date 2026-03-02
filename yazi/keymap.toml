@@ -1,7 +1,7 @@
 # Yazi keymap overrides
 # Managed by GNU Stow from ~/dotfiles/yazi/keymap.toml
 
-[[manager.prepend_keymap]]
-on   = ["<A-d>"]
-run  = "shell 'ripdrag -x \"$@\"'"
+[[mgr.prepend_keymap]]
+on   = "<A-d>"
+run  = "shell -- ripdrag -x $@"
 desc = "Drag selected files with ripdrag"
