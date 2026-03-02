@@ -3,5 +3,5 @@
 
 [[manager.prepend_keymap]]
 on   = ["<A-d>"]
-run  = "shell 'ripdrag -x $@' --orphan"
+run  = "shell 'ripdrag -x \"$@\"'"
 desc = "Drag selected files with ripdrag"
