@@ -2,7 +2,7 @@
 # =============================================================================
 # tmux-command-center -- Create the command-center tmux session with TUI apps
 # =============================================================================
-# Managed by GNU Stow from ~/dotfiles/bin/tmux-command-center
+# Managed by GNU Stow from ~/dotfiles/bin/bin/tmux-command-center
 #
 # This script creates the main tmux session with pre-configured windows for
 # all your TUI (Terminal User Interface) apps. It runs automatically when you
@@ -10,19 +10,20 @@
 # via grouped sessions (see .zshrc).
 #
 # WINDOW LAYOUT:
+#   Window 0:  scratch   -- Extra shell, out of the way (Alt+0)
 #   Window 1:  tactical  -- Your default working shell
 #   Window 2+: (user-created windows, pi-workspace agent, etc.)
-#   Window 7:  mail      -- neomutt email client (if installed)
-#   Window 8:  notes     -- basalt Obsidian vault browser (if installed)
-#   Window 9:  news      -- newsboat RSS reader (future, currently disabled)
-#   Window 0:  monitor   -- btop system monitor (if installed)
+#   Window 6:  mail      -- neomutt email client (if installed)
+#   Window 7:  notes     -- basalt Obsidian vault browser (if installed)
+#   Window 8:  news      -- newsboat RSS reader (if installed)
+#   Window 9:  monitor   -- btop system monitor (if installed)
 #
-# TUI apps are pinned to windows 7-0 (the right side of Alt+number keys).
-# New windows (Ctrl+a c, pi-workspace, etc.) auto-fill 2, 3, 4, 5, 6
-# since renumber-windows is ON and those slots are open.
+# TUI apps are pinned to windows 6-9 (the right side of Alt+number keys).
+# New windows (Ctrl+a c, pi-workspace, etc.) auto-fill 2, 3, 4, 5
+# since renumber-windows is OFF and those slots are open.
 # This keeps your working windows at low numbers and background TUI apps
-# at high numbers -- you access working stuff with Alt+1-6 and TUI apps
-# with Alt+7-0.
+# at high numbers -- you access working stuff with Alt+1-5 and TUI apps
+# with Alt+6-9. Window 0 (Alt+0) is a scratch shell for quick one-offs.
 #
 # Additional windows (like "agent" for Pi workspace) are created on demand
 # by other scripts like pi-workspace.
@@ -39,43 +40,48 @@ SESSION="command-center"
 # It's created as part of the session itself (the -n flag names it).
 tmux new-session -d -s "$SESSION" -n tactical
 
+# --- Window 0: scratch (extra shell) ---
+# A spare shell tucked away at Alt+0 for quick one-off commands without
+# cluttering your main tactical window. Useful but not in the way.
+tmux new-window -t "$SESSION:0" -n scratch
+
 # =========================================================================
-# TUI Apps -- Pinned to windows 7-0 (high numbers, right side of keyboard)
+# TUI Apps -- Pinned to windows 6-9 (high numbers, right side of keyboard)
 # =========================================================================
 # These use explicit window numbers (-t SESSION:NUMBER) so they always
 # live at the end of the window list. New working windows auto-fill
-# slots 2-6 without displacing these.
+# slots 2-5 without displacing these.
 
-# --- Window 7: mail (neomutt) ---
+# --- Window 6: mail (neomutt) ---
 # Only create the mail window if neomutt is actually installed.
 # "command -v" checks if a program exists; if not, we skip this window
 # so you don't get an error on a fresh install before neomutt is set up.
 if command -v neomutt &> /dev/null; then
-    tmux new-window -t "$SESSION:7" -n mail
+    tmux new-window -t "$SESSION:6" -n mail
     tmux send-keys -t "$SESSION:mail" "neomutt" Enter
 fi
 
-# --- Window 8: notes (basalt) ---
+# --- Window 7: notes (basalt) ---
 # Basalt is a TUI for browsing Obsidian vaults. It renders markdown,
 # understands wikilinks, and has a file explorer sidebar.
 # Press Ctrl+Alt+E inside basalt to open a note in Neovim.
 if command -v basalt &> /dev/null; then
-    tmux new-window -t "$SESSION:8" -n notes
+    tmux new-window -t "$SESSION:7" -n notes
     tmux send-keys -t "$SESSION:notes" "basalt" Enter
 fi
 
-# --- Window 9: news (newsboat) --- FUTURE ---
-# Uncomment when newsboat is configured with RSS feeds.
-# if command -v newsboat &> /dev/null; then
-#     tmux new-window -t "$SESSION:9" -n news
-#     tmux send-keys -t "$SESSION:news" "newsboat" Enter
-# fi
+# --- Window 8: news (newsboat) ---
+# Newsboat is an RSS/Atom feed reader for the terminal.
+if command -v newsboat &> /dev/null; then
+    tmux new-window -t "$SESSION:8" -n news
+    tmux send-keys -t "$SESSION:news" "newsboat" Enter
+fi
 
-# --- Window 0: monitor (btop) ---
+# --- Window 9: monitor (btop) ---
 # btop is a system monitor that shows CPU, RAM, disk, network, and processes.
-# Window 0 = Alt+0, the rightmost number key. Always the last window.
+# Window 9 = Alt+9, the last TUI app window.
 if command -v btop &> /dev/null; then
-    tmux new-window -t "$SESSION:0" -n monitor
+    tmux new-window -t "$SESSION:9" -n monitor
     tmux send-keys -t "$SESSION:monitor" "btop" Enter
 fi
 
