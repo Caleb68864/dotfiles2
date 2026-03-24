@@ -63,6 +63,11 @@ imagemagick
 ripdrag
 lazygit
 ruff
+zoxide
+zathura
+zathura-pdf-mupdf
+imv
+entr
 swww
 grim
 slurp
@@ -70,6 +75,10 @@ grimblast
 satty
 hyprpicker
 wf-recorder
+
+# TUI apps (auto-started in tmux command-center)
+btop
+newsboat
 
 # Fonts
 ttf-font-awesome

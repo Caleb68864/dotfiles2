@@ -1,0 +1,90 @@
+#!/bin/bash
+# ==============================================================================
+# pi-workspace — Set up a coding workspace with Neovim + Pi AI agent side by side
+# ==============================================================================
+#
+# WHAT THIS DOES:
+#   Creates a nicely arranged tmux window with three panes (sections):
+#
+#   +------------------------------+-------------------+
+#   |                              |                   |
+#   |   Neovim (code editor)       |   Pi (AI agent)   |
+#   |   Takes up 60% width         |   Takes up 40%    |
+#   |                              |                   |
+#   +------------------------------+                   |
+#   |  Small terminal (for running |                   |
+#   |  commands, 8 lines tall)     |                   |
+#   +------------------------------+-------------------+
+#
+#   This layout lets you:
+#   - Edit code in Neovim on the left
+#   - Ask the Pi AI agent questions on the right
+#   - Run quick commands (like "python test.py") in the small bottom pane
+#   - All inside one tmux window, so you can switch back and forth easily
+#
+# HOW TO USE:
+#   pi-workspace              -> Opens the workspace in whatever folder you're in
+#   pi-workspace ~/my-project -> Opens the workspace in ~/my-project
+#
+# WHAT IS TMUX?
+#   Tmux is a "terminal multiplexer" — it lets you split one terminal window
+#   into multiple panes, and keeps everything running even if you close the
+#   terminal. Think of it like tabs and split-screen for your command line.
+#
+# WHAT IS A SESSION AND WINDOW IN TMUX?
+#   - A "session" is like a project workspace (named "command-center" here)
+#   - A "window" is like a tab inside that session (named "agent" here)
+#   - A "pane" is a split section inside a window
+# ==============================================================================
+
+# The name of our tmux session. All terminal work happens inside this session.
+# "command-center" is the main session that auto-starts with every terminal.
+SESSION="command-center"
+
+# The directory where Neovim and Pi should open.
+# If you pass a directory as an argument (like "pi-workspace ~/code"), use that.
+# Otherwise, fall back to whatever directory you're currently in (pwd = "print
+# working directory" — it tells you where you are in the file system).
+WORKDIR="${1:-$(pwd)}"
+
+# --- STEP 1: Create or reuse the "agent" window ---
+# Check if a window named "agent" already exists in our tmux session.
+# "tmux list-windows" shows all windows; we filter for one named exactly "agent".
+# If it doesn't exist, create a new window named "agent" starting in our work directory.
+# If it already exists, just switch to it (no need to make a duplicate).
+if ! tmux list-windows -t "$SESSION" -F '#{window_name}' | grep -q "^agent$"; then
+    # Create a brand new window called "agent" in the command-center session.
+    # -n "agent" sets the window name, -c "$WORKDIR" sets its starting directory.
+    tmux new-window -t "$SESSION" -n "agent" -c "$WORKDIR"
+else
+    # The window already exists — just switch to it.
+    tmux select-window -t "$SESSION:agent"
+fi
+
+# --- STEP 2: Open Neovim in the main pane (left side, 60% of the width) ---
+# "send-keys" types a command into the current pane as if you typed it yourself.
+# We "cd" into the work directory first, then launch Neovim (the code editor).
+# "Enter" at the end simulates pressing the Enter key to run the command.
+tmux send-keys -t "$SESSION:agent" "cd $WORKDIR && nvim" Enter
+
+# --- STEP 3: Create the Pi pane (right side, 40% of the width) ---
+# "split-window -h" splits the current pane horizontally (side by side).
+# "-p 40" means the new pane on the right gets 40% of the width.
+# "-c $WORKDIR" starts the new pane in our work directory.
+# Then we type "pi" to launch the Pi AI coding agent in that pane.
+tmux split-window -h -p 40 -t "$SESSION:agent" -c "$WORKDIR"
+tmux send-keys -t "$SESSION:agent" "pi" Enter
+
+# --- STEP 4: Create a small terminal pane below Neovim ---
+# "split-window -v" splits vertically (top and bottom) inside pane 0 (the Neovim pane).
+# "-l 8" makes it only 8 lines tall — just enough to run quick commands like
+# "git status" or "python script.py" without taking up much screen space.
+# "-t $SESSION:agent.0" targets pane 0 specifically (the Neovim pane on the left).
+tmux split-window -v -t "$SESSION:agent.0" -l 8 -c "$WORKDIR"
+
+# --- STEP 5: Put the cursor back on Neovim ---
+# After all the splitting, the cursor ends up in the last pane we created
+# (the small terminal). We want to start with focus on Neovim (pane 0),
+# since that's where you'll be editing code most of the time.
+# "select-pane -t .0" switches focus to pane 0 (the top-left Neovim pane).
+tmux select-pane -t "$SESSION:agent.0"

@@ -30,6 +30,7 @@ Each package has a specific stow target. Never use a blanket `stow -t "$HOME"` f
 | `git` | `$HOME` | .gitconfig |
 | `scripts` | `$HOME` | setup-github-ssh.sh |
 | `bin` | `$HOME` | get-fonts.sh, switch-theme.sh, deploy-all, undeploy |
+| `pi` | `$HOME` | .pi/agent/settings.json, bin/pi-workspace, prompts/ |
 
 ## Common Commands
 
@@ -50,7 +51,7 @@ stow -Rv -t "$HOME/.config/kitty"  kitty
 stow -Rv -t "$HOME/.config/yazi"     yazi
 stow -Rv -t "$HOME/.config/atuin"   atuin
 stow -Rv -t "$HOME/.config/themes"  themes
-stow -Rv -t "$HOME"                 zsh tmux git
+stow -Rv -t "$HOME"                 zsh tmux git pi
 
 # Remove a package
 stow -Dv -t "$HOME/.config/waybar" waybar
@@ -196,6 +197,33 @@ windowrule = workspace 4 silent, match:class ^(discord)$
 - Workspace 7: Steam
 - Workspace 8: Games (heroic)
 
+### Hyprland Keybinding Summary
+
+| Key | Action |
+|-----|--------|
+| `SUPER+H/J/K/L` | Move focus (vim-style) |
+| `SUPER+SHIFT+H/J/K/L` | Move window |
+| `SUPER+R` then `H/J/K/L` | Resize mode (submap, Escape to exit) |
+| `SUPER+F` | Toggle fullscreen |
+| `SUPER+BackSpace` | Lock screen (hyprlock) |
+| `SUPER+T` | Toggle split (dwindle) |
+| `SUPER+A` | Toggle AI scratchpad workspace |
+| `SUPER+SHIFT+P` | Pi workspace (tmux layout) |
+| `SUPER+SHIFT+N` | Floating Pi in Obsidian vault |
+| `SUPER+N` | Notification center |
+
+### Tmux Keybinding Summary
+
+| Key | Action |
+|-----|--------|
+| `C-a, C-c` | Claude Code popup (persistent session) |
+| `C-a, C-p` | Pi popup (persistent session) |
+| `C-a, C-f` | Project sessionizer (fzf project picker) |
+| `Alt+1-9` | Direct window (tab) access |
+| `C-a, \|` | Split horizontal |
+| `C-a, -` | Split vertical |
+| `C-h/j/k/l` | Pane navigation (vim-tmux-navigator) |
+
 ### Hyprland Notes
 
 - Config reloads cleanly with `hyprctl reload` — always verify after edits
@@ -260,11 +288,26 @@ Critical syntax rules — old syntax is **silently ignored**:
 
 ### Neovim Configuration
 
-Single-file config: `nvim/init.lua`
-- Uses lazy.nvim for plugin management
-- LSP servers auto-installed via Mason
-- Configured for Python (pyright, debugpy) and C# (omnisharp, netcoredbg)
-- CodeCompanion as primary AI assistant (requires ANTHROPIC_API_KEY env var)
+Modular config split across `nvim/lua/`:
+- `init.lua` — Bootstrap lazy.nvim, load config modules
+- `lua/config/options.lua` — Editor settings
+- `lua/config/keymaps.lua` — General keymaps (non-plugin)
+- `lua/config/autocommands.lua` — Autocommands
+- `lua/plugins/*.lua` — Plugin specs (auto-discovered by lazy.nvim):
+  - `colorscheme.lua` — Tokyo Night
+  - `treesitter.lua` — Syntax highlighting
+  - `lsp.lua` — Mason + LSP servers + on-attach keymaps
+  - `completion.lua` — nvim-cmp + LuaSnip
+  - `dap.lua` — Debug adapters (Python, C#)
+  - `ai.lua` — Pi (primary), claudecode.nvim, CodeCompanion (commented)
+  - `editor.lua` — nvim-tree, telescope, harpoon, yazi, surround, ufo, vim-tmux-navigator
+  - `git.lua` — gitsigns, diffview, lazygit
+  - `ui.lua` — lualine, which-key, indent-blankline, colorizer
+  - `tools.lua` — neotest, conform, trouble, aerial, refactoring, spectre, todo-comments
+
+**AI assistant keymaps:** Pi uses `<leader>p` namespace (pp/ps/pf/pb). LSP code_action is `<leader>ca`. claudecode.nvim connects to Claude Code CLI via WebSocket MCP.
+
+**Path yanking:** `<leader>yr` (relative), `<leader>yp` (absolute) — copies to system clipboard.
 
 ### Zsh Configuration
 
@@ -272,9 +315,12 @@ Features Oh-My-Zsh with plugins:
 - zsh-autosuggestions, zsh-syntax-highlighting, fzf-tab
 - Starship prompt
 - Atuin for shell history (`Ctrl+R`)
+- zoxide for smart directory jumping (`z`)
 - fzf with Tokyo Night colors (sourced from `~/.config/themes/tokyo-night.conf`)
 - Tmux auto-starts "command-center" session on terminal launch
+- `chpwd()` hook auto-lists directory contents on any cd/z
 - History config: 100k entries, shared across sessions
+- Pi aliases: `pa`, `pac`, `par`, `paf`
 
 ### Auto-start Applications (exec-once)
 
