@@ -63,6 +63,10 @@ imagemagick
 ripdrag
 lazygit
 ruff
+zoxide
+zathura
+zathura-pdf-mupdf
+imv
 swww
 grim
 slurp

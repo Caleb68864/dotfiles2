@@ -74,6 +74,7 @@ opt.completeopt = "menu,menuone,noselect"
 opt.updatetime = 250
 opt.timeoutlen = 300
 opt.conceallevel = 0
+opt.autoread = true  -- Auto-reload files changed externally (e.g., by AI agents)
 
 -- Disable netrw (using nvim-tree instead)
 vim.g.loaded_netrw = 1
@@ -351,16 +352,14 @@ require("lazy").setup({
     end,
   },
 
-  -- Optional: Claude Code (disabled by default)
-  -- {
-  --   "anthropics/claude-code.nvim",
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --   },
-  --   config = function()
-  --     require("claude-code").setup()
-  --   end,
-  -- },
+  -- Claude Code integration (WebSocket MCP protocol, like VS Code extension)
+  {
+    "coder/claudecode.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      require("claudecode").setup({})
+    end,
+  },
 
   -- Optional: Avante (disabled by default)
   -- {
@@ -991,6 +990,11 @@ vim.keymap.set("n", "zm", require("ufo").closeFoldsWith, { desc = "Close folds w
 -- ============================================================================
 -- Autocommands
 -- ============================================================================
+
+-- Auto-reload files changed by external tools (AI agents, git, etc.)
+vim.api.nvim_create_autocmd({"FocusGained", "BufEnter", "CursorHold"}, {
+  command = "checktime",
+})
 
 -- Highlight on yank
 vim.api.nvim_create_autocmd("TextYankPost", {

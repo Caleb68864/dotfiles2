@@ -193,6 +193,11 @@ fi
 # Initialize Atuin (enhanced shell history — replaces Ctrl+R)
 eval "$(atuin init zsh)"
 
+# Initialize zoxide (smart cd — use 'z' to jump to frecent directories)
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init zsh)"
+fi
+
 # Initialize Starship prompt (default)
 eval "$(starship init zsh)"
 
