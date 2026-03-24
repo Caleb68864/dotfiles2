@@ -79,6 +79,8 @@ wf-recorder
 # TUI apps (auto-started in tmux command-center)
 btop
 newsboat
+basalt-bin
+notesmd-cli-bin
 
 # Fonts
 ttf-font-awesome

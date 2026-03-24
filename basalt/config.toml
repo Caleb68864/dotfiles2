@@ -1,0 +1,41 @@
+# =============================================================================
+# Basalt Configuration -- TUI for browsing Obsidian vaults in the terminal
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/basalt/config.toml
+# Stow target: ~/.config/basalt/config.toml
+#
+# Basalt is a terminal app for reading and browsing your Obsidian notes.
+# It renders markdown, understands wikilinks, and has a file explorer sidebar.
+#
+# Launch: just type "basalt" in your terminal (or Alt+5 in tmux command-center)
+# Help:   press ? inside basalt to see all keybindings
+# =============================================================================
+
+# --- VIM MODE ---
+# Enable vim-style navigation (j/k to move, etc.)
+# Since everything else in this setup uses vim keys, this should be on.
+vim_mode = true
+
+# --- EXPERIMENTAL EDITOR ---
+# Basalt has a basic built-in editor, but it lacks undo/redo and clipboard.
+# Better to press Ctrl+Alt+E to open notes in Neovim instead.
+experimental_editor = false
+
+# =============================================================================
+# Custom Keybindings
+# =============================================================================
+# These override the default keys. Only "action" keybindings can be customized
+# (not view/navigation keys like j/k/h/l).
+#
+# Available variables for commands:
+#   %note_path = full path to the current note
+#   %vault     = path to the vault root
+#   %note      = note name without extension
+#
+# Command prefixes:
+#   exec:  = run command and wait for it to finish (blocks basalt)
+#   spawn: = run command in the background (doesn't block)
+
+[keys.global]
+# Open the current note in Neovim (replaces default vi)
+open_in_editor = { key = "ctrl+alt+e", command = "exec:nvim %note_path" }

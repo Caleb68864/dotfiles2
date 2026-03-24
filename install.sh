@@ -185,6 +185,7 @@ PACKAGES=(
     "pi"
     "themes"
     "neomutt"
+    "basalt"
 )
 
 declare -A STOW_TARGETS=(
@@ -198,6 +199,7 @@ declare -A STOW_TARGETS=(
     ["themes"]="$HOME/.config/themes"
     ["fonts"]="$HOME/.local/share/fonts"
     ["neomutt"]="$HOME/.config/neomutt"
+    ["basalt"]="$HOME/.config/basalt"
 )
 
 for package in "${PACKAGES[@]}"; do
