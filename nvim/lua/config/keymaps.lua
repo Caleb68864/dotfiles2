@@ -86,3 +86,99 @@ vim.keymap.set("n", "<leader>yp", function()
   vim.fn.setreg("+", path)           -- Put it in the system clipboard
   vim.notify("Copied: " .. path)     -- Show a little notification
 end, { desc = "[y]ank absolute [p]ath" })
+
+-- ============================================================================
+-- Cheat Sheet -- Quick reference for all custom keybindings
+-- ============================================================================
+-- Press Space+? to open a floating window with all keybindings.
+-- Press q or Escape to close it. This supplements which-key (which shows
+-- bindings as you type) with a full overview you can read at a glance.
+vim.keymap.set("n", "<leader>?", function()
+  local lines = {
+    "╔═══════════════════════════════════════════════════════════╗",
+    "║              Neovim Cheat Sheet  (Space = leader)        ║",
+    "╚═══════════════════════════════════════════════════════════╝",
+    "",
+    "── Navigation ──────────────────────────────────────────────",
+    "  Ctrl+h/j/k/l    Move between splits (shared with tmux)",
+    "  Shift+H / L      Previous / next buffer (file)",
+    "  gd               Go to definition",
+    "  gr               Find all references",
+    "  K                Hover documentation",
+    "  ]t / [t          Next / previous TODO comment",
+    "",
+    "── Find (Space+f) ─────────────────────────────────────────",
+    "  ff  Find files        fg  Grep text in project",
+    "  fb  Find buffers      fh  Find help docs",
+    "  fr  Find recent files fs  Find string under cursor",
+    "  ft  Find TODOs",
+    "",
+    "── Git (Space+g) ──────────────────────────────────────────",
+    "  gd  Diffview open     gc  Diffview close",
+    "  gh  File history      gH  Repo history",
+    "  lg  LazyGit",
+    "",
+    "── Pi AI (Space+p) ────────────────────────────────────────",
+    "  pp  Pi prompt          ps  Send selection to Pi",
+    "  pf  Send file to Pi    pb  Send buffer to Pi",
+    "",
+    "── Test (Space+t) ─────────────────────────────────────────",
+    "  tt  Run nearest test   tf  Run file tests",
+    "  td  Debug nearest      ts  Test summary",
+    "  to  Test output        tS  Stop test",
+    "",
+    "── Debug ──────────────────────────────────────────────────",
+    "  F5   Start/Continue    F10  Step over",
+    "  F11  Step into         F12  Step out",
+    "  Space+b  Toggle breakpoint",
+    "  Space+B  Conditional breakpoint",
+    "",
+    "── Code ───────────────────────────────────────────────────",
+    "  Space+ca  Code action      Space+rn  Rename symbol",
+    "  Space+f   Format file      Space+e   File explorer",
+    "  Space+a   Code outline     Space+S   Find & replace (Spectre)",
+    "  Space+xx  Toggle Trouble   gcc       Comment line",
+    "",
+    "── Harpoon (Space+h) ─────────────────────────────────────",
+    "  ha  Add file to harpoon    hl  Harpoon list",
+    "  Space+1-4  Jump to harpoon file 1-4",
+    "",
+    "── Other ──────────────────────────────────────────────────",
+    "  Space+yr  Yank relative path   Space+yp  Yank absolute path",
+    "  Space+bd  Close buffer         Space+q   Close buffer",
+    "  Space+y   Yazi (current file)  Space+Y   Yazi (working dir)",
+    "  zR / zM   Open / close all folds",
+    "",
+    "  Press q to close",
+  }
+
+  -- Create a scratch buffer with the cheat sheet content
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].bufhidden = "wipe"
+
+  -- Calculate floating window size and position (centered)
+  local width = 63
+  local height = #lines
+  local ui = vim.api.nvim_list_uis()[1]
+  local row = math.floor((ui.height - height) / 2)
+  local col = math.floor((ui.width - width) / 2)
+
+  -- Open the floating window
+  local win = vim.api.nvim_open_win(buf, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = col,
+    style = "minimal",
+    border = "rounded",
+    title = " Cheat Sheet ",
+    title_pos = "center",
+  })
+
+  -- Close with q or Escape
+  vim.keymap.set("n", "q", "<cmd>close<CR>", { buffer = buf, silent = true })
+  vim.keymap.set("n", "<Esc>", "<cmd>close<CR>", { buffer = buf, silent = true })
+end, { desc = "Show cheat sheet" })
