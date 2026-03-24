@@ -30,6 +30,7 @@ Each package has a specific stow target. Never use a blanket `stow -t "$HOME"` f
 | `git` | `$HOME` | .gitconfig |
 | `scripts` | `$HOME` | setup-github-ssh.sh |
 | `bin` | `$HOME` | get-fonts.sh, switch-theme.sh, deploy-all, undeploy |
+| `pi` | `$HOME` | .pi/agent/settings.json, bin/pi-workspace, prompts/ |
 
 ## Common Commands
 
@@ -50,7 +51,7 @@ stow -Rv -t "$HOME/.config/kitty"  kitty
 stow -Rv -t "$HOME/.config/yazi"     yazi
 stow -Rv -t "$HOME/.config/atuin"   atuin
 stow -Rv -t "$HOME/.config/themes"  themes
-stow -Rv -t "$HOME"                 zsh tmux git
+stow -Rv -t "$HOME"                 zsh tmux git pi
 
 # Remove a package
 stow -Dv -t "$HOME/.config/waybar" waybar

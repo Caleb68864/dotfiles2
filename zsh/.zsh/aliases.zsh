@@ -78,3 +78,11 @@ if [ "$XDG_CURRENT_DESKTOP" = "Hyprland" ]; then
     alias reload-hypr='hyprctl reload'
     alias hypr-edit='nvim ~/.config/hypr/hyprland.conf'
 fi
+
+# ============================================================================
+# Pi Coding Agent
+# ============================================================================
+alias pa='pi'
+alias pac='pi -c'
+alias par='pi -r'
+alias paf='pi --fork'

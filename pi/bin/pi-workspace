@@ -1,0 +1,26 @@
+#!/bin/bash
+# pi-workspace — Create a dedicated Pi development window in tmux command-center
+# Usage: pi-workspace [directory]
+#   If a directory is provided, Pi and Neovim open there.
+#   Otherwise, uses the current working directory.
+
+SESSION="command-center"
+WORKDIR="${1:-$(pwd)}"
+
+# Create "agent" window if it doesn't exist
+if ! tmux list-windows -t "$SESSION" -F '#{window_name}' | grep -q "^agent$"; then
+    tmux new-window -t "$SESSION" -n "agent" -c "$WORKDIR"
+else
+    tmux select-window -t "$SESSION:agent"
+fi
+
+# Split: Neovim left (60%), Pi right (40%)
+tmux send-keys -t "$SESSION:agent" "cd $WORKDIR && nvim" Enter
+tmux split-window -h -p 40 -t "$SESSION:agent" -c "$WORKDIR"
+tmux send-keys -t "$SESSION:agent" "pi" Enter
+
+# Add a small terminal pane at the bottom of the Neovim side
+tmux split-window -v -t "$SESSION:agent.0" -l 8 -c "$WORKDIR"
+
+# Focus on Neovim pane
+tmux select-pane -t "$SESSION:agent.0"

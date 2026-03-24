@@ -116,6 +116,7 @@ fi
 status "Creating necessary directories..."
 mkdir -p "$HOME/.local/share"
 mkdir -p "$HOME/.config"
+mkdir -p "$HOME/scratch"
 success "Directories created"
 
 # Backup existing dotfiles
@@ -136,6 +137,7 @@ CONFLICT_ITEMS=(
     "$HOME/.config/swaync"
     "$HOME/.config/atuin"
     "$HOME/.local/share/fonts"
+    "$HOME/.pi"
 )
 
 for item in "${CONFLICT_ITEMS[@]}"; do
@@ -176,6 +178,7 @@ PACKAGES=(
     "fonts"
     "scripts"
     "bin"
+    "pi"
     "themes"
 )
 

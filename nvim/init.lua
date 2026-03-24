@@ -320,37 +320,45 @@ require("lazy").setup({
 
   -- AI Assistants
 
-  -- Primary: CodeCompanion
+  -- Primary: Pi (replaces CodeCompanion)
   {
-    "olimorris/codecompanion.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter",
-    },
-    config = function()
-      require("codecompanion").setup({
-        strategies = {
-          chat = {
-            adapter = "anthropic",
-          },
-          inline = {
-            adapter = "anthropic",
-          },
-        },
-        adapters = {
-          http = {
-            anthropic = function()
-              return require("codecompanion.adapters").extend("anthropic", {
-                env = {
-                  api_key = "ANTHROPIC_API_KEY",
-                },
-              })
-            end,
-          },
-        },
-      })
-    end,
+      "carderne/pi-nvim",
+      config = function()
+          require("pi-nvim").setup({})
+      end,
   },
+
+  -- Primary: CodeCompanion (commented out, replaced by pi-nvim)
+  -- {
+  --   "olimorris/codecompanion.nvim",
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-treesitter/nvim-treesitter",
+  --   },
+  --   config = function()
+  --     require("codecompanion").setup({
+  --       strategies = {
+  --         chat = {
+  --           adapter = "anthropic",
+  --         },
+  --         inline = {
+  --           adapter = "anthropic",
+  --         },
+  --       },
+  --       adapters = {
+  --         http = {
+  --           anthropic = function()
+  --             return require("codecompanion.adapters").extend("anthropic", {
+  --               env = {
+  --                 api_key = "ANTHROPIC_API_KEY",
+  --               },
+  --             })
+  --           end,
+  --         },
+  --       },
+  --     })
+  --   end,
+  -- },
 
   -- Claude Code integration (WebSocket MCP protocol, like VS Code extension)
   {
@@ -929,10 +937,16 @@ end, { desc = "Debug: Set conditional [B]reakpoint" })
 vim.keymap.set("n", "<leader>dr", dap.repl.open, { desc = "[d]ebug [r]epl" })
 vim.keymap.set("n", "<leader>dl", dap.run_last, { desc = "[d]ebug [l]ast" })
 
--- CodeCompanion
-vim.keymap.set({ "n", "v" }, "<leader>cc", "<cmd>CodeCompanionChat<CR>", { desc = "[c]ode[c]ompanion chat" })
-vim.keymap.set({ "n", "v" }, "<leader>ci", "<cmd>CodeCompanion<CR>", { desc = "[c]ode[c]ompanion [i]nline" })
-vim.keymap.set("n", "<leader>ca", "<cmd>CodeCompanionActions<CR>", { desc = "[c]ode[c]ompanion [a]ctions" })
+-- CodeCompanion (commented out, replaced by Pi)
+-- vim.keymap.set({ "n", "v" }, "<leader>cc", "<cmd>CodeCompanionChat<CR>", { desc = "[c]ode[c]ompanion chat" })
+-- vim.keymap.set({ "n", "v" }, "<leader>ci", "<cmd>CodeCompanion<CR>", { desc = "[c]ode[c]ompanion [i]nline" })
+-- vim.keymap.set("n", "<leader>ca", "<cmd>CodeCompanionActions<CR>", { desc = "[c]ode[c]ompanion [a]ctions" })
+
+-- Pi Coding Agent (replaces CodeCompanion)
+vim.keymap.set("n", "<leader>cc", ":Pi ", { desc = "Pi chat prompt" })
+vim.keymap.set("v", "<leader>ci", ":PiSendSelection<CR>", { desc = "Send selection to Pi" })
+vim.keymap.set("n", "<leader>ca", ":PiSendFile<CR>", { desc = "Send file to Pi" })
+vim.keymap.set("n", "<leader>cb", ":PiSendBuffer<CR>", { desc = "Send buffer to Pi" })
 
 -- Neotest
 local neotest = require("neotest")
