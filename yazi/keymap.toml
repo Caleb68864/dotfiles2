@@ -1,6 +1,39 @@
-# Yazi keymap overrides
+# =============================================================================
+# Yazi Keymap Overrides
 # Managed by GNU Stow from ~/dotfiles/yazi/keymap.toml
+# =============================================================================
+#
+# Yazi is a terminal-based file manager (like Windows Explorer but in
+# the terminal). This file adds CUSTOM keybindings on top of Yazi's
+# built-in defaults. The "prepend_keymap" section means these bindings
+# are checked FIRST, before the defaults, so they can override them.
+#
+# SYNTAX NOTES (Yazi v26.x — old syntax is silently ignored!):
+#   - Section must be [[mgr.prepend_keymap]] (NOT [[manager.prepend_keymap]])
+#   - Single key: on = "<A-d>" (a string, NOT an array)
+#   - Multi-key sequence: on = ["g", "d"] (an array)
+#   - File variables: %h = hovered file, %s = selected files
+#   - Shell commands: run = "shell -- command %s"
+# =============================================================================
 
+
+# --- ALT+D: Drag and drop files ---
+# Press Alt+D in Yazi to drag the selected files out of the terminal and
+# drop them into any GUI application (like a browser upload field, a file
+# manager window, etc.). This uses "ripdrag" — a lightweight drag-and-drop
+# helper for Wayland.
+#
+# Why "env GDK_SCALE=1"?
+#   The system uses GDK_SCALE=2 for HiDPI (4K monitor) scaling, but that
+#   breaks ripdrag's GTK window layout (buttons become huge and misaligned).
+#   Setting GDK_SCALE=1 just for ripdrag fixes this without affecting
+#   anything else.
+#
+# The "-x" flag (--and-exit) tells ripdrag to close automatically after
+# you complete the drag-and-drop, so you don't have a leftover window.
+#
+# %s = the currently selected file(s) in Yazi. If you have multiple files
+# selected, they all get dragged together.
 [[mgr.prepend_keymap]]
 on   = "<A-d>"
 run  = "shell -- env GDK_SCALE=1 ripdrag -x %s"
