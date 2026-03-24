@@ -10,11 +10,19 @@
 # via grouped sessions (see .zshrc).
 #
 # WINDOW LAYOUT:
-#   Window 1: tactical  -- Your default working shell
-#   Window 2: mail      -- neomutt email client (if installed)
-#   Window 3: notes     -- basalt Obsidian vault browser (if installed)
-#   Window 4: news      -- newsboat RSS reader (future, currently disabled)
-#   Last:     monitor   -- btop system monitor (if installed, always last)
+#   Window 1:  tactical  -- Your default working shell
+#   Window 2+: (user-created windows, pi-workspace agent, etc.)
+#   Window 7:  mail      -- neomutt email client (if installed)
+#   Window 8:  notes     -- basalt Obsidian vault browser (if installed)
+#   Window 9:  news      -- newsboat RSS reader (future, currently disabled)
+#   Window 0:  monitor   -- btop system monitor (if installed)
+#
+# TUI apps are pinned to windows 7-0 (the right side of Alt+number keys).
+# New windows (Ctrl+a c, pi-workspace, etc.) auto-fill 2, 3, 4, 5, 6
+# since renumber-windows is ON and those slots are open.
+# This keeps your working windows at low numbers and background TUI apps
+# at high numbers -- you access working stuff with Alt+1-6 and TUI apps
+# with Alt+7-0.
 #
 # Additional windows (like "agent" for Pi workspace) are created on demand
 # by other scripts like pi-workspace.
@@ -31,37 +39,43 @@ SESSION="command-center"
 # It's created as part of the session itself (the -n flag names it).
 tmux new-session -d -s "$SESSION" -n tactical
 
-# --- Window 2: mail (neomutt) ---
+# =========================================================================
+# TUI Apps -- Pinned to windows 7-0 (high numbers, right side of keyboard)
+# =========================================================================
+# These use explicit window numbers (-t SESSION:NUMBER) so they always
+# live at the end of the window list. New working windows auto-fill
+# slots 2-6 without displacing these.
+
+# --- Window 7: mail (neomutt) ---
 # Only create the mail window if neomutt is actually installed.
 # "command -v" checks if a program exists; if not, we skip this window
 # so you don't get an error on a fresh install before neomutt is set up.
 if command -v neomutt &> /dev/null; then
-    tmux new-window -t "$SESSION" -n mail
+    tmux new-window -t "$SESSION:7" -n mail
     tmux send-keys -t "$SESSION:mail" "neomutt" Enter
 fi
 
-# --- Window 3: notes (basalt) ---
+# --- Window 8: notes (basalt) ---
 # Basalt is a TUI for browsing Obsidian vaults. It renders markdown,
 # understands wikilinks, and has a file explorer sidebar.
 # Press Ctrl+Alt+E inside basalt to open a note in Neovim.
 if command -v basalt &> /dev/null; then
-    tmux new-window -t "$SESSION" -n notes
+    tmux new-window -t "$SESSION:8" -n notes
     tmux send-keys -t "$SESSION:notes" "basalt" Enter
 fi
 
-# --- Window 4: news (newsboat) --- FUTURE ---
+# --- Window 9: news (newsboat) --- FUTURE ---
 # Uncomment when newsboat is configured with RSS feeds.
 # if command -v newsboat &> /dev/null; then
-#     tmux new-window -t "$SESSION" -n news
+#     tmux new-window -t "$SESSION:9" -n news
 #     tmux send-keys -t "$SESSION:news" "newsboat" Enter
 # fi
 
-# --- Last window: monitor (btop) ---
+# --- Window 0: monitor (btop) ---
 # btop is a system monitor that shows CPU, RAM, disk, network, and processes.
-# Placed last so working windows (mail, notes, news) get lower numbers.
-# On-demand windows like "agent" (pi-workspace) insert before this.
+# Window 0 = Alt+0, the rightmost number key. Always the last window.
 if command -v btop &> /dev/null; then
-    tmux new-window -t "$SESSION" -n monitor
+    tmux new-window -t "$SESSION:0" -n monitor
     tmux send-keys -t "$SESSION:monitor" "btop" Enter
 fi
 
