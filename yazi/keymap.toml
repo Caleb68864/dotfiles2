@@ -38,3 +38,26 @@
 on   = "<A-d>"
 run  = "shell -- env GDK_SCALE=1 ripdrag -x %s"
 desc = "Drag selected files with ripdrag"
+
+# --- ALT+P: Open Pi in a tmux pane at the current directory ---
+# Splits the current tmux pane horizontally (side by side) and launches
+# Pi coding agent in the new pane, set to the directory you're browsing
+# in Yazi. Great for starting an AI session right where your files are.
+[[mgr.prepend_keymap]]
+on   = "<A-p>"
+run  = "shell -- tmux split-window -h -c %h -l 40% pi"
+desc = "Open Pi in tmux split at current directory"
+
+# --- ALT+C: Open Claude Code in a tmux pane at the current directory ---
+# Same as above but launches Claude Code instead of Pi.
+[[mgr.prepend_keymap]]
+on   = "<A-c>"
+run  = "shell -- tmux split-window -h -c %h -l 40% claude"
+desc = "Open Claude Code in tmux split at current directory"
+
+# --- ALT+N: Open Neovim in a tmux pane at the current directory ---
+# Splits and opens Neovim so you can edit files side by side with Yazi.
+[[mgr.prepend_keymap]]
+on   = "<A-n>"
+run  = "shell -- tmux split-window -h -c %h -l 60% nvim"
+desc = "Open Neovim in tmux split at current directory"

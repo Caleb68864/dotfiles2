@@ -82,3 +82,40 @@ gacp() {
     git commit -m "$1"
     git push
 }
+
+
+# =============================================================================
+# AI Coding Pane Launchers
+# =============================================================================
+# These functions split your current tmux pane and launch an AI coding agent
+# right next to what you're working on. Perfect for monitoring multiple
+# sessions side by side without switching windows.
+#
+# Usage:
+#   spi              -- Split right and open Pi in current directory
+#   spi ~/project    -- Split right and open Pi in ~/project
+#   sclaude          -- Split right and open Claude Code in current directory
+#   sclaude ~/proj   -- Split right and open Claude Code in ~/project
+#   snvim            -- Split right and open Neovim in current directory
+
+# --- SPI: Split pane and launch Pi ---
+# Opens Pi in a new tmux pane to the RIGHT of your current pane (40% width).
+# Optionally pass a directory; defaults to your current working directory.
+spi() {
+    local dir="${1:-$(pwd)}"
+    tmux split-window -h -l 40% -c "$dir" pi
+}
+
+# --- SCLAUDE: Split pane and launch Claude Code ---
+# Same as spi but launches Claude Code instead.
+sclaude() {
+    local dir="${1:-$(pwd)}"
+    tmux split-window -h -l 40% -c "$dir" claude
+}
+
+# --- SNVIM: Split pane and launch Neovim ---
+# Opens Neovim in a new pane to the RIGHT (60% width, since editor needs more space).
+snvim() {
+    local dir="${1:-$(pwd)}"
+    tmux split-window -h -l 60% -c "$dir" nvim
+}
