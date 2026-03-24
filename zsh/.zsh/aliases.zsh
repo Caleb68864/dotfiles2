@@ -43,6 +43,7 @@ alias gd='git diff'
 alias gco='git checkout'
 alias gb='git branch'
 alias glog='git log --oneline --graph --decorate --all'
+alias lg='lazygit'
 
 # ============================================================================
 # System Aliases

@@ -154,20 +154,18 @@ zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza -1 --color=always --ico
 [ -f ~/.zsh/keybindings.zsh ] && source ~/.zsh/keybindings.zsh
 
 # ============================================================================
-# Auto-ls After cd
+# Auto-ls After cd (and zoxide 'z')
 # ============================================================================
 
-# Automatically run ls after cd
-function cd() {
-    builtin cd "$@" && ls
-}
+# Fires on any directory change — works with cd, z, pushd, etc.
+chpwd() { ls }
 
 # ============================================================================
 # Keybindings
 # ============================================================================
 
-# Ctrl+K to go up a directory
-bindkey -s '^K' 'cd ..\n'
+# Alt+K to go up a directory (C-k is used by vim-tmux-navigator for pane switching)
+bindkey -s '^[k' 'cd ..\n'
 
 # ============================================================================
 # Tmux Auto-Start
