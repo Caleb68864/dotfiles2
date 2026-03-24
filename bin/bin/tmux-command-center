@@ -11,13 +11,14 @@
 #
 # WINDOW LAYOUT:
 #   Window 1:    tactical  -- Your default working shell (Alt+1)
-#   Window 2-4:  (open)    -- User-created, pi-workspace agent, etc.
-#   Window 5:    comms     -- weechat + gomuks (Alt+5, full screen each, swap with prefix+n)
+#   Window 2-3:  (open)    -- User-created, pi-workspace agent, etc.
+#   Window 4:    comms     -- weechat + gomuks (Alt+4, prefix+z to swap)
+#   Window 5:    notes     -- basalt Obsidian vault browser (Alt+5)
 #   Window 6:    mail      -- neomutt email client (Alt+6)
 #   Window 7:    calendar  -- khal interactive calendar (Alt+7)
 #   Window 8:    news      -- newsboat RSS reader (Alt+8)
 #   Window 9:    music     -- ncmpcpp + cava split panes (Alt+9)
-#   Window 0:    notes     -- basalt Obsidian vault browser (Alt+0)
+#   Window 0:    scratch   -- Empty shell for quick one-offs (Alt+0)
 #
 # GROUPING:
 #   Mail/Calendar/News are at 6-7-8 (consecutive, easy to flip between)
@@ -31,8 +32,8 @@
 # ALIAS-ONLY TOOLS (launch when needed, not auto-started):
 #   btop, pulsemixer, bluetuith, basalt -- see aliases.zsh
 #
-# TUI apps are pinned to windows 5-0 (right side of keyboard).
-# Working windows auto-fill slots 2-4.
+# TUI apps are pinned to windows 4-9 (right side of keyboard).
+# Working windows auto-fill slots 2-3. Window 0 is scratch.
 #
 # Additional windows (like "agent" for Pi workspace) are created on demand
 # by other scripts like pi-workspace.
@@ -59,28 +60,32 @@ tmux new-session -d -s "$SESSION" -n tactical
 # "command -v" checks if a program exists; skips if not installed.
 # This means on a fresh system, only installed apps get windows.
 
-# --- Window 5: comms (weechat + gomuks as stacked full-screen panes) ---
-# Both chat apps are full-screen in the same window. Use prefix+o or
-# Ctrl+a then o to swap between them (cycle panes). Each gets 100% width.
-# We achieve this by creating two panes and zooming into the first one.
+# --- Window 4: comms (weechat + gomuks as stacked full-screen panes) ---
+# Both chat apps are full-screen in the same window. Use prefix+z to
+# unzoom and see both, or prefix+o to cycle between them.
 if command -v weechat &> /dev/null || command -v gomuks &> /dev/null; then
-    tmux new-window -t "$SESSION:5" -n comms
+    tmux new-window -t "$SESSION:4" -n comms
     if command -v weechat &> /dev/null; then
-        tmux send-keys -t "$SESSION:5" "weechat" Enter
+        tmux send-keys -t "$SESSION:4" "weechat" Enter
     fi
     if command -v gomuks &> /dev/null; then
         if command -v weechat &> /dev/null; then
-            # Create gomuks as a second pane (hidden behind zoom)
-            tmux split-window -v -t "$SESSION:5" -l 50%
-            tmux send-keys -t "$SESSION:5.1" "gomuks" Enter
-            tmux select-pane -t "$SESSION:5.0"
-            # Zoom the first pane so weechat is full-screen by default
-            # Use prefix+z to toggle zoom, or prefix+o to cycle between them
-            tmux resize-pane -Z -t "$SESSION:5.0"
+            tmux split-window -v -t "$SESSION:4" -l 50%
+            tmux send-keys -t "$SESSION:4.1" "gomuks" Enter
+            tmux select-pane -t "$SESSION:4.0"
+            tmux resize-pane -Z -t "$SESSION:4.0"
         else
-            tmux send-keys -t "$SESSION:5" "gomuks" Enter
+            tmux send-keys -t "$SESSION:4" "gomuks" Enter
         fi
     fi
+fi
+
+# --- Window 5: notes (basalt) ---
+# Full-screen Obsidian vault browser. Renders markdown, understands wikilinks.
+# Press Ctrl+Alt+E inside basalt to open a note in Neovim.
+if command -v basalt &> /dev/null; then
+    tmux new-window -t "$SESSION:5" -n notes
+    tmux send-keys -t "$SESSION:5" "basalt" Enter
 fi
 
 # --- Window 6: mail (neomutt) ---
@@ -117,13 +122,9 @@ if command -v ncmpcpp &> /dev/null; then
     fi
 fi
 
-# --- Window 0: notes (basalt) ---
-# Full-screen Obsidian vault browser. Renders markdown, understands wikilinks.
-# Press Ctrl+Alt+E inside basalt to open a note in Neovim.
-if command -v basalt &> /dev/null; then
-    tmux new-window -t "$SESSION:0" -n notes
-    tmux send-keys -t "$SESSION:0" "basalt" Enter
-fi
+# --- Window 0: scratch (empty shell) ---
+# A spare shell for quick one-off commands. Out of the way at Alt+0.
+tmux new-window -t "$SESSION:0" -n scratch
 
 # --- Focus on window 1 (tactical) ---
 # When tmux attaches, you want to land on your working shell, not on
