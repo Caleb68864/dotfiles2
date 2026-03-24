@@ -122,6 +122,7 @@ w3m
 pulsemixer
 bluetuith
 rsync
+ncdu
 
 # Fonts
 ttf-font-awesome

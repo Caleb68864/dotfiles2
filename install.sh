@@ -229,6 +229,7 @@ fi
 status "Setting executable permissions on scripts..."
 EXECUTABLE_SCRIPTS=(
     "$HOME/bin/tmux-command-center"
+    "$HOME/bin/tmux-smart-window"
     "$HOME/bin/pi-workspace"
     "$HOME/bin/deploy-all"
     "$HOME/bin/undeploy"

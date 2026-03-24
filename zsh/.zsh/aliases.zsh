@@ -156,10 +156,10 @@ if command -v mbsync &> /dev/null; then
 fi
 
 # =============================================================================
-# System Control
+# System & TUI Tools (launch on demand, not auto-started)
 # =============================================================================
-# Quick access to system tools you don't need running all the time.
-# Just type the alias, do your thing, and quit.
+# These are tools you launch when you need them, then quit.
+# The always-running TUI apps live in tmux windows (see tmux-command-center).
 if command -v pulsemixer &> /dev/null; then
     alias audio='pulsemixer'          # TUI audio mixer (volume, inputs, outputs)
 fi
@@ -167,10 +167,12 @@ if command -v bluetuith &> /dev/null; then
     alias bt='bluetuith'              # TUI bluetooth manager (pair, connect, disconnect)
 fi
 if command -v khal &> /dev/null; then
-    alias cal='khal interactive'      # Interactive calendar (day/week/month views)
     alias agenda='khal list today 7d' # Show agenda for the next 7 days
 fi
-alias nmtui='nmtui'                   # Network manager TUI (WiFi, ethernet)
+if command -v btop &> /dev/null; then
+    alias top='btop'                  # System monitor (replaces htop/top)
+fi
+alias notes='basalt'                  # Obsidian vault browser TUI (also Alt+4 in tmux)
 
 # =============================================================================
 # Pi Coding Agent
