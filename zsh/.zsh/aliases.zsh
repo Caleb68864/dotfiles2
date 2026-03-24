@@ -156,6 +156,23 @@ if command -v mbsync &> /dev/null; then
 fi
 
 # =============================================================================
+# System Control
+# =============================================================================
+# Quick access to system tools you don't need running all the time.
+# Just type the alias, do your thing, and quit.
+if command -v pulsemixer &> /dev/null; then
+    alias audio='pulsemixer'          # TUI audio mixer (volume, inputs, outputs)
+fi
+if command -v bluetuith &> /dev/null; then
+    alias bt='bluetuith'              # TUI bluetooth manager (pair, connect, disconnect)
+fi
+if command -v khal &> /dev/null; then
+    alias cal='khal interactive'      # Interactive calendar (day/week/month views)
+    alias agenda='khal list today 7d' # Show agenda for the next 7 days
+fi
+alias nmtui='nmtui'                   # Network manager TUI (WiFi, ethernet)
+
+# =============================================================================
 # Pi Coding Agent
 # =============================================================================
 # Pi is an AI coding assistant (similar to Claude Code). These aliases

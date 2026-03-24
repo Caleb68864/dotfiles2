@@ -100,6 +100,29 @@ basalt
 notesmd-cli
 lazydocker
 
+# Chat / Communication
+weechat
+gomuks
+scli
+
+# Calendar (khal reads local calendars, vdirsyncer syncs O365/Google)
+khal
+vdirsyncer
+
+# Music / Media
+mpd
+ncmpcpp
+cava
+yt-dlp
+
+# Terminal web browser
+w3m
+
+# System control
+pulsemixer
+bluetuith
+rsync
+
 # Fonts
 ttf-font-awesome
 

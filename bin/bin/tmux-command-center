@@ -10,20 +10,23 @@
 # via grouped sessions (see .zshrc).
 #
 # WINDOW LAYOUT:
-#   Window 0:  scratch   -- Extra shell, out of the way (Alt+0)
-#   Window 1:  tactical  -- Your default working shell
-#   Window 2+: (user-created windows, pi-workspace agent, etc.)
-#   Window 6:  mail      -- neomutt email client (if installed)
-#   Window 7:  notes     -- basalt Obsidian vault browser (if installed)
-#   Window 8:  news      -- newsboat RSS reader (if installed)
-#   Window 9:  monitor   -- btop system monitor (if installed)
+#   Window 1:  tactical  -- Your default working shell (Alt+1)
+#   Window 2-5: (open)   -- User-created, pi-workspace agent, etc.
+#   Window 6:  mail      -- neomutt email client (Alt+6)
+#   Window 7:  comms     -- weechat + gomuks side by side (Alt+7)
+#   Window 8:  notes     -- basalt Obsidian vault browser (Alt+8)
+#   Window 9:  media     -- ncmpcpp + cava + news split panes (Alt+9)
+#   Window 0:  monitor   -- btop + calendar agenda split (Alt+0)
 #
-# TUI apps are pinned to windows 6-9 (the right side of Alt+number keys).
-# New windows (Ctrl+a c, pi-workspace, etc.) auto-fill 2, 3, 4, 5
-# since renumber-windows is OFF and those slots are open.
-# This keeps your working windows at low numbers and background TUI apps
-# at high numbers -- you access working stuff with Alt+1-5 and TUI apps
-# with Alt+6-9. Window 0 (Alt+0) is a scratch shell for quick one-offs.
+# POPUP TOOLS (not windows, toggled on demand):
+#   prefix+Ctrl+c  -- Claude Code popup
+#   prefix+Ctrl+p  -- Pi popup
+#   prefix+a       -- pulsemixer (audio control)
+#   prefix+B       -- bluetuith (bluetooth control)
+#
+# TUI apps are pinned to windows 6-0 (right side of keyboard).
+# Working windows auto-fill slots 2-5.
+# Some windows use split panes to combine related apps.
 #
 # Additional windows (like "agent" for Pi workspace) are created on demand
 # by other scripts like pi-workspace.
@@ -40,49 +43,92 @@ SESSION="command-center"
 # It's created as part of the session itself (the -n flag names it).
 tmux new-session -d -s "$SESSION" -n tactical
 
-# --- Window 0: scratch (extra shell) ---
-# A spare shell tucked away at Alt+0 for quick one-off commands without
-# cluttering your main tactical window. Useful but not in the way.
-tmux new-window -t "$SESSION:0" -n scratch
-
 # =========================================================================
-# TUI Apps -- Pinned to windows 6-9 (high numbers, right side of keyboard)
+# TUI Apps -- Pinned to windows 6-0 (high numbers, right side of keyboard)
 # =========================================================================
 # These use explicit window numbers (-t SESSION:NUMBER) so they always
 # live at the end of the window list. New working windows auto-fill
 # slots 2-5 without displacing these.
+#
+# Some windows use split panes to combine related apps so you don't
+# end up with 15 separate windows.
 
 # --- Window 6: mail (neomutt) ---
-# Only create the mail window if neomutt is actually installed.
-# "command -v" checks if a program exists; if not, we skip this window
-# so you don't get an error on a fresh install before neomutt is set up.
+# Full-screen email client. Needs all the width for sidebar + message list + body.
+# "command -v" checks if a program exists; skips if not installed.
 if command -v neomutt &> /dev/null; then
     tmux new-window -t "$SESSION:6" -n mail
-    tmux send-keys -t "$SESSION:mail" "neomutt" Enter
+    tmux send-keys -t "$SESSION:6" "neomutt" Enter
 fi
 
-# --- Window 7: notes (basalt) ---
-# Basalt is a TUI for browsing Obsidian vaults. It renders markdown,
-# understands wikilinks, and has a file explorer sidebar.
+# --- Window 7: comms (chat clients side by side) ---
+# Weechat (IRC/Discord/Slack) on the left, gomuks (Matrix/Element) on the right.
+# If only one is installed, it gets the full window.
+if command -v weechat &> /dev/null; then
+    tmux new-window -t "$SESSION:7" -n comms
+    tmux send-keys -t "$SESSION:7" "weechat" Enter
+    # Add gomuks as a split pane on the right (40% width)
+    if command -v gomuks &> /dev/null; then
+        tmux split-window -h -t "$SESSION:7" -l 40%
+        tmux send-keys -t "$SESSION:7.1" "gomuks" Enter
+        tmux select-pane -t "$SESSION:7.0"  # Focus back on weechat
+    fi
+elif command -v gomuks &> /dev/null; then
+    # No weechat, just gomuks full-screen
+    tmux new-window -t "$SESSION:7" -n comms
+    tmux send-keys -t "$SESSION:7" "gomuks" Enter
+fi
+
+# --- Window 8: notes (basalt) ---
+# Full-screen Obsidian vault browser. Needs width for file tree + rendered markdown.
 # Press Ctrl+Alt+E inside basalt to open a note in Neovim.
 if command -v basalt &> /dev/null; then
-    tmux new-window -t "$SESSION:7" -n notes
-    tmux send-keys -t "$SESSION:notes" "basalt" Enter
+    tmux new-window -t "$SESSION:8" -n notes
+    tmux send-keys -t "$SESSION:8" "basalt" Enter
 fi
 
-# --- Window 8: news (newsboat) ---
-# Newsboat is an RSS/Atom feed reader for the terminal.
-if command -v newsboat &> /dev/null; then
-    tmux new-window -t "$SESSION:8" -n news
-    tmux send-keys -t "$SESSION:news" "newsboat" Enter
+# --- Window 9: media (music + visualizer + news) ---
+# ncmpcpp (music player) top-left, cava (visualizer) top-right,
+# newsboat (RSS) on the bottom. All your consumption in one window.
+# If only some are installed, the layout adapts.
+if command -v ncmpcpp &> /dev/null || command -v newsboat &> /dev/null; then
+    tmux new-window -t "$SESSION:9" -n media
+
+    if command -v ncmpcpp &> /dev/null; then
+        tmux send-keys -t "$SESSION:9" "ncmpcpp" Enter
+        # Add cava visualizer to the right if installed
+        if command -v cava &> /dev/null; then
+            tmux split-window -h -t "$SESSION:9" -l 35%
+            tmux send-keys -t "$SESSION:9.1" "cava" Enter
+        fi
+        # Add newsboat below the music player
+        if command -v newsboat &> /dev/null; then
+            tmux split-window -v -t "$SESSION:9.0" -l 50%
+            tmux send-keys "newsboat" Enter
+        fi
+        tmux select-pane -t "$SESSION:9.0"  # Focus on ncmpcpp
+    elif command -v newsboat &> /dev/null; then
+        # No music player, just newsboat full-screen
+        tmux send-keys -t "$SESSION:9" "newsboat" Enter
+    fi
 fi
 
-# --- Window 9: monitor (btop) ---
-# btop is a system monitor that shows CPU, RAM, disk, network, and processes.
-# Window 9 = Alt+9, the last TUI app window.
+# --- Window 0: monitor (btop + calendar agenda) ---
+# btop (system monitor) on the left, khal calendar agenda on the right.
+# The calendar shows today's schedule at a glance.
 if command -v btop &> /dev/null; then
-    tmux new-window -t "$SESSION:9" -n monitor
-    tmux send-keys -t "$SESSION:monitor" "btop" Enter
+    tmux new-window -t "$SESSION:0" -n monitor
+    tmux send-keys -t "$SESSION:0" "btop" Enter
+    # Add calendar agenda as a narrow right pane
+    if command -v khal &> /dev/null; then
+        tmux split-window -h -t "$SESSION:0" -l 35%
+        # Show today's agenda, refreshing every 5 minutes via watch
+        tmux send-keys -t "$SESSION:0.1" "watch -n 300 -t khal list today 7d" Enter
+    fi
+elif command -v khal &> /dev/null; then
+    # No btop, just calendar
+    tmux new-window -t "$SESSION:0" -n monitor
+    tmux send-keys -t "$SESSION:0" "khal interactive" Enter
 fi
 
 # --- Focus on window 1 (tactical) ---
