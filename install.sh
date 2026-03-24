@@ -14,7 +14,7 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "${BLUE}╔═══════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║                                                       ║${NC}"
 echo -e "${BLUE}║       Caleb's Dotfiles Installation Script           ║${NC}"
-echo -e "${BLUE}║       Stow + Starship + Hyprland + Neovim            ║${NC}"
+echo -e "${BLUE}║   Stow + Hyprland + Neovim + Tmux + AI Agents       ║${NC}"
 echo -e "${BLUE}║                                                       ║${NC}"
 echo -e "${BLUE}╚═══════════════════════════════════════════════════════╝${NC}"
 echo ""
@@ -116,7 +116,10 @@ fi
 status "Creating necessary directories..."
 mkdir -p "$HOME/.local/share"
 mkdir -p "$HOME/.config"
-mkdir -p "$HOME/scratch"
+mkdir -p "$HOME/.local/share/mail"       # Maildir for neomutt/isync (Phase 2)
+mkdir -p "$HOME/scratch"                  # Scratch directory for quick AI sessions
+mkdir -p "$HOME/Pictures/Wallpapers"      # Wallpaper directory for random-wallpaper.sh
+mkdir -p "$HOME/Pictures/Screenshots"     # Screenshots directory for hyprshot
 success "Directories created"
 
 # Backup existing dotfiles
@@ -136,6 +139,7 @@ CONFLICT_ITEMS=(
     "$HOME/.config/waybar"
     "$HOME/.config/swaync"
     "$HOME/.config/atuin"
+    "$HOME/.config/neomutt"
     "$HOME/.local/share/fonts"
     "$HOME/.pi"
 )
@@ -180,6 +184,7 @@ PACKAGES=(
     "bin"
     "pi"
     "themes"
+    "neomutt"
 )
 
 declare -A STOW_TARGETS=(
@@ -192,6 +197,7 @@ declare -A STOW_TARGETS=(
     ["atuin"]="$HOME/.config/atuin"
     ["themes"]="$HOME/.config/themes"
     ["fonts"]="$HOME/.local/share/fonts"
+    ["neomutt"]="$HOME/.config/neomutt"
 )
 
 for package in "${PACKAGES[@]}"; do
@@ -213,6 +219,25 @@ if [ -d "$HOME/.local/share/fonts" ]; then
     success "Font cache refreshed"
 fi
 
+# Set executable permissions on scripts
+# (Git on Windows can't set the execute bit, so we fix it here on Linux)
+status "Setting executable permissions on scripts..."
+EXECUTABLE_SCRIPTS=(
+    "$HOME/bin/tmux-command-center"
+    "$HOME/bin/pi-workspace"
+    "$HOME/bin/deploy-all"
+    "$HOME/bin/undeploy"
+    "$HOME/bin/get-fonts.sh"
+    "$HOME/bin/switch-theme.sh"
+    "$HOME/.config/hypr/scripts/random-wallpaper.sh"
+)
+for script in "${EXECUTABLE_SCRIPTS[@]}"; do
+    if [ -f "$script" ]; then
+        chmod +x "$script"
+        success "chmod +x $(basename $script)"
+    fi
+done
+
 # Install lazy.nvim for Neovim
 if [ ! -d "$HOME/.local/share/nvim/lazy/lazy.nvim" ]; then
     status "Installing lazy.nvim..."
@@ -221,6 +246,25 @@ if [ ! -d "$HOME/.local/share/nvim/lazy/lazy.nvim" ]; then
     success "lazy.nvim installed"
 else
     success "lazy.nvim already installed"
+fi
+
+# Install TPM (Tmux Plugin Manager)
+if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+    status "Installing Tmux Plugin Manager (TPM)..."
+    git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+    success "TPM installed (press Ctrl+a then I inside tmux to install plugins)"
+else
+    success "TPM already installed"
+fi
+
+# Install Neovim plugins headlessly
+status "Installing/updating Neovim plugins..."
+nvim --headless "+Lazy! sync" +qa 2>/dev/null && success "Neovim plugins synced" || warning "Neovim plugin sync skipped (run :Lazy in nvim)"
+
+# Install tmux plugins if TPM is available
+if [ -f "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
+    status "Installing tmux plugins..."
+    "$HOME/.tmux/plugins/tpm/bin/install_plugins" && success "Tmux plugins installed" || warning "Tmux plugin install failed (press Ctrl+a I inside tmux)"
 fi
 
 # Change default shell to zsh
@@ -251,9 +295,23 @@ if [ -d "$BACKUP_DIR" ] && [ "$(ls -A $BACKUP_DIR)" ]; then
 fi
 echo -e "${BLUE}Next steps:${NC}"
 echo -e "  1. Restart your terminal or run: ${YELLOW}exec zsh${NC}"
+echo -e "     (Tmux will auto-start with mail/monitor windows)"
 echo -e "  2. Open Neovim and run: ${YELLOW}:Lazy${NC} and ${YELLOW}:Mason${NC}"
 echo -e "  3. Run: ${YELLOW}:checkhealth${NC} in Neovim to verify setup"
 echo -e "  4. Configure your Hyprland monitors in ${YELLOW}~/.config/hypr/hyprland.conf${NC}"
+echo ""
+echo -e "${BLUE}Tmux keybinds:${NC}"
+echo -e "  ${YELLOW}Ctrl+a, Ctrl+c${NC}  Claude Code popup"
+echo -e "  ${YELLOW}Ctrl+a, Ctrl+p${NC}  Pi popup"
+echo -e "  ${YELLOW}Ctrl+a, Ctrl+f${NC}  Project sessionizer (fzf)"
+echo -e "  ${YELLOW}Alt+1-9${NC}         Jump to tmux window"
+echo ""
+echo -e "${BLUE}Hyprland keybinds:${NC}"
+echo -e "  ${YELLOW}Super+H/J/K/L${NC}       Move focus (vim-style)"
+echo -e "  ${YELLOW}Super+Shift+H/J/K/L${NC} Move window"
+echo -e "  ${YELLOW}Super+R${NC} then HJKL   Resize mode"
+echo -e "  ${YELLOW}Super+BackSpace${NC}     Lock screen"
+echo -e "  ${YELLOW}Super+A${NC}             AI scratchpad"
 echo ""
 echo -e "${BLUE}Stow usage:${NC}"
 echo -e "  Deploy a package:   ${YELLOW}stow -vRt \$HOME <package>${NC}"
@@ -262,5 +320,5 @@ echo -e "  Dry run:            ${YELLOW}stow -nvt \$HOME <package>${NC}"
 echo ""
 echo -e "${BLUE}Available packages:${NC} ${PACKAGES[*]}"
 echo ""
-echo -e "For more information, see: ${YELLOW}$DOTFILES_DIR/README.md${NC}"
+echo -e "For more information, see: ${YELLOW}$DOTFILES_DIR/CLAUDE.md${NC}"
 echo ""
