@@ -11,14 +11,21 @@
 #
 # WINDOW LAYOUT:
 #   Window 1:    tactical  -- Your default working shell (Alt+1)
-#   Window 2-3:  (open)    -- User-created, pi-workspace agent, etc.
-#   Window 4:    comms     -- weechat + gomuks (Alt+4, prefix+z to swap)
-#   Window 5:    notes     -- basalt Obsidian vault browser (Alt+5)
-#   Window 6:    mail      -- neomutt email client (Alt+6)
-#   Window 7:    calendar  -- khal interactive calendar (Alt+7)
-#   Window 8:    news      -- newsboat RSS reader (Alt+8)
-#   Window 9:    music     -- ncmpcpp + cava split panes (Alt+9)
+#   Window 2-4:  (open)    -- User-created, pi-workspace agent, etc.
+#   Window 5:    comms     -- weechat + gomuks + scli (Alt+5, monocle)
+#   Window 6:    notes     -- basalt Obsidian vault browser (Alt+6)
+#   Window 7:    info      -- mail + calendar + news (Alt+7, monocle)
+#   Window 8:    music     -- ncmpcpp + cava split panes (Alt+8)
+#   Window 9:    (free)    -- Available for future use
 #   Window 0:    scratch   -- Empty shell for quick one-offs (Alt+0)
+#
+# MONOCLE MODE (windows 5 and 7):
+#   Multiple apps share one window, each as a full-screen pane.
+#   The first pane is zoomed by default (fills the whole window).
+#   To switch between apps:
+#     prefix+o  = cycle to next app (stays full-screen)
+#     prefix+z  = unzoom to see all apps as split panes
+#     prefix+z  = zoom back to full-screen on current app
 #
 # GROUPING:
 #   Mail/Calendar/News are at 6-7-8 (consecutive, easy to flip between)
@@ -32,8 +39,8 @@
 # ALIAS-ONLY TOOLS (launch when needed, not auto-started):
 #   btop, pulsemixer, bluetuith, basalt -- see aliases.zsh
 #
-# TUI apps are pinned to windows 4-9 (right side of keyboard).
-# Working windows auto-fill slots 2-3. Window 0 is scratch.
+# TUI apps are pinned to windows 5-8 (right side of keyboard).
+# Working windows auto-fill slots 2-4. Window 0 is scratch.
 #
 # Additional windows (like "agent" for Pi workspace) are created on demand
 # by other scripts like pi-workspace.
@@ -60,65 +67,96 @@ tmux new-session -d -s "$SESSION" -n tactical
 # "command -v" checks if a program exists; skips if not installed.
 # This means on a fresh system, only installed apps get windows.
 
-# --- Window 4: comms (weechat + gomuks as stacked full-screen panes) ---
-# Both chat apps are full-screen in the same window. Use prefix+z to
-# unzoom and see both, or prefix+o to cycle between them.
-if command -v weechat &> /dev/null || command -v gomuks &> /dev/null; then
-    tmux new-window -t "$SESSION:4" -n comms
-    if command -v weechat &> /dev/null; then
-        tmux send-keys -t "$SESSION:4" "weechat" Enter
-    fi
-    if command -v gomuks &> /dev/null; then
-        if command -v weechat &> /dev/null; then
-            tmux split-window -v -t "$SESSION:4" -l 50%
-            tmux send-keys -t "$SESSION:4.1" "gomuks" Enter
-            tmux select-pane -t "$SESSION:4.0"
-            tmux resize-pane -Z -t "$SESSION:4.0"
-        else
-            tmux send-keys -t "$SESSION:4" "gomuks" Enter
-        fi
+# --- Window 5: comms (monocle: weechat + gomuks + scli) ---
+# All chat apps stacked as panes, first one zoomed to full-screen.
+# prefix+o = cycle to next chat app (stays zoomed/full-screen)
+# prefix+z = unzoom to see all as split panes, then zoom back
+COMMS_CREATED=false
+if command -v weechat &> /dev/null; then
+    tmux new-window -t "$SESSION:5" -n comms
+    tmux send-keys -t "$SESSION:5" "weechat" Enter
+    COMMS_CREATED=true
+fi
+if command -v gomuks &> /dev/null; then
+    if [ "$COMMS_CREATED" = true ]; then
+        tmux split-window -v -t "$SESSION:5" -l 50%
+        tmux send-keys "gomuks" Enter
+    else
+        tmux new-window -t "$SESSION:5" -n comms
+        tmux send-keys -t "$SESSION:5" "gomuks" Enter
+        COMMS_CREATED=true
     fi
 fi
+if command -v scli &> /dev/null; then
+    if [ "$COMMS_CREATED" = true ]; then
+        tmux split-window -v -t "$SESSION:5" -l 33%
+        tmux send-keys "scli" Enter
+    else
+        tmux new-window -t "$SESSION:5" -n comms
+        tmux send-keys -t "$SESSION:5" "scli" Enter
+        COMMS_CREATED=true
+    fi
+fi
+# Zoom the first pane so you start with one app full-screen
+if [ "$COMMS_CREATED" = true ]; then
+    tmux select-pane -t "$SESSION:5.0"
+    tmux resize-pane -Z -t "$SESSION:5.0"
+fi
 
-# --- Window 5: notes (basalt) ---
+# --- Window 6: notes (basalt) ---
 # Full-screen Obsidian vault browser. Renders markdown, understands wikilinks.
 # Press Ctrl+Alt+E inside basalt to open a note in Neovim.
 if command -v basalt &> /dev/null; then
-    tmux new-window -t "$SESSION:5" -n notes
-    tmux send-keys -t "$SESSION:5" "basalt" Enter
+    tmux new-window -t "$SESSION:6" -n notes
+    tmux send-keys -t "$SESSION:6" "basalt" Enter
 fi
 
-# --- Window 6: mail (neomutt) ---
-# Full-screen email. Needs all the width for sidebar + message list + body.
+# --- Window 7: info (monocle: mail + calendar + news) ---
+# All info apps stacked as panes, first one zoomed to full-screen.
+# prefix+o = cycle between neomutt, khal, newsboat (stays full-screen)
+# prefix+z = unzoom to see all three, then zoom back
+INFO_CREATED=false
 if command -v neomutt &> /dev/null; then
-    tmux new-window -t "$SESSION:6" -n mail
-    tmux send-keys -t "$SESSION:6" "neomutt" Enter
+    tmux new-window -t "$SESSION:7" -n info
+    tmux send-keys -t "$SESSION:7" "neomutt" Enter
+    INFO_CREATED=true
 fi
-
-# --- Window 7: calendar (khal) ---
-# Full-screen interactive calendar. Day/week/month views with vim keys.
-# Syncs with O365 and Google via vdirsyncer.
 if command -v khal &> /dev/null; then
-    tmux new-window -t "$SESSION:7" -n calendar
-    tmux send-keys -t "$SESSION:7" "khal interactive" Enter
+    if [ "$INFO_CREATED" = true ]; then
+        tmux split-window -v -t "$SESSION:7" -l 50%
+        tmux send-keys "khal interactive" Enter
+    else
+        tmux new-window -t "$SESSION:7" -n info
+        tmux send-keys -t "$SESSION:7" "khal interactive" Enter
+        INFO_CREATED=true
+    fi
 fi
-
-# --- Window 8: news (newsboat) ---
-# Full-screen RSS reader. Browse feeds, read articles, bookmark to Obsidian.
 if command -v newsboat &> /dev/null; then
-    tmux new-window -t "$SESSION:8" -n news
-    tmux send-keys -t "$SESSION:8" "newsboat" Enter
+    if [ "$INFO_CREATED" = true ]; then
+        tmux split-window -v -t "$SESSION:7" -l 33%
+        tmux send-keys "newsboat" Enter
+    else
+        tmux new-window -t "$SESSION:7" -n info
+        tmux send-keys -t "$SESSION:7" "newsboat" Enter
+        INFO_CREATED=true
+    fi
+fi
+# Zoom the first pane so you start with mail full-screen
+if [ "$INFO_CREATED" = true ]; then
+    tmux select-pane -t "$SESSION:7.0"
+    tmux resize-pane -Z -t "$SESSION:7.0"
 fi
 
-# --- Window 9: music (ncmpcpp + cava) ---
+# --- Window 8: music (ncmpcpp + cava) ---
 # Music player on the left (60%), audio visualizer on the right (40%).
+# These are side-by-side (not monocle) because cava is visual + music together.
 if command -v ncmpcpp &> /dev/null; then
-    tmux new-window -t "$SESSION:9" -n music
-    tmux send-keys -t "$SESSION:9" "ncmpcpp" Enter
+    tmux new-window -t "$SESSION:8" -n music
+    tmux send-keys -t "$SESSION:8" "ncmpcpp" Enter
     if command -v cava &> /dev/null; then
-        tmux split-window -h -t "$SESSION:9" -l 40%
-        tmux send-keys -t "$SESSION:9.1" "cava" Enter
-        tmux select-pane -t "$SESSION:9.0"
+        tmux split-window -h -t "$SESSION:8" -l 40%
+        tmux send-keys -t "$SESSION:8.1" "cava" Enter
+        tmux select-pane -t "$SESSION:8.0"
     fi
 fi
 
