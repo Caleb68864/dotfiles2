@@ -144,6 +144,18 @@ fi
 
 
 # =============================================================================
+# Email (neomutt + mbsync)
+# =============================================================================
+# These aliases prepare for terminal email. They only load if the tools are
+# installed -- safe to have even before neomutt is set up.
+if command -v neomutt &> /dev/null; then
+    alias mail='neomutt'              # Quick way to open your email
+fi
+if command -v mbsync &> /dev/null; then
+    alias msync='mbsync -a'           # Sync ALL email accounts (download new mail)
+fi
+
+# =============================================================================
 # Pi Coding Agent
 # =============================================================================
 # Pi is an AI coding assistant (similar to Claude Code). These aliases

@@ -1,0 +1,65 @@
+#!/bin/bash
+# =============================================================================
+# tmux-command-center -- Create the command-center tmux session with TUI apps
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/bin/tmux-command-center
+#
+# This script creates the main tmux session with pre-configured windows for
+# all your TUI (Terminal User Interface) apps. It runs automatically when you
+# open your FIRST terminal -- subsequent terminals join the existing session
+# via grouped sessions (see .zshrc).
+#
+# WINDOW LAYOUT:
+#   Window 1: tactical  -- Your default working shell
+#   Window 2: mail      -- neomutt email client (if installed)
+#   Window 3: monitor   -- btop system monitor (if installed)
+#   Window 4: news      -- newsboat RSS reader (future, currently disabled)
+#
+# Additional windows (like "agent" for Pi workspace) are created on demand
+# by other scripts like pi-workspace.
+#
+# USAGE:
+#   Called automatically by .zshrc on first terminal open.
+#   Can also be run manually: ~/bin/tmux-command-center
+# =============================================================================
+
+SESSION="command-center"
+
+# --- Window 1: tactical (default shell) ---
+# This is your main working terminal -- where you type commands, edit files, etc.
+# It's created as part of the session itself (the -n flag names it).
+tmux new-session -d -s "$SESSION" -n tactical
+
+# --- Window 2: mail (neomutt) ---
+# Only create the mail window if neomutt is actually installed.
+# "command -v" checks if a program exists; if not, we skip this window
+# so you don't get an error on a fresh install before neomutt is set up.
+if command -v neomutt &> /dev/null; then
+    tmux new-window -t "$SESSION" -n mail
+    tmux send-keys -t "$SESSION:mail" "neomutt" Enter
+fi
+
+# --- Window 3: monitor (btop) ---
+# btop is a system monitor that shows CPU, RAM, disk, network, and processes.
+# Same guard: only launch if btop is installed.
+if command -v btop &> /dev/null; then
+    tmux new-window -t "$SESSION" -n monitor
+    tmux send-keys -t "$SESSION:monitor" "btop" Enter
+fi
+
+# --- Window 4: news (newsboat) --- FUTURE ---
+# Uncomment when newsboat is configured with RSS feeds.
+# if command -v newsboat &> /dev/null; then
+#     tmux new-window -t "$SESSION" -n news
+#     tmux send-keys -t "$SESSION:news" "newsboat" Enter
+# fi
+
+# --- Focus on window 1 (tactical) ---
+# When tmux attaches, you want to land on your working shell, not on
+# btop or neomutt. This selects window 1 before attaching.
+tmux select-window -t "$SESSION:tactical"
+
+# --- Attach to the session ---
+# "exec" replaces the current shell process with tmux (no leftover shell
+# sitting underneath using memory).
+exec tmux attach -t "$SESSION"

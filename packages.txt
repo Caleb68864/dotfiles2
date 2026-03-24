@@ -76,6 +76,10 @@ satty
 hyprpicker
 wf-recorder
 
+# TUI apps (auto-started in tmux command-center)
+btop
+newsboat
+
 # Fonts
 ttf-font-awesome
 
