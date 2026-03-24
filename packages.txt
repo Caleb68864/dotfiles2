@@ -67,6 +67,7 @@ zoxide
 zathura
 zathura-pdf-mupdf
 imv
+entr
 swww
 grim
 slurp
