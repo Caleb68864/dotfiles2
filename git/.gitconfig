@@ -9,7 +9,7 @@
 [core]
 	editor = nvim
 	autocrlf = input
-	pager = less -R
+	pager = delta
 	whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
 
 [init]
@@ -33,9 +33,29 @@
 [mergetool "nvimdiff"]
 	cmd = nvim -d $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
 
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+	side-by-side = true
+	line-numbers = true
+	syntax-theme = tokyonight_night
+	minus-style = syntax "#37222c"
+	minus-emph-style = syntax "#713137"
+	plus-style = syntax "#20303b"
+	plus-emph-style = syntax "#2c5a66"
+	line-numbers-minus-style = "#f7768e"
+	line-numbers-plus-style = "#9ece6a"
+	line-numbers-zero-style = "#414868"
+	hunk-header-decoration-style = "#7aa2f7" box ul
+	hunk-header-style = file line-number syntax bold
+	file-style = "#7aa2f7" bold
+	file-decoration-style = "#7aa2f7" ul
+
 [diff]
 	tool = nvimdiff
-	colorMoved = zebra
+	colorMoved = default
 
 [difftool]
 	prompt = false

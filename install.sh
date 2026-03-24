@@ -140,6 +140,7 @@ CONFLICT_ITEMS=(
     "$HOME/.config/swaync"
     "$HOME/.config/atuin"
     "$HOME/.config/neomutt"
+    "$HOME/.config/newsboat"
     "$HOME/.local/share/fonts"
     "$HOME/.pi"
 )
@@ -186,6 +187,7 @@ PACKAGES=(
     "themes"
     "neomutt"
     "basalt"
+    "newsboat"
 )
 
 declare -A STOW_TARGETS=(
@@ -200,6 +202,7 @@ declare -A STOW_TARGETS=(
     ["fonts"]="$HOME/.local/share/fonts"
     ["neomutt"]="$HOME/.config/neomutt"
     ["basalt"]="$HOME/.config/basalt"
+    ["newsboat"]="$HOME/.config/newsboat"
 )
 
 for package in "${PACKAGES[@]}"; do

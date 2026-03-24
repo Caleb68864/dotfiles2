@@ -1,0 +1,139 @@
+# =============================================================================
+# Newsboat Configuration
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/newsboat/config
+# Stow target: ~/.config/newsboat/config
+#
+# Newsboat is a terminal RSS/Atom feed reader. You subscribe to websites,
+# blogs, YouTube channels, and GitHub releases and read them all in one
+# place without opening a browser.
+#
+# Usage:
+#   newsboat           -- Open newsboat
+#   r                  -- Reload current feed
+#   R                  -- Reload all feeds
+#   o                  -- Open article in browser
+#   b                  -- Bookmark article (saves to Obsidian vault)
+#   q                  -- Quit / go back
+# =============================================================================
+
+
+# =============================================================================
+# General Settings
+# =============================================================================
+
+# How often to auto-reload feeds (in minutes). 0 = don't auto-reload.
+auto-reload yes
+reload-time 30
+
+# Number of threads for parallel feed downloading (faster reloads)
+reload-threads 4
+
+# Notify when new articles arrive (shows count)
+notify-always yes
+notify-format "newsboat: %n new articles"
+
+# Show article dates in a clean format
+datetime-format "%Y-%m-%d %H:%M"
+
+# Default browser for opening articles
+browser "xdg-open %u"
+
+# Maximum number of articles to keep per feed (0 = unlimited)
+max-items 200
+
+# Confirm before quitting
+confirm-exit no
+
+# Use vim-style keybindings
+bind-key j down
+bind-key k up
+bind-key j next articlelist
+bind-key k prev articlelist
+bind-key J next-feed articlelist
+bind-key K prev-feed articlelist
+bind-key G end
+bind-key g home
+bind-key l open
+bind-key h quit
+bind-key n next-unread
+bind-key N prev-unread
+
+# Bookmark command: saves article to Obsidian vault (Phase 2 of clipping pipeline)
+# bookmark-cmd "~/.config/newsboat/scripts/save-to-obsidian.sh"
+# bookmark-autopilot yes
+
+
+# =============================================================================
+# Tokyo Night Color Theme
+# =============================================================================
+# Colors use the format: color <element> <foreground> <background> [<attribute>]
+#
+# Available colors: black, red, green, yellow, blue, magenta, cyan, white
+# Plus color0-color255 for 256-color terminals.
+# Attributes: bold, underline, standout, blink
+#
+# Tokyo Night palette mapping:
+#   bg:     color0/black     (#1a1b26)
+#   bg2:    color8           (#414868)
+#   fg:     color15/white    (#c0caf5)
+#   fg dim: color7           (#a9b1d6)
+#   blue:   color4           (#7aa2f7)
+#   purple: color5           (#bb9af7)
+#   cyan:   color6           (#7dcfff)
+#   green:  color2           (#9ece6a)
+#   yellow: color3           (#e0af68)
+#   red:    color1           (#f7768e)
+# =============================================================================
+
+# --- Article list ---
+# Regular articles: soft gray text on dark background
+color article        color15  default
+
+# --- List items (feeds and articles) ---
+# Normal list text
+color listnormal     color7   default
+# Unread list items: bright white (stands out)
+color listnormal_unread color15 default bold
+# Currently selected item: bright text on blue background
+color listfocus      color15  color4   bold
+# Currently selected + unread: same but extra emphasis
+color listfocus_unread color15 color4  bold
+
+# --- Info bar (status line at top/bottom) ---
+color info           color15  color8   bold
+
+# --- Highlighted text in article view ---
+color highlight-article color15 color8
+
+# --- Hint keys (one-key shortcuts) ---
+color hint-key       color4   default  bold
+color hint-keys-delimiter color8 default
+
+# --- Title bar ---
+color title          color4   default  bold
+
+# =============================================================================
+# Feed display format
+# =============================================================================
+
+# How feeds are displayed in the feed list
+# %t = title, %U = unread count, %u = url
+feedlist-format "%4i %n %11U  %t"
+
+# How articles are displayed in the article list
+# %D = date, %f = feed title, %t = article title, %a = author
+articlelist-format "%D  %f  %?T?|%-17T|  ?%t"
+
+
+# =============================================================================
+# URLs file (add your RSS feeds here)
+# =============================================================================
+# Create ~/.config/newsboat/urls and add feeds, one per line:
+#
+#   https://hnrss.org/newest "~Hacker News"
+#   https://www.reddit.com/r/neovim/.rss "~r/neovim"
+#   https://github.com/neovim/neovim/releases.atom "~Neovim Releases"
+#   https://lukesmith.xyz/rss.xml "~Luke Smith"
+#
+# The "~Name" after the URL sets a display name for the feed.

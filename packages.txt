@@ -76,11 +76,29 @@ satty
 hyprpicker
 wf-recorder
 
+# Modern CLI replacements (Rust/Go tools)
+git-delta
+jq
+yq
+xh
+dust
+duf
+procs
+just
+direnv
+glow
+tealdeer
+age
+ouch
+navi
+
 # TUI apps (auto-started in tmux command-center)
 btop
 newsboat
+neomutt
 basalt
 notesmd-cli
+lazydocker
 
 # Fonts
 ttf-font-awesome
