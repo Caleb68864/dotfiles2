@@ -32,6 +32,8 @@ Each package has a specific stow target. Never use a blanket `stow -t "$HOME"` f
 | `bin` | `$HOME` | get-fonts.sh, switch-theme.sh, deploy-all, undeploy |
 | `pi` | `$HOME` | .pi/agent/settings.json, bin/pi-workspace, prompts/ |
 | `basalt` | `~/.config/basalt` | config.toml (Obsidian vault TUI browser) |
+| `aerc` | `~/.config/aerc` | aerc.conf, accounts.conf, binds.conf, scripts/ |
+| `newsboat` | `~/.config/newsboat` | config (RSS reader with Tokyo Night theme) |
 
 ## Common Commands
 

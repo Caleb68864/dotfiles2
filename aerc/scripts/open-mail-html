@@ -1,0 +1,71 @@
+#!/bin/bash
+# =============================================================================
+# open-mail-html -- Open an email's HTML part in a lightweight browser
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/aerc/scripts/open-mail-html
+# Installed to: ~/.local/bin/open-mail-html
+#
+# Called by aerc via :pipe -- receives raw email on stdin.
+# Extracts the HTML part and opens it in qutebrowser for full rendering
+# (images, CSS, tables, etc. that don't display in the terminal).
+#
+# USAGE (from aerc):
+#   Press V on any email to view it in the browser.
+#
+# BROWSER PREFERENCE (in order):
+#   1. qutebrowser (fast, vim keys, Wayland native)
+#   2. xdg-open (system default browser)
+#   3. w3m (fallback: terminal browser)
+# =============================================================================
+
+set -euo pipefail
+
+# Create a temp file for the HTML content
+TMPFILE=$(mktemp /tmp/aerc-html-XXXXXX.html)
+
+# Extract the HTML part from the raw email using Python
+# Falls back to the plain text body wrapped in <pre> tags
+python3 -c "
+import sys, email
+from email import policy
+
+msg = email.message_from_binary_file(sys.stdin.buffer, policy=policy.default)
+
+# Try HTML part first
+for part in msg.walk():
+    if part.get_content_type() == 'text/html':
+        charset = part.get_content_charset() or 'utf-8'
+        html = part.get_payload(decode=True).decode(charset, errors='replace')
+        print(html)
+        sys.exit(0)
+
+# No HTML part -- wrap plain text in basic HTML
+for part in msg.walk():
+    if part.get_content_type() == 'text/plain':
+        charset = part.get_content_charset() or 'utf-8'
+        text = part.get_payload(decode=True).decode(charset, errors='replace')
+        # Escape HTML entities and wrap in pre tag
+        import html
+        text = html.escape(text)
+        print(f'<html><body><pre style=\"font-family: monospace; white-space: pre-wrap;\">{text}</pre></body></html>')
+        sys.exit(0)
+
+print('<html><body><p>No viewable content found.</p></body></html>')
+" > "$TMPFILE"
+
+# Open in the best available browser
+if command -v qutebrowser &> /dev/null; then
+    qutebrowser "$TMPFILE" &
+elif command -v xdg-open &> /dev/null; then
+    xdg-open "$TMPFILE" &
+elif command -v w3m &> /dev/null; then
+    w3m "$TMPFILE"
+else
+    echo "No browser found. Install qutebrowser: yay -S qutebrowser"
+    exit 1
+fi
+
+# Clean up after a delay (give the browser time to load)
+(sleep 30 && rm -f "$TMPFILE") &
+
+exit 0

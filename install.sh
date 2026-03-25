@@ -116,7 +116,7 @@ fi
 status "Creating necessary directories..."
 mkdir -p "$HOME/.local/share"
 mkdir -p "$HOME/.config"
-mkdir -p "$HOME/.local/share/mail"       # Maildir for neomutt/isync (Phase 2)
+mkdir -p "$HOME/.local/share/mail"       # Maildir for email (if needed)
 mkdir -p "$HOME/scratch"                  # Scratch directory for quick AI sessions
 mkdir -p "$HOME/Pictures/Wallpapers"      # Wallpaper directory for random-wallpaper.sh
 mkdir -p "$HOME/Pictures/Screenshots"     # Screenshots directory for hyprshot
@@ -139,7 +139,7 @@ CONFLICT_ITEMS=(
     "$HOME/.config/waybar"
     "$HOME/.config/swaync"
     "$HOME/.config/atuin"
-    "$HOME/.config/neomutt"
+    "$HOME/.config/aerc"
     "$HOME/.config/newsboat"
     "$HOME/.local/share/fonts"
     "$HOME/.pi"
@@ -185,7 +185,7 @@ PACKAGES=(
     "bin"
     "pi"
     "themes"
-    "neomutt"
+    "aerc"
     "basalt"
     "newsboat"
 )
@@ -200,7 +200,7 @@ declare -A STOW_TARGETS=(
     ["atuin"]="$HOME/.config/atuin"
     ["themes"]="$HOME/.config/themes"
     ["fonts"]="$HOME/.local/share/fonts"
-    ["neomutt"]="$HOME/.config/neomutt"
+    ["aerc"]="$HOME/.config/aerc"
     ["basalt"]="$HOME/.config/basalt"
     ["newsboat"]="$HOME/.config/newsboat"
 )
@@ -230,6 +230,9 @@ status "Setting executable permissions on scripts..."
 EXECUTABLE_SCRIPTS=(
     "$HOME/bin/tmux-command-center"
     "$HOME/bin/tmux-smart-window"
+    "$HOME/.config/aerc/scripts/mail-to-obsidian"
+    "$HOME/.config/aerc/scripts/open-mail-html"
+    "$HOME/.config/aerc/scripts/save-raw-email"
     "$HOME/bin/pi-workspace"
     "$HOME/bin/deploy-all"
     "$HOME/bin/undeploy"
@@ -243,6 +246,17 @@ for script in "${EXECUTABLE_SCRIPTS[@]}"; do
         success "chmod +x $(basename $script)"
     fi
 done
+
+# Symlink aerc scripts to PATH so aerc keybindings can find them
+if [ -d "$HOME/.config/aerc/scripts" ]; then
+    status "Symlinking aerc scripts to ~/.local/bin..."
+    mkdir -p "$HOME/.local/bin"
+    for script in "$HOME/.config/aerc/scripts"/*; do
+        name="$(basename "$script")"
+        ln -sf "$script" "$HOME/.local/bin/$name"
+        success "Linked $name"
+    done
+fi
 
 # Install lazy.nvim for Neovim
 if [ ! -d "$HOME/.local/share/nvim/lazy/lazy.nvim" ]; then

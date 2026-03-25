@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+# =============================================================================
+# mail-to-obsidian -- Export an email to Obsidian vault as Markdown
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/aerc/scripts/mail-to-obsidian
+# Installed to: ~/.local/bin/mail-to-obsidian
+#
+# Called by aerc via :pipe -- receives raw email on stdin.
+# Extracts metadata, converts body to Markdown, saves attachments,
+# and writes a note to the Obsidian vault.
+#
+# USAGE (from aerc):
+#   Press E on any email to export it.
+#
+# DEPENDENCIES:
+#   - python3 (stdlib: email, os, re, sys, datetime)
+#   - markdownify (pip/pipx: converts HTML to Markdown)
+#     Install: pipx install markdownify  OR  yay -S python-markdownify
+#
+# CONFIGURATION:
+#   Set OBSIDIAN_VAULT environment variable or edit the default below.
+#   Export is saved to: $OBSIDIAN_VAULT/Inbox/Email/YYYY-MM-DD Subject.md
+#   Attachments go to:  $OBSIDIAN_VAULT/Inbox/Email/_assets/
+# =============================================================================
+
+import sys
+import os
+import re
+import email
+from email import policy
+from email.utils import parsedate_to_datetime
+from datetime import datetime
+from pathlib import Path
+
+# --- Configuration ---
+VAULT = os.environ.get("OBSIDIAN_VAULT", os.path.expanduser("~/Documents/Notes/Logic"))
+NOTES_DIR = os.path.join(VAULT, "Inbox", "Email")
+ASSETS_DIR = os.path.join(NOTES_DIR, "_assets")
+
+# --- Try to import markdownify (HTML -> Markdown converter) ---
+try:
+    from markdownify import markdownify
+    HAS_MARKDOWNIFY = True
+except ImportError:
+    HAS_MARKDOWNIFY = False
+
+
+def sanitize_filename(name, max_length=100):
+    """Remove characters that are illegal in filenames."""
+    # Remove Re:/Fwd:/FW: prefixes
+    name = re.sub(r'^(Re|Fwd|FW|RE|Fw):\s*', '', name, flags=re.IGNORECASE)
+    # Remove illegal filename characters
+    name = re.sub(r'[/:*?"<>|\\]', '-', name)
+    # Collapse multiple spaces/dashes
+    name = re.sub(r'[-\s]+', ' ', name).strip()
+    # Truncate
+    return name[:max_length].strip()
+
+
+def extract_name(addr_str):
+    """Extract display name from email address, wrap in wikilink."""
+    if not addr_str:
+        return ""
+    # Parse "Name <email>" format
+    match = re.match(r'^"?([^"<]+)"?\s*<', addr_str)
+    if match:
+        name = match.group(1).strip()
+        return f"[[{name}]]"
+    return addr_str
+
+
+def get_body(msg):
+    """Extract the best body content from the email as Markdown."""
+    body = ""
+
+    # Try plain text first
+    plain_part = None
+    html_part = None
+
+    for part in msg.walk():
+        content_type = part.get_content_type()
+        if content_type == "text/plain" and not part.get("Content-Disposition"):
+            plain_part = part
+        elif content_type == "text/html" and not part.get("Content-Disposition"):
+            html_part = part
+
+    # Prefer plain text if it's substantial
+    if plain_part:
+        charset = plain_part.get_content_charset() or "utf-8"
+        try:
+            body = plain_part.get_payload(decode=True).decode(charset, errors="replace")
+        except Exception:
+            body = plain_part.get_payload(decode=True).decode("utf-8", errors="replace")
+
+        # If plain text is very short but HTML exists, prefer HTML
+        if len(body.strip()) < 50 and html_part:
+            body = ""  # Fall through to HTML
+
+    # Fall back to HTML → Markdown conversion
+    if not body.strip() and html_part:
+        charset = html_part.get_content_charset() or "utf-8"
+        try:
+            html = html_part.get_payload(decode=True).decode(charset, errors="replace")
+        except Exception:
+            html = html_part.get_payload(decode=True).decode("utf-8", errors="replace")
+
+        if HAS_MARKDOWNIFY:
+            body = markdownify(html, heading_style="ATX", strip=["img", "script", "style"])
+        else:
+            # Fallback: strip HTML tags with regex (crude but works)
+            body = re.sub(r'<[^>]+>', '', html)
+            body = re.sub(r'\n{3,}', '\n\n', body)
+
+    return body.strip()
+
+
+def save_attachments(msg, assets_dir, note_name):
+    """Save email attachments to the assets directory. Returns list of saved filenames."""
+    saved = []
+    os.makedirs(assets_dir, exist_ok=True)
+
+    for part in msg.walk():
+        content_disposition = str(part.get("Content-Disposition", ""))
+        if "attachment" not in content_disposition and "inline" not in content_disposition:
+            continue
+        if part.get_content_maintype() == "text":
+            continue  # Skip text parts (body, not attachments)
+
+        filename = part.get_filename()
+        if not filename:
+            # Generate a name for unnamed attachments
+            ext = part.get_content_type().split("/")[-1]
+            filename = f"attachment-{len(saved)+1}.{ext}"
+
+        filename = sanitize_filename(filename, max_length=80)
+        filepath = os.path.join(assets_dir, f"{note_name}_{filename}")
+
+        payload = part.get_payload(decode=True)
+        if payload:
+            with open(filepath, "wb") as f:
+                f.write(payload)
+            saved.append(filename)
+
+    return saved
+
+
+def main():
+    # Read raw email from stdin (piped by aerc)
+    raw = sys.stdin.buffer.read()
+    msg = email.message_from_bytes(raw, policy=policy.default)
+
+    # --- Extract metadata ---
+    subject = msg["Subject"] or "Untitled Email"
+    sender = msg["From"] or "Unknown"
+    to_addr = msg["To"] or ""
+    cc_addr = msg["Cc"] or ""
+    date_str = msg["Date"] or ""
+    message_id = msg["Message-ID"] or ""
+
+    # Parse date
+    try:
+        date_obj = parsedate_to_datetime(date_str)
+        date_formatted = date_obj.strftime("%Y-%m-%d")
+        date_iso = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+    except Exception:
+        date_obj = datetime.now()
+        date_formatted = date_obj.strftime("%Y-%m-%d")
+        date_iso = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+
+    # --- Build note filename ---
+    safe_subject = sanitize_filename(subject)
+    note_name = f"{date_formatted} {safe_subject}"
+    note_filename = f"{note_name}.md"
+    note_path = os.path.join(NOTES_DIR, note_filename)
+
+    # Avoid duplicates: append timestamp if file exists
+    if os.path.exists(note_path):
+        timestamp = date_obj.strftime("%H%M%S")
+        note_name = f"{date_formatted} {safe_subject} ({timestamp})"
+        note_filename = f"{note_name}.md"
+        note_path = os.path.join(NOTES_DIR, note_filename)
+
+    # --- Extract body ---
+    body = get_body(msg)
+
+    # --- Save attachments ---
+    attachments = save_attachments(msg, ASSETS_DIR, note_name)
+
+    # --- Build attachment links for the note ---
+    attachment_section = ""
+    if attachments:
+        attachment_section = "\n## Attachments\n\n"
+        for att in attachments:
+            attachment_section += f"- [[_assets/{note_name}_{att}|{att}]]\n"
+
+    # --- Write the Obsidian note ---
+    os.makedirs(NOTES_DIR, exist_ok=True)
+
+    # Escape YAML special characters in strings
+    def yaml_escape(s):
+        if not s:
+            return '""'
+        if any(c in s for c in ':"{}[]|>&*!#%@`'):
+            return f'"{s}"'
+        return f'"{s}"'
+
+    note_content = f"""---
+title: {yaml_escape(subject)}
+subject: {yaml_escape(subject)}
+from: {yaml_escape(sender)}
+to: {yaml_escape(to_addr)}
+cc: {yaml_escape(cc_addr)}
+date: {date_iso}
+message_id: {yaml_escape(message_id)}
+tags:
+  - email/inbox
+type: email
+---
+
+# {subject}
+
+| Field | Value |
+|-------|-------|
+| **From** | {extract_name(sender)} |
+| **To** | {to_addr} |
+| **Date** | {date_formatted} |
+
+---
+
+{body}
+{attachment_section}"""
+
+    with open(note_path, "w", encoding="utf-8") as f:
+        f.write(note_content)
+
+    print(f"Saved to: {note_path}")
+
+
+if __name__ == "__main__":
+    main()

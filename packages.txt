@@ -95,7 +95,7 @@ navi
 # TUI apps (auto-started in tmux command-center)
 btop
 newsboat
-neomutt
+aerc
 basalt
 notesmd-cli
 lazydocker

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# =============================================================================
+# save-raw-email -- Save raw email source (.eml) for debugging or archival
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/aerc/scripts/save-raw-email
+# Installed to: ~/.local/bin/save-raw-email
+#
+# Called by aerc via :pipe -- receives raw email on stdin.
+# Saves the complete email (headers + body + attachments) as a .eml file.
+#
+# USAGE (from aerc):
+#   Press W on any email to save the raw source.
+#
+# OUTPUT:
+#   ~/Downloads/email_YYYYMMDD_HHMMSS.eml
+# =============================================================================
+
+set -euo pipefail
+
+OUT_DIR="${HOME}/Downloads"
+mkdir -p "$OUT_DIR"
+
+TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+OUTFILE="${OUT_DIR}/email_${TIMESTAMP}.eml"
+
+cat > "$OUTFILE"
+
+echo "Saved raw email to ${OUTFILE}"

@@ -144,15 +144,11 @@ fi
 
 
 # =============================================================================
-# Email (neomutt + mbsync)
+# Email (aerc)
 # =============================================================================
-# These aliases prepare for terminal email. They only load if the tools are
-# installed -- safe to have even before neomutt is set up.
-if command -v neomutt &> /dev/null; then
-    alias mail='neomutt'              # Quick way to open your email
-fi
-if command -v mbsync &> /dev/null; then
-    alias msync='mbsync -a'           # Sync ALL email accounts (download new mail)
+# aerc is the terminal email client. It handles IMAP/SMTP directly (no mbsync needed).
+if command -v aerc &> /dev/null; then
+    alias mail='aerc'                 # Quick way to open your email
 fi
 
 # =============================================================================
