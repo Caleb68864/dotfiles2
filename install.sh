@@ -263,6 +263,20 @@ else
     success "TPM already installed"
 fi
 
+# Configure weechat to skip Ruby plugin (libruby often missing)
+WEECHAT_CONF="$HOME/.config/weechat/weechat.conf"
+if [ -f "$WEECHAT_CONF" ]; then
+    if grep -q 'plugin.autoload' "$WEECHAT_CONF"; then
+        sed -i 's/plugin.autoload = .*/plugin.autoload = "*,!ruby"/' "$WEECHAT_CONF"
+    fi
+    success "Weechat Ruby plugin disabled"
+elif command -v weechat &> /dev/null; then
+    # Weechat hasn't been run yet -- create minimal config
+    mkdir -p "$HOME/.config/weechat"
+    weechat -r '/set weechat.plugin.autoload "*,!ruby";/save;/quit' 2>/dev/null
+    success "Weechat initialized with Ruby plugin disabled"
+fi
+
 # Install Neovim plugins headlessly
 status "Installing/updating Neovim plugins..."
 nvim --headless "+Lazy! sync" +qa 2>/dev/null && success "Neovim plugins synced" || warning "Neovim plugin sync skipped (run :Lazy in nvim)"
