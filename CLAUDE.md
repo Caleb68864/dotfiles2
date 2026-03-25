@@ -10,6 +10,8 @@ This is a **dotfiles repository** for Arch Linux (EndeavourOS) managed with **GN
 
 **Git remote:** `git@github.com:Caleb68864/dotfiles2.git`
 
+**Cross-platform workflow:** Dotfiles are edited on Windows (this machine) and deployed on Linux (EndeavourOS) via `git pull` + `stow`. The repo is cloned as `~/dotfiles` on Linux (not `~/dotfiles2`). Symlinks point to `../dotfiles/`.
+
 ## Stow Package Targets
 
 Each package has a specific stow target. Never use a blanket `stow -t "$HOME"` for config packages.
@@ -127,7 +129,8 @@ waybar/
 └── scripts/           → ~/.config/waybar/scripts/
 
 nvim/
-└── init.lua           → ~/.config/nvim/init.lua
+├── init.lua           → ~/.config/nvim/init.lua (bootstrap + requires)
+└── lua/               → ~/.config/nvim/lua/ (config modules + plugin specs)
 ```
 
 There is **no** `.config/app/` nesting inside package directories. The stow target handles the path mapping.
@@ -215,6 +218,20 @@ windowrule = workspace 4 silent, match:class ^(discord)$
 | `SUPER+SHIFT+N` | Floating Pi in Obsidian vault |
 | `SUPER+N` | Notification center |
 
+### Tmux Window Layout
+
+Windows use "smart" bindings — if closed, Alt+number recreates the app automatically via `bin/bin/tmux-smart-window`. Monocle windows (5, 7) stack multiple full-screen apps; cycle with `prefix+o`, zoom toggle with `prefix+z`.
+
+| Key | Window | Apps |
+|-----|--------|------|
+| Alt+1-3 | working | tactical, agent, pi-workspace |
+| Alt+4 | (open) | user-created |
+| Alt+5 | comms | weechat + gomuks + scli (monocle) |
+| Alt+6 | notes | basalt (Obsidian vault) |
+| Alt+7 | info | aerc + khal + newsboat (monocle) |
+| Alt+8 | music | ncmpcpp + cava (split) |
+| Alt+0 | scratch | empty shell |
+
 ### Tmux Keybinding Summary
 
 | Key | Action |
@@ -222,7 +239,10 @@ windowrule = workspace 4 silent, match:class ^(discord)$
 | `C-a, C-c` | Claude Code popup (persistent session) |
 | `C-a, C-p` | Pi popup (persistent session) |
 | `C-a, C-f` | Project sessionizer (fzf project picker) |
-| `Alt+1-9` | Direct window (tab) access |
+| `C-a, p` | Split pane + Pi (side by side) |
+| `C-a, C` | Split pane + Claude Code (side by side) |
+| `C-a, /` | Cheat sheet popup |
+| `Alt+0-9` | Smart window access (auto-creates if missing) |
 | `C-a, \|` | Split horizontal |
 | `C-a, -` | Split vertical |
 | `C-h/j/k/l` | Pane navigation (vim-tmux-navigator) |
@@ -311,6 +331,21 @@ Modular config split across `nvim/lua/`:
 **AI assistant keymaps:** Pi uses `<leader>p` namespace (pp/ps/pf/pb). LSP code_action is `<leader>ca`. claudecode.nvim connects to Claude Code CLI via WebSocket MCP.
 
 **Path yanking:** `<leader>yr` (relative), `<leader>yp` (absolute) — copies to system clipboard.
+
+### aerc (Email Client)
+
+Replaced neomutt. Config at `aerc/` stow package. Custom keybindings:
+- `E` = export email to Obsidian vault as Markdown (scripts/mail-to-obsidian)
+- `V` = open HTML in qutebrowser (scripts/open-mail-html)
+- `W` = save raw .eml source (scripts/save-raw-email)
+- O365 auth via oauth2ms, Gmail via GPG-encrypted app password
+- accounts.conf has placeholder values (YOUR_*) that must be edited
+
+### Obsidian Integration
+
+Vault: `~/Documents/Notes/Logic` (configurable via `OBSIDIAN_VAULT` env var).
+SlingMD (C# Outlook add-in) sets the frontmatter standard — terminal scripts must match:
+`title`, `from` (wikilink), `to` (wikilink), `date`, `type`, `tags`
 
 ### Zsh Configuration
 
@@ -421,3 +456,13 @@ groups $USER   # verify 'input' is listed
 Drop images into `~/Pictures/Wallpapers/` (jpg, jpeg, png, webp).
 `random-wallpaper.sh` picks one randomly at each login via hyprpaper IPC.
 Fallback: `/usr/share/wallpapers/EndeavourOS/contents/screenshot.png`
+
+## Gotchas
+
+- **`bin/` package has double nesting:** `bin/bin/script` stows to `~/bin/script`. The outer `bin/` is the stow package name, inner `bin/` is the target directory. Don't flatten it.
+- **tmux-resurrect saves at `~/.local/share/tmux/resurrect/`** — NOT `~/.tmux/resurrect/`. Clear these to force fresh session layout.
+- **tmux `renumber-windows` is OFF** — TUI apps are pinned to fixed window numbers (4-9). Enabling renumber would collapse the gaps.
+- **Never `pip install` on Arch** — use `yay -S python-packagename` or `pipx install packagename`.
+- **Tokyo Night theme must be applied to every new tool** — check themes/, hypr/theme.conf, waybar/style.css, and per-tool color configs.
+- **weechat:** Ruby plugin must be disabled (`plugin.autoload = "*,!ruby"`) or libruby error occurs.
+- **git-delta** is configured as the git pager — `git diff` output looks different from raw diff.
