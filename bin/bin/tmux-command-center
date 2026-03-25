@@ -113,12 +113,12 @@ fi
 
 # --- Window 7: info (monocle: mail + calendar + news) ---
 # All info apps stacked as panes, first one zoomed to full-screen.
-# prefix+o = cycle between neomutt, khal, newsboat (stays full-screen)
+# prefix+o = cycle between aerc, khal, newsboat (stays full-screen)
 # prefix+z = unzoom to see all three, then zoom back
 INFO_CREATED=false
-if command -v neomutt &> /dev/null; then
+if command -v aerc &> /dev/null; then
     tmux new-window -t "$SESSION:7" -n info
-    tmux send-keys -t "$SESSION:7" "neomutt" Enter
+    tmux send-keys -t "$SESSION:7" "aerc" Enter
     INFO_CREATED=true
 fi
 if command -v khal &> /dev/null; then
@@ -166,7 +166,7 @@ tmux new-window -t "$SESSION:0" -n scratch
 
 # --- Focus on window 1 (tactical) ---
 # When tmux attaches, you want to land on your working shell, not on
-# btop or neomutt. This selects window 1 before attaching.
+# btop or aerc. This selects window 1 before attaching.
 tmux select-window -t "$SESSION:tactical"
 
 # --- Attach to the session ---

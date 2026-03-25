@@ -8,7 +8,7 @@
 #   1. If the window exists → switch to it (normal behavior)
 #   2. If the window DOESN'T exist → create it, launch its app, then switch
 #
-# This means you can never "lose" a window. Accidentally close neomutt?
+# This means you can never "lose" a window. Accidentally close aerc?
 # Just press Alt+6 and it relaunches automatically.
 #
 # USAGE:
@@ -68,11 +68,11 @@ else
             tmux send-keys -t "$SESSION:6" "basalt" Enter
             ;;
         7)
-            # Info: monocle with neomutt + khal + newsboat
+            # Info: monocle with aerc + khal + newsboat
             tmux new-window -t "$SESSION:7" -n info
             FIRST=true
-            if command -v neomutt &> /dev/null; then
-                tmux send-keys -t "$SESSION:7" "neomutt" Enter
+            if command -v aerc &> /dev/null; then
+                tmux send-keys -t "$SESSION:7" "aerc" Enter
                 FIRST=false
             fi
             if command -v khal &> /dev/null; then
