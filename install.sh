@@ -106,7 +106,7 @@ fi
 
 # zsh-you-should-use (reminds you of existing aliases)
 if [ ! -d "$ZSH_CUSTOM/plugins/you-should-use" ]; then
-    git clone https://github.com/MichaelAqworthy/zsh-you-should-use "$ZSH_CUSTOM/plugins/you-should-use"
+    git clone https://github.com/MichaelAquilina/zsh-you-should-use "$ZSH_CUSTOM/plugins/you-should-use"
     success "zsh-you-should-use installed"
 else
     success "zsh-you-should-use already installed"
