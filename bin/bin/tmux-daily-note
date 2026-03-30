@@ -1,0 +1,96 @@
+#!/bin/bash
+# =============================================================================
+# tmux-daily-note -- Open today's Obsidian daily note in Neovim
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/bin/bin/tmux-daily-note
+#
+# Opens today's daily note in a tmux popup. If the note doesn't exist,
+# creates it from the vault's daily note template with Templater
+# placeholders resolved to today's date.
+#
+# Reads the vault's .obsidian/daily-notes.json for:
+#   - folder: where daily notes live (e.g., "Calendar Notes/Daily Notes")
+#   - template: path to template file (e.g., "Templates/Daily Note - Template")
+#
+# USAGE:
+#   tmux-daily-note              # opens default vault ($OBSIDIAN_VAULT)
+#   tmux-daily-note pick         # fzf picker to choose a vault
+#   tmux-daily-note /path/to/vault  # open specific vault
+#
+# Called by tmux keybindings:
+#   prefix + n   → default vault (work)
+#   prefix + N   → vault picker
+# =============================================================================
+
+# --- Vault configuration ---
+# Each vault's .obsidian/daily-notes.json tells us where notes go and
+# which template to use. This map provides fallback defaults for vaults
+# that don't have that file.
+NOTES_ROOT="$HOME/Documents/Notes"
+DEFAULT_VAULT="${OBSIDIAN_VAULT:-$NOTES_ROOT/Logic}"
+TODAY=$(date +%Y-%m-%d)
+
+# --- Vault selection ---
+if [ "$1" = "pick" ]; then
+    # Show fzf picker with vaults that have .obsidian directories
+    VAULT=$(find "$NOTES_ROOT" -maxdepth 2 -name ".obsidian" -type d 2>/dev/null \
+        | sed 's|/.obsidian$||' \
+        | sort \
+        | fzf --reverse --header="Pick a vault for daily note")
+    [ -z "$VAULT" ] && exit 0
+elif [ -n "$1" ]; then
+    VAULT="$1"
+else
+    VAULT="$DEFAULT_VAULT"
+fi
+
+# --- Read vault's daily-notes.json for folder and template paths ---
+DN_CONFIG="$VAULT/.obsidian/daily-notes.json"
+if [ -f "$DN_CONFIG" ]; then
+    # Parse JSON with sed (avoids jq dependency)
+    DN_FOLDER=$(sed -n 's/.*"folder"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$DN_CONFIG")
+    DN_TEMPLATE=$(sed -n 's/.*"template"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$DN_CONFIG")
+fi
+
+# Defaults if not set
+DN_FOLDER="${DN_FOLDER:-Daily Notes}"
+DN_TEMPLATE="${DN_TEMPLATE:-Templates/Daily Note - Template}"
+
+NOTE_DIR="$VAULT/$DN_FOLDER"
+NOTE_PATH="$NOTE_DIR/$TODAY.md"
+TEMPLATE="$VAULT/$DN_TEMPLATE.md"
+
+# Create the daily notes directory if it doesn't exist
+mkdir -p "$NOTE_DIR"
+
+# If the note doesn't exist, create it from the template
+if [ ! -f "$NOTE_PATH" ]; then
+    if [ -f "$TEMPLATE" ]; then
+        # Resolve Templater placeholders:
+        #   <% tp.date.now("YYYY-MM-DD") %> → today's date
+        #   <% tp.date.now() %>              → today's date (no format arg)
+        #   <% tp.file.title %>              → filename (today's date)
+        #   <% tp.file.cursor() %>           → remove (no cursor in terminal)
+        sed \
+            -e "s/<% tp.date.now(\"YYYY-MM-DD\") %>/$TODAY/g" \
+            -e "s/<% tp.date.now() %>/$TODAY/g" \
+            -e "s/<% tp.file.title %>/$TODAY/g" \
+            -e "s/<% tp.file.cursor() %>//g" \
+            "$TEMPLATE" > "$NOTE_PATH"
+    else
+        # No template found — create a minimal daily note
+        cat > "$NOTE_PATH" <<EOF
+---
+date: $TODAY
+tags:
+  - Daily_Note
+---
+
+# $TODAY
+
+EOF
+    fi
+fi
+
+# Open in Neovim
+exec nvim "$NOTE_PATH"

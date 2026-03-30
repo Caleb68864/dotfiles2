@@ -243,6 +243,7 @@ status "Setting executable permissions on scripts..."
 EXECUTABLE_SCRIPTS=(
     "$HOME/bin/tmux-command-center"
     "$HOME/bin/tmux-smart-window"
+    "$HOME/bin/tmux-daily-note"
     "$HOME/.config/aerc/scripts/mail-to-obsidian"
     "$HOME/.config/aerc/scripts/open-mail-html"
     "$HOME/.config/aerc/scripts/save-raw-email"

@@ -116,6 +116,11 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CACHE_HOME="$HOME/.cache"
 
+# --- OBSIDIAN VAULT ---
+# Default vault path for scripts that interact with Obsidian notes
+# (e.g., tmux-daily-note, mail-to-obsidian).
+export OBSIDIAN_VAULT="$HOME/Documents/Notes/Logic"
+
 # --- PATH ---
 # PATH is the list of directories where the shell looks for programs.
 # Adding ~/.local/bin and ~/bin means you can put your own scripts there
