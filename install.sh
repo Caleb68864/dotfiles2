@@ -104,6 +104,22 @@ else
     success "fzf-tab already installed"
 fi
 
+# zsh-you-should-use (reminds you of existing aliases)
+if [ ! -d "$ZSH_CUSTOM/plugins/you-should-use" ]; then
+    git clone https://github.com/MichaelAqworthy/zsh-you-should-use "$ZSH_CUSTOM/plugins/you-should-use"
+    success "zsh-you-should-use installed"
+else
+    success "zsh-you-should-use already installed"
+fi
+
+# zsh-autopair (auto-close brackets, quotes, backticks)
+if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autopair" ]; then
+    git clone https://github.com/hlissner/zsh-autopair "$ZSH_CUSTOM/plugins/zsh-autopair"
+    success "zsh-autopair installed"
+else
+    success "zsh-autopair already installed"
+fi
+
 # Optional: powerlevel10k (commented by default, using Starship instead)
 # if [ ! -d "$ZSH_CUSTOM/themes/powerlevel10k" ]; then
 #     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$ZSH_CUSTOM/themes/powerlevel10k"

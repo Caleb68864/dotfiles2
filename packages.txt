@@ -92,6 +92,10 @@ age
 ouch
 navi
 qalc
+fd
+sd
+hyperfine
+tokei
 
 # TUI apps (auto-started in tmux command-center)
 btop

@@ -326,4 +326,63 @@ return {
       },
     },
   },
+
+  -- =========================================================================
+  -- Obsidian.nvim -- Edit Obsidian vaults natively in Neovim
+  -- =========================================================================
+  -- Adds Obsidian-aware features when editing markdown files in your vaults:
+  --   - Follow [[wikilinks]] with gf
+  --   - Autocomplete note names with [[
+  --   - Create new notes from links that don't exist yet
+  --   - Search notes by name or content
+  --   - Open daily notes
+  --
+  -- The vault paths below must match your actual Obsidian vault locations.
+  -- $OBSIDIAN_VAULT is set in .zshrc for the default (work) vault.
+  {
+    "epwalsh/obsidian.nvim",
+    version = "*",
+    lazy = true,
+    -- Only load when opening a markdown file inside a vault directory
+    ft = "markdown",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim",
+    },
+    opts = {
+      workspaces = {
+        { name = "Logic", path = "~/Documents/Notes/Logic" },
+        { name = "Personal", path = "~/Documents/Notes/Caleb's Vault" },
+      },
+      -- Daily note settings (matches .obsidian/daily-notes.json in each vault)
+      daily_notes = {
+        folder = "Calendar Notes/Daily Notes",
+        date_format = "%Y-%m-%d",
+        template = "Daily Note - Template.md",
+      },
+      -- Where templates live
+      templates = {
+        folder = "Templates",
+        date_format = "%Y-%m-%d",
+      },
+      -- Use Telescope for note searching
+      picker = { name = "telescope.nvim" },
+      -- Don't add frontmatter automatically — let Obsidian/Templater handle it
+      disable_frontmatter = true,
+      -- Follow wikilinks with gf
+      follow_url_func = function(url)
+        vim.fn.jobstart({ "xdg-open", url })
+      end,
+    },
+    keys = {
+      { "<leader>oo", "<cmd>ObsidianQuickSwitch<CR>", desc = "[o]bsidian [o]pen note" },
+      { "<leader>os", "<cmd>ObsidianSearch<CR>", desc = "[o]bsidian [s]earch" },
+      { "<leader>od", "<cmd>ObsidianToday<CR>", desc = "[o]bsidian [d]aily note" },
+      { "<leader>ob", "<cmd>ObsidianBacklinks<CR>", desc = "[o]bsidian [b]acklinks" },
+      { "<leader>on", "<cmd>ObsidianNew<CR>", desc = "[o]bsidian [n]ew note" },
+      { "<leader>ol", "<cmd>ObsidianLinks<CR>", desc = "[o]bsidian [l]inks in note" },
+      { "<leader>ot", "<cmd>ObsidianTags<CR>", desc = "[o]bsidian [t]ags" },
+      { "<leader>ow", "<cmd>ObsidianWorkspace<CR>", desc = "[o]bsidian [w]orkspace switch" },
+    },
+  },
 }

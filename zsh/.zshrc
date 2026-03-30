@@ -78,6 +78,8 @@ plugins=(
     command-not-found        # When you mistype a command, tells you which package to install to get it
     extract                  # Type "extract file.tar.gz" to unpack ANY archive format automatically
     sudo                     # Press Escape twice to add "sudo" to the beginning of your current command
+    you-should-use           # Reminds you when you type a command that has an alias you forgot about
+    zsh-autopair             # Auto-closes brackets, quotes, and backticks as you type
 )
 
 # Load Oh-My-Zsh -- this activates all the plugins and settings above.

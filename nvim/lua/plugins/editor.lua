@@ -236,6 +236,62 @@ return {
   },
 
   -- =========================================================================
+  -- Flash -- Jump anywhere on screen with labeled keystrokes
+  -- =========================================================================
+  -- Type s + 2 chars to search, then a label key to jump directly there.
+  -- Much faster than f/t// for moving around. Works across windows too.
+  -- In operator-pending mode (d, y, c), use s to jump-select text.
+  {
+    "folke/flash.nvim",
+    event = "VeryLazy",
+    keys = {
+      { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash jump" },
+      { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash treesitter select" },
+      { "r", mode = "o", function() require("flash").remote() end, desc = "Flash remote (operator)" },
+      { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash search" },
+    },
+    opts = {},
+  },
+
+  -- =========================================================================
+  -- Undotree -- Visual undo history with branches
+  -- =========================================================================
+  -- Vim's undo is a tree, not a line — if you undo then make a new edit,
+  -- the old branch isn't gone, but it's invisible without this plugin.
+  -- Undotree shows every branch so you never lose work.
+  {
+    "mbbill/undotree",
+    keys = {
+      { "<leader>u", "<cmd>UndotreeToggle<CR>", desc = "[u]ndotree toggle" },
+    },
+  },
+
+  -- =========================================================================
+  -- Zen Mode -- Distraction-free writing/coding
+  -- =========================================================================
+  -- Strips away the file explorer, status bar, line numbers, and centers
+  -- the buffer. Great for focused editing on small screens (like a tablet).
+  {
+    "folke/zen-mode.nvim",
+    keys = {
+      { "<leader>z", "<cmd>ZenMode<CR>", desc = "[z]en mode toggle" },
+    },
+    opts = {
+      window = {
+        width = 90,          -- Centered column width
+        options = {
+          number = false,
+          relativenumber = false,
+          signcolumn = "no",
+        },
+      },
+      plugins = {
+        tmux = { enabled = true },   -- Hide tmux status bar in zen mode
+      },
+    },
+  },
+
+  -- =========================================================================
   -- Vim-Tmux Navigator -- Move between Neovim and Tmux seamlessly
   -- =========================================================================
   -- If you use Tmux (a terminal multiplexer that lets you have multiple

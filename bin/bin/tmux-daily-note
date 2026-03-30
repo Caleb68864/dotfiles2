@@ -92,5 +92,7 @@ EOF
     fi
 fi
 
-# Open in Neovim
+# Open in Neovim, changing to the vault directory so obsidian.nvim
+# auto-detects the correct workspace for wikilinks, backlinks, etc.
+cd "$VAULT"
 exec nvim "$NOTE_PATH"
