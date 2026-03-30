@@ -337,6 +337,15 @@ if command -v zoxide &> /dev/null; then
     eval "$(zoxide init zsh)"
 fi
 
+# --- DIRENV ---
+# Direnv auto-loads .envrc files when you cd into a project directory.
+# Use it to set per-project env vars (API keys, Python venvs, PATH tweaks)
+# without polluting your global shell. Run "direnv allow" in a directory
+# to trust its .envrc file.
+if command -v direnv &> /dev/null; then
+    eval "$(direnv hook zsh)"
+fi
+
 # --- STARSHIP PROMPT ---
 # Starship is the program that draws your command prompt (the text before
 # your cursor). It shows useful info like the current directory, git branch,
