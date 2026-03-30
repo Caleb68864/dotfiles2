@@ -4,22 +4,22 @@
 # =============================================================================
 # Managed by GNU Stow from ~/dotfiles/bin/bin/tmux-smart-window
 #
-# When you press Alt+number, this script:
-#   1. If the window exists → switch to it (normal behavior)
+# For preconfigured TUI windows (6-9, 0):
+#   1. If the window exists → switch to it
 #   2. If the window DOESN'T exist → create it, launch its app, then switch
 #
-# This means you can never "lose" a window. Accidentally close aerc?
-# Just press Alt+6 and it relaunches automatically.
+# For unconfigured windows (1-5): does nothing (handled by plain
+# select-window in .tmux.conf).
 #
 # USAGE:
 #   tmux-smart-window <window-number>
 #   Called by tmux keybindings (see .tmux.conf)
 #
 # WINDOW MAP:
-#   5 = comms (weechat+gomuks+scli, monocle)
-#   6 = notes (basalt)
-#   7 = info (mail+calendar+news, monocle)
-#   8 = music (ncmpcpp+cava, side-by-side)
+#   6 = comms (weechat+gomuks+scli, monocle)
+#   7 = notes (basalt)
+#   8 = info (mail+calendar+news, monocle)
+#   9 = music (ncmpcpp+cava, side-by-side)
 #   0 = scratch (empty shell)
 # =============================================================================
 
@@ -33,86 +33,86 @@ if tmux list-windows -t "$SESSION" -F '#{window_index}' 2>/dev/null | grep -q "^
 else
     # Window doesn't exist -- create it with the right app
     case "$WINDOW" in
-        5)
+        6)
             # Comms: monocle with weechat + gomuks + scli
-            tmux new-window -t "$SESSION:5" -n comms
+            tmux new-window -t "$SESSION:6" -n comms
             FIRST=true
             if command -v weechat &> /dev/null; then
-                tmux send-keys -t "$SESSION:5" "weechat" Enter
+                tmux send-keys -t "$SESSION:6" "weechat" Enter
                 FIRST=false
             fi
             if command -v gomuks &> /dev/null; then
                 if [ "$FIRST" = false ]; then
                     sleep 0.3
-                    tmux split-window -v -t "$SESSION:5" -l 50%
+                    tmux split-window -v -t "$SESSION:6" -l 50%
                     tmux send-keys "gomuks" Enter
                 else
-                    tmux send-keys -t "$SESSION:5" "gomuks" Enter
+                    tmux send-keys -t "$SESSION:6" "gomuks" Enter
                     FIRST=false
                 fi
             fi
             if command -v scli &> /dev/null; then
                 if [ "$FIRST" = false ]; then
                     sleep 0.3
-                    tmux split-window -v -t "$SESSION:5" -l 33%
+                    tmux split-window -v -t "$SESSION:6" -l 33%
                     tmux send-keys "scli" Enter
                 else
-                    tmux send-keys -t "$SESSION:5" "scli" Enter
+                    tmux send-keys -t "$SESSION:6" "scli" Enter
                 fi
             fi
-            tmux select-pane -t "$SESSION:5.0"
-            tmux resize-pane -Z -t "$SESSION:5.0"
-            ;;
-        6)
-            tmux new-window -t "$SESSION:6" -n notes
-            tmux send-keys -t "$SESSION:6" "basalt" Enter
+            tmux select-pane -t "$SESSION:6.0"
+            tmux resize-pane -Z -t "$SESSION:6.0"
             ;;
         7)
+            tmux new-window -t "$SESSION:7" -n notes
+            tmux send-keys -t "$SESSION:7" "basalt" Enter
+            ;;
+        8)
             # Info: monocle with aerc + khal + newsboat
-            tmux new-window -t "$SESSION:7" -n info
+            tmux new-window -t "$SESSION:8" -n info
             FIRST=true
             if command -v aerc &> /dev/null; then
-                tmux send-keys -t "$SESSION:7" "aerc" Enter
+                tmux send-keys -t "$SESSION:8" "aerc" Enter
                 FIRST=false
             fi
             if command -v khal &> /dev/null; then
                 if [ "$FIRST" = false ]; then
                     sleep 0.3
-                    tmux split-window -v -t "$SESSION:7" -l 50%
+                    tmux split-window -v -t "$SESSION:8" -l 50%
                     tmux send-keys "khal interactive" Enter
                 else
-                    tmux send-keys -t "$SESSION:7" "khal interactive" Enter
+                    tmux send-keys -t "$SESSION:8" "khal interactive" Enter
                     FIRST=false
                 fi
             fi
             if command -v newsboat &> /dev/null; then
                 if [ "$FIRST" = false ]; then
                     sleep 0.3
-                    tmux split-window -v -t "$SESSION:7" -l 33%
+                    tmux split-window -v -t "$SESSION:8" -l 33%
                     tmux send-keys "newsboat" Enter
                 else
-                    tmux send-keys -t "$SESSION:7" "newsboat" Enter
+                    tmux send-keys -t "$SESSION:8" "newsboat" Enter
                 fi
             fi
-            tmux select-pane -t "$SESSION:7.0"
-            tmux resize-pane -Z -t "$SESSION:7.0"
+            tmux select-pane -t "$SESSION:8.0"
+            tmux resize-pane -Z -t "$SESSION:8.0"
             ;;
-        8)
-            tmux new-window -t "$SESSION:8" -n music
-            tmux send-keys -t "$SESSION:8" "ncmpcpp" Enter
+        9)
+            tmux new-window -t "$SESSION:9" -n music
+            tmux send-keys -t "$SESSION:9" "ncmpcpp" Enter
             if command -v cava &> /dev/null; then
                 sleep 0.3
-                tmux split-window -h -t "$SESSION:8" -l 40%
-                tmux send-keys -t "$SESSION:8.1" "cava" Enter
-                tmux select-pane -t "$SESSION:8.0"
+                tmux split-window -h -t "$SESSION:9" -l 40%
+                tmux send-keys -t "$SESSION:9.1" "cava" Enter
+                tmux select-pane -t "$SESSION:9.0"
             fi
             ;;
         0)
             tmux new-window -t "$SESSION:0" -n scratch
             ;;
         *)
-            # For working windows (1-4), just create an empty shell
-            tmux new-window -t "$SESSION:$WINDOW"
+            # For unconfigured windows, do nothing -- don't create empty shells
+            exit 0
             ;;
     esac
     tmux select-window -t "$SESSION:$WINDOW"

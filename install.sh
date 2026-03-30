@@ -217,6 +217,19 @@ for package in "${PACKAGES[@]}"; do
     fi
 done
 
+# Symlink KDE applications.menu for Dolphin "Open With" support
+# On non-Plasma desktops (Hyprland), kbuildsycoca6 can't find applications.menu
+# because only plasma-applications.menu exists. Without it, Dolphin's "Open With"
+# menu is blank and files have no associated programs.
+if [ -f /etc/xdg/menus/plasma-applications.menu ] && [ ! -f /etc/xdg/menus/applications.menu ]; then
+    status "Symlinking applications.menu for Dolphin file associations..."
+    sudo ln -s /etc/xdg/menus/plasma-applications.menu /etc/xdg/menus/applications.menu
+    kbuildsycoca6 --noincremental 2>/dev/null
+    success "applications.menu linked and KDE service cache rebuilt"
+elif [ -f /etc/xdg/menus/applications.menu ]; then
+    success "applications.menu already exists"
+fi
+
 # Refresh font cache
 if [ -d "$HOME/.local/share/fonts" ]; then
     status "Refreshing font cache..."
