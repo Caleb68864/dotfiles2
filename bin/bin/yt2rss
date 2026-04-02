@@ -1,0 +1,502 @@
+#!/usr/bin/env python3
+# =============================================================================
+# yt2rss -- Convert YouTube channel URLs to RSS feed URLs
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/bin/bin/yt2rss
+#
+# Takes a YouTube channel URL, @handle, custom URL, or raw channel ID and
+# returns the RSS feed URL. Optionally appends to a Newsboat urls file with
+# tags.
+#
+# DEPENDENCIES:
+#   pip install requests beautifulsoup4
+#   -- or on Arch --
+#   yay -S python-requests python-beautifulsoup4
+#
+# USAGE:
+#   yt2rss https://www.youtube.com/@lukesmithxyz
+#   yt2rss https://www.youtube.com/@BrodieRobertson --json
+#   yt2rss https://www.youtube.com/channel/UC2eYFnH61tmIToGftDg0Fvg
+#   yt2rss UCxxxxxxxxxxxxxxxxxxxxxx
+#   yt2rss https://www.youtube.com/@NetworkChuck \
+#       --newsboat-file ~/.config/newsboat/urls \
+#       --tag youtube --tag security --tag people
+#   yt2rss --check https://www.youtube.com/@ThePrimeagen
+#   echo -e "https://youtube.com/@luke\nhttps://youtube.com/@brodie" | yt2rss -
+#   yt2rss --batch channels.txt --newsboat-file ~/.config/newsboat/urls
+#
+# NEWSBOAT DUPLICATE CHECKING:
+#   Before appending, the script reads the target file and checks whether the
+#   RSS URL (the channel_id= portion) already appears on any line. If it does,
+#   the feed is skipped with a message (unless --quiet). This means re-running
+#   the same command is safe -- it won't create duplicates.
+# =============================================================================
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Optional
+
+try:
+    import requests
+except ImportError:
+    print("error: 'requests' is required. Install with: pip install requests", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    print("error: 'beautifulsoup4' is required. Install with: pip install beautifulsoup4", file=sys.stderr)
+    sys.exit(1)
+
+
+# Base URL for YouTube RSS feeds
+RSS_BASE = "https://www.youtube.com/feeds/videos.xml?channel_id="
+
+# Regex for a bare YouTube channel ID (starts with UC, 24 chars)
+CHANNEL_ID_RE = re.compile(r"^UC[\w-]{22}$")
+
+# Request timeout in seconds
+REQUEST_TIMEOUT = 15
+
+# User-Agent to avoid bot blocks
+USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+
+
+# =============================================================================
+# Input classification
+# =============================================================================
+
+def classify_input(raw: str) -> tuple[str, Optional[str]]:
+    """Classify input and extract what we can without fetching.
+
+    Returns:
+        (input_type, channel_id_or_none)
+
+    Input types:
+        "rss"        - already an RSS feed URL, channel_id extracted
+        "channel_id" - bare UC... string
+        "channel_url"- /channel/UC... URL, channel_id extracted
+        "handle"     - /@handle URL, needs resolution
+        "custom"     - /c/Name URL, needs resolution
+        "user"       - /user/Name URL, needs resolution
+        "unknown"    - something else, will attempt resolution
+    """
+    text = raw.strip()
+
+    # Already an RSS feed URL
+    if "feeds/videos.xml" in text and "channel_id=" in text:
+        match = re.search(r"channel_id=(UC[\w-]{22})", text)
+        if match:
+            return ("rss", match.group(1))
+
+    # Bare channel ID
+    if CHANNEL_ID_RE.match(text):
+        return ("channel_id", text)
+
+    # /channel/UC... URL -- channel ID is right in the path
+    match = re.search(r"youtube\.com/channel/(UC[\w-]{22})", text)
+    if match:
+        return ("channel_url", match.group(1))
+
+    # /@handle URL
+    if re.search(r"youtube\.com/@[\w.-]+", text):
+        return ("handle", None)
+
+    # /c/CustomName URL
+    if re.search(r"youtube\.com/c/[\w.-]+", text):
+        return ("custom", None)
+
+    # /user/Username URL
+    if re.search(r"youtube\.com/user/[\w.-]+", text):
+        return ("user", None)
+
+    # Some other YouTube URL or garbage -- try anyway
+    if "youtube.com" in text or "youtu.be" in text:
+        return ("unknown", None)
+
+    return ("unknown", None)
+
+
+# =============================================================================
+# Channel ID resolution (fetches page HTML)
+# =============================================================================
+
+def resolve_channel_id(url: str) -> str:
+    """Fetch a YouTube page and extract the channel ID.
+
+    Tries multiple extraction strategies in order of reliability:
+    1. <meta> tag with itemprop="channelId"
+    2. <link rel="canonical"> pointing to /channel/UC...
+    3. "channelId":"UC..." in inline JSON/script tags
+    4. "externalId":"UC..." in inline JSON
+    5. /channel/UC... anywhere in the page source
+
+    Raises ValueError if no channel ID can be found.
+    """
+    # Ensure it's a full URL
+    if not url.startswith("http"):
+        url = "https://www.youtube.com/" + url.lstrip("/")
+
+    try:
+        resp = requests.get(
+            url,
+            headers={"User-Agent": USER_AGENT},
+            timeout=REQUEST_TIMEOUT,
+            allow_redirects=True,
+        )
+        resp.raise_for_status()
+    except requests.ConnectionError:
+        raise ValueError(f"network error: could not connect to {url}")
+    except requests.Timeout:
+        raise ValueError(f"timeout: request to {url} took longer than {REQUEST_TIMEOUT}s")
+    except requests.HTTPError as e:
+        raise ValueError(f"HTTP {e.response.status_code} from {url}")
+
+    html = resp.text
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Strategy 1: <meta itemprop="channelId" content="UC...">
+    meta = soup.find("meta", attrs={"itemprop": "channelId"})
+    if meta and meta.get("content", "").startswith("UC"):
+        return meta["content"]
+
+    # Strategy 2: <link rel="canonical" href="...youtube.com/channel/UC...">
+    canon = soup.find("link", attrs={"rel": "canonical"})
+    if canon:
+        match = re.search(r"/channel/(UC[\w-]{22})", canon.get("href", ""))
+        if match:
+            return match.group(1)
+
+    # Strategy 3: "channelId":"UC..." in script/JSON blobs
+    match = re.search(r'"channelId"\s*:\s*"(UC[\w-]{22})"', html)
+    if match:
+        return match.group(1)
+
+    # Strategy 4: "externalId":"UC..." (another common JSON key)
+    match = re.search(r'"externalId"\s*:\s*"(UC[\w-]{22})"', html)
+    if match:
+        return match.group(1)
+
+    # Strategy 5: /channel/UC... anywhere in the raw HTML
+    match = re.search(r"/channel/(UC[\w-]{22})", html)
+    if match:
+        return match.group(1)
+
+    raise ValueError(
+        f"could not find channel ID on {url}. "
+        "The page may require login, or YouTube changed its markup."
+    )
+
+
+# =============================================================================
+# RSS URL generation
+# =============================================================================
+
+def make_rss_url(channel_id: str) -> str:
+    """Build the canonical RSS feed URL for a channel ID."""
+    return f"{RSS_BASE}{channel_id}"
+
+
+def get_rss_url(raw_input: str) -> tuple[str, str]:
+    """Main resolution pipeline: raw input -> (channel_id, rss_url).
+
+    Raises ValueError with a descriptive message on failure.
+    """
+    input_type, channel_id = classify_input(raw_input)
+
+    if channel_id:
+        # Already resolved from the input string
+        return (channel_id, make_rss_url(channel_id))
+
+    # Need to fetch the page to resolve
+    return _resolve_from_url(raw_input)
+
+
+def _resolve_from_url(raw_input: str) -> tuple[str, str]:
+    """Resolve channel ID by fetching the URL."""
+    url = raw_input.strip()
+    if not url.startswith("http"):
+        # Might be @handle without full URL
+        url = f"https://www.youtube.com/{url}" if url.startswith("@") else url
+
+    channel_id = resolve_channel_id(url)
+    return (channel_id, make_rss_url(channel_id))
+
+
+# =============================================================================
+# RSS feed verification
+# =============================================================================
+
+def check_rss_feed(rss_url: str) -> bool:
+    """Verify the RSS URL returns valid XML with at least one entry."""
+    try:
+        resp = requests.get(
+            rss_url,
+            headers={"User-Agent": USER_AGENT},
+            timeout=REQUEST_TIMEOUT,
+        )
+        resp.raise_for_status()
+        # A valid YouTube RSS feed contains <feed> and <entry> tags
+        return "<feed" in resp.text and "<entry>" in resp.text
+    except requests.RequestException:
+        return False
+
+
+# =============================================================================
+# Newsboat file writing
+# =============================================================================
+
+def format_newsboat_line(rss_url: str, tags: list[str], name: Optional[str] = None) -> str:
+    """Format a single Newsboat urls file line.
+
+    Format: URL "tag1" "tag2" "~Display Name"
+    """
+    parts = [rss_url]
+    for tag in tags:
+        parts.append(f'"{tag}"')
+    if name:
+        parts.append(f'"~{name}"')
+    return " ".join(parts)
+
+
+def feed_exists_in_file(filepath: Path, channel_id: str) -> bool:
+    """Check if a channel's RSS feed already exists in the Newsboat urls file.
+
+    Matches on the channel_id= portion so it catches the feed regardless of
+    surrounding tags or formatting differences.
+    """
+    if not filepath.exists():
+        return False
+    content = filepath.read_text()
+    return f"channel_id={channel_id}" in content
+
+
+def append_to_newsboat(
+    filepath: Path,
+    rss_url: str,
+    channel_id: str,
+    tags: list[str],
+    name: Optional[str] = None,
+    quiet: bool = False,
+) -> bool:
+    """Append an RSS feed line to a Newsboat urls file.
+
+    Returns True if the line was added, False if it already existed.
+    Creates the file (and parent dirs) if they don't exist.
+    """
+    if feed_exists_in_file(filepath, channel_id):
+        if not quiet:
+            print(f"skip: feed for {channel_id} already in {filepath}", file=sys.stderr)
+        return False
+
+    line = format_newsboat_line(rss_url, tags, name)
+
+    # Create parent dirs if needed
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    # Ensure file ends with newline before appending
+    if filepath.exists():
+        content = filepath.read_text()
+        if content and not content.endswith("\n"):
+            line = "\n" + line
+
+    with open(filepath, "a") as f:
+        f.write(line + "\n")
+
+    if not quiet:
+        print(f"added: {line}", file=sys.stderr)
+    return True
+
+
+# =============================================================================
+# Batch processing
+# =============================================================================
+
+def read_urls_from_stream(stream) -> list[str]:
+    """Read URLs from a file or stdin, one per line. Skips blanks and comments."""
+    urls = []
+    for line in stream:
+        line = line.strip()
+        if line and not line.startswith("#"):
+            urls.append(line)
+    return urls
+
+
+# =============================================================================
+# CLI
+# =============================================================================
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="yt2rss",
+        description="Convert YouTube channel URLs to RSS feed URLs.",
+        epilog=(
+            "examples:\n"
+            "  yt2rss https://www.youtube.com/@lukesmithxyz\n"
+            "  yt2rss UCxxxxxxxxxxxxxxxxxxxxxx\n"
+            "  yt2rss https://youtube.com/@brodie --json\n"
+            "  yt2rss https://youtube.com/@chuck --newsboat-file ~/.config/newsboat/urls --tag youtube\n"
+            "  yt2rss --batch channels.txt --newsboat-file ~/.config/newsboat/urls\n"
+            "  echo 'https://youtube.com/@luke' | yt2rss -\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        "input",
+        help=(
+            "YouTube URL, @handle, channel ID, or '-' to read from stdin. "
+            "Accepts /channel/, /@handle, /c/, /user/ URLs and bare UC... IDs."
+        ),
+    )
+
+    # Output format
+    parser.add_argument(
+        "--json", action="store_true",
+        help="Output as JSON object (input, channel_id, rss_url)",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true",
+        help="Suppress informational messages (errors still printed)",
+    )
+    parser.add_argument(
+        "--check", action="store_true",
+        help="Verify the RSS feed URL returns valid XML",
+    )
+
+    # Newsboat integration
+    parser.add_argument(
+        "--newsboat-file", "-f", type=str, default=None,
+        help="Path to Newsboat urls file to append to",
+    )
+    parser.add_argument(
+        "--tag", "-t", action="append", default=[],
+        help="Tag to add when appending to Newsboat (repeatable)",
+    )
+    parser.add_argument(
+        "--name", "-n", type=str, default=None,
+        help="Display name for the feed in Newsboat (e.g. 'Luke Smith')",
+    )
+    parser.add_argument(
+        "--print-only", action="store_true",
+        help="Print the Newsboat line without writing to file",
+    )
+
+    # Batch mode
+    parser.add_argument(
+        "--batch", "-b", type=str, default=None,
+        help="Read URLs from a text file (one per line) instead of a single input",
+    )
+
+    return parser
+
+
+def process_single(
+    raw_input: str,
+    args: argparse.Namespace,
+) -> int:
+    """Process a single URL/ID. Returns 0 on success, 1 on failure."""
+    try:
+        channel_id, rss_url = get_rss_url(raw_input)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+
+    # Verify feed if requested
+    if args.check:
+        valid = check_rss_feed(rss_url)
+        if not valid:
+            print(f"warning: RSS feed did not return valid XML: {rss_url}", file=sys.stderr)
+            if not args.json and not args.newsboat_file:
+                return 1
+
+    # JSON output
+    if args.json:
+        result = {
+            "input": raw_input,
+            "channel_id": channel_id,
+            "rss_url": rss_url,
+        }
+        if args.check:
+            result["valid"] = valid
+        print(json.dumps(result, indent=2))
+        return 0
+
+    # Newsboat append
+    if args.newsboat_file and not args.print_only:
+        filepath = Path(args.newsboat_file).expanduser()
+        try:
+            append_to_newsboat(
+                filepath, rss_url, channel_id,
+                tags=args.tag, name=args.name, quiet=args.quiet,
+            )
+        except PermissionError:
+            print(f"error: permission denied writing to {filepath}", file=sys.stderr)
+            return 1
+        except OSError as e:
+            print(f"error: could not write to {filepath}: {e}", file=sys.stderr)
+            return 1
+        return 0
+
+    # Print-only Newsboat line
+    if args.print_only:
+        print(format_newsboat_line(rss_url, args.tag, args.name))
+        return 0
+
+    # Default: just print the RSS URL
+    print(rss_url)
+    return 0
+
+
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+
+    # Batch mode: read URLs from a file
+    if args.batch:
+        batch_path = Path(args.batch).expanduser()
+        if not batch_path.exists():
+            print(f"error: batch file not found: {batch_path}", file=sys.stderr)
+            return 1
+        urls = read_urls_from_stream(batch_path.open())
+        if not urls:
+            print("error: batch file is empty or has no valid lines", file=sys.stderr)
+            return 1
+        failures = 0
+        for url in urls:
+            result = process_single(url, args)
+            if result != 0:
+                failures += 1
+        if not args.quiet:
+            total = len(urls)
+            print(f"\nprocessed {total} URLs, {total - failures} ok, {failures} failed", file=sys.stderr)
+        return 1 if failures else 0
+
+    # Stdin mode: read from pipe
+    if args.input == "-":
+        if sys.stdin.isatty():
+            print("error: stdin is a terminal. Pipe URLs or use a URL argument.", file=sys.stderr)
+            return 1
+        urls = read_urls_from_stream(sys.stdin)
+        if not urls:
+            print("error: no URLs received on stdin", file=sys.stderr)
+            return 1
+        failures = 0
+        for url in urls:
+            result = process_single(url, args)
+            if result != 0:
+                failures += 1
+        return 1 if failures else 0
+
+    # Single URL mode
+    return process_single(args.input, args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

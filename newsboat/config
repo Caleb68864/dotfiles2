@@ -45,6 +45,21 @@ max-items 200
 # Confirm before quitting
 confirm-exit no
 
+# =============================================================================
+# Podboat (podcast downloader/player)
+# =============================================================================
+# Podboat is a separate program, not built into newsboat.
+# Workflow: press 'e' on a podcast episode to enqueue → run 'podboat' to play.
+#
+# In podboat:
+#   d = download episode
+#   p = play episode
+#   c = cancel download
+#   D = delete downloaded file
+#   q = quit
+player "mpv"
+download-path "~/Podcasts/%n/"
+
 # Use vim-style keybindings
 bind-key j down
 bind-key k up
@@ -59,9 +74,47 @@ bind-key h quit
 bind-key n next-unread
 bind-key N prev-unread
 
-# Bookmark command: saves article to Obsidian vault (Phase 2 of clipping pipeline)
-# bookmark-cmd "~/.config/newsboat/scripts/save-to-obsidian.sh"
-# bookmark-autopilot yes
+# =============================================================================
+# Macros (prefix: , )
+# =============================================================================
+# Usage: press , then the macro key.
+#
+#   ,m  = Stream in mpv (YouTube, podcasts, etc.)
+#   ,o  = Clip to Obsidian vault (Markdown note)
+#   ,c  = Copy URL to clipboard
+#   ,d  = Download with yt-dlp
+#
+# Flags (press F then type the flag character):
+#   w = To-Watch    r = To-Read    s = Saved
+#   (clear by pressing F and entering empty string)
+
+# Stream in mpv (detached so newsboat isn't blocked)
+macro m set browser "~/.config/newsboat/scripts/newsboat-to-mpv %u" ; open-in-browser ; set browser "xdg-open %u"
+
+# Clip to Obsidian vault
+macro o set browser "~/.config/newsboat/scripts/newsboat-to-obsidian %u %t" ; open-in-browser ; set browser "xdg-open %u"
+
+# Copy URL to clipboard
+macro c set browser "wl-copy %u" ; open-in-browser ; set browser "xdg-open %u"
+
+# Download with yt-dlp
+macro d set browser "yt-dlp -o '~/Downloads/%(title)s.%(ext)s' %u &" ; open-in-browser ; set browser "xdg-open %u"
+
+# =============================================================================
+# Article flags
+# =============================================================================
+# Newsboat flags are single characters stored per-article. Press F to set flags
+# manually, or use the macros above.
+#
+# Flag convention:
+#   w = To-Watch (video/podcast content to watch later)
+#   r = To-Read  (articles/blogs to read later)
+#   s = Saved    (permanently bookmarked)
+#
+# Query feeds (add these to your urls file) create filtered views:
+#   "query:To-Watch:flags # \"w\"" "virtual"
+#   "query:To-Read:flags # \"r\"" "virtual"
+#   "query:Saved:flags # \"s\"" "virtual"
 
 
 # =============================================================================
@@ -104,7 +157,15 @@ color listfocus_unread color15 color4  bold
 color info           color15  color8   bold
 
 # --- Highlighted text in article view ---
-color highlight-article color15 color8
+highlight article "^(Feed|Title|Author|Link|Date):.*" color4 default bold
+
+# --- Flag-based article highlighting ---
+# To-Watch articles: cyan (video content)
+highlight-article "flags # \"w\"" color6 default bold
+# To-Read articles: purple (text content)
+highlight-article "flags # \"r\"" color5 default bold
+# Saved articles: green
+highlight-article "flags # \"s\"" color2 default bold
 
 # --- Hint keys (one-key shortcuts) ---
 color hint-key       color4   default  bold
@@ -118,22 +179,89 @@ color title          color4   default  bold
 # =============================================================================
 
 # How feeds are displayed in the feed list
-# %t = title, %U = unread count, %u = url
-feedlist-format "%4i %n %11U  %t"
+# %4i = index, %n = new flag, %11U = unread count, %T = first tag, %t = title
+feedlist-format "%4i %n %11U  %-12T  %t"
 
 # How articles are displayed in the article list
-# %D = date, %f = feed title, %t = article title, %a = author
-articlelist-format "%D  %f  %?T?|%-17T|  ?%t"
+# %D = date, %f = feed title, %T = tag, %F = flags, %t = article title
+articlelist-format "%D  %f  %?T?|%-17T|  ?%?F?[%F] ?%t"
 
 
 # =============================================================================
-# URLs file (add your RSS feeds here)
+# Tag-based highlighting
 # =============================================================================
-# Create ~/.config/newsboat/urls and add feeds, one per line:
+# Colors by category using Tokyo Night palette:
+#   blue   (color4)  = dev / systems / architecture
+#   cyan   (color6)  = linux / arch / endeavouros / unix / suckless
+#   green  (color2)  = maker / hardware / electronics / 3dprinting / prusa
+#   red    (color1)  = security / privacy / networking
+#   purple (color5)  = writing / fantasy / fiction / scifi / sanderson
+#   yellow (color3)  = rpg / games / freeleague / mongoose / pinnacle
+#   magenta(color13) = podcast / music / metal
+#   white  (color15) = news / commentary / analysis / blog
+#   color8 (gray)    = deals / bundles / freebies / humble / indiegamebundles / bundleofholding
+
+# --- Dev / Systems (blue) ---
+highlight feedlist "dev|dotnet|github|architecture|systems|guide" color4 default bold
+highlight articlelist "dev|dotnet|github|architecture|systems|guide" color4 default bold
+
+# --- Linux / OS (cyan) ---
+highlight feedlist "linux|arch|endeavouros|unix|suckless|distrotube" color6 default bold
+highlight articlelist "linux|arch|endeavouros|unix|suckless|distrotube" color6 default bold
+
+# --- Maker / Hardware (green) ---
+highlight feedlist "maker|hardware|electronics|3dprinting|prusa|homelab|selfhost" color2 default bold
+highlight articlelist "maker|hardware|electronics|3dprinting|prusa|homelab|selfhost" color2 default bold
+
+# --- Security / Privacy (red) ---
+highlight feedlist "security|privacy|networking|darknetdiaries|tactical" color1 default bold
+highlight articlelist "security|privacy|networking|darknetdiaries|tactical" color1 default bold
+
+# --- Writing / Fiction (purple) ---
+highlight feedlist "writing|fantasy|fiction|scifi|sanderson|science" color5 default bold
+highlight articlelist "writing|fantasy|fiction|scifi|sanderson|science" color5 default bold
+
+# --- RPG / Games (yellow) ---
+highlight feedlist "rpg|games|freeleague|mongoose|pinnacle|bundleofholding" color3 default bold
+highlight articlelist "rpg|games|freeleague|mongoose|pinnacle|bundleofholding" color3 default bold
+
+# --- Podcast / Music (magenta) ---
+highlight feedlist "podcast|music|metal|jupiter|linuxunplugged" color13 default bold
+highlight articlelist "podcast|music|metal|jupiter|linuxunplugged" color13 default bold
+
+# --- News / Commentary (bright white) ---
+highlight feedlist "news|commentary|analysis|blog|discovery" color15 default
+highlight articlelist "news|commentary|analysis|blog|discovery" color15 default
+
+# --- Deals / Bundles (gray) ---
+highlight feedlist "deals|bundles|freebies|humble|indiegamebundles" color8 default
+highlight articlelist "deals|bundles|freebies|humble|indiegamebundles" color8 default
+
+# --- People / Creators (cyan, no bold — subtler than category tags) ---
+highlight feedlist "creator|brodie|lukesmith|mentaloutlaw|networkchuck|nicknisi|theprimeagen|timcast|timcastirl|shawnryan|unsubscribe" color6 default
+highlight articlelist "creator|brodie|lukesmith|mentaloutlaw|networkchuck|nicknisi|theprimeagen|timcast|timcastirl|shawnryan|unsubscribe" color6 default
+
+# --- Microsoft (blue, no bold) ---
+highlight feedlist "microsoft" color4 default
+highlight articlelist "microsoft" color4 default
+
+
+# =============================================================================
+# URLs file
+# =============================================================================
+# Feeds go in ~/.config/newsboat/urls, one per line:
 #
-#   https://hnrss.org/newest "~Hacker News"
-#   https://www.reddit.com/r/neovim/.rss "~r/neovim"
-#   https://github.com/neovim/neovim/releases.atom "~Neovim Releases"
-#   https://lukesmith.xyz/rss.xml "~Luke Smith"
+#   https://hnrss.org/newest "~Hacker News" "news"
+#   https://lukesmith.xyz/rss.xml "~Luke Smith" "linux" "people"
 #
-# The "~Name" after the URL sets a display name for the feed.
+# The "~Name" sets a display name. Other quoted strings are tags.
+#
+# --- Query feeds (filtered views) ---
+# Add these lines to your urls file for flag-based filtered views:
+#
+#   "query:To-Watch:flags # \"w\"" "virtual"
+#   "query:To-Read:flags # \"r\"" "virtual"
+#   "query:Saved:flags # \"s\"" "virtual"
+#
+# These appear as virtual feeds at the top of your feed list.
+# Flag articles with F then type w/r/s, or use the ,w ,r ,s macros.

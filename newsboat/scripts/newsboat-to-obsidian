@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# =============================================================================
+# newsboat-to-obsidian -- Clip an article URL to the Obsidian vault
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/newsboat/scripts/newsboat-to-obsidian
+# Installed to: ~/.config/newsboat/scripts/newsboat-to-obsidian
+#
+# Creates a clipping note in the Obsidian vault via the Obsidian CLI.
+# Falls back to direct file write if the CLI is unavailable or Obsidian
+# isn't running.
+#
+# Frontmatter matches the SlingMD standard used by aerc's mail-to-obsidian.
+#
+# USAGE (called by newsboat macro):
+#   newsboat-to-obsidian <url> <title> [feed_title]
+#
+# DEPENDENCIES:
+#   - obsidian CLI (enable in Obsidian > Settings > General > Advanced)
+#   - readable (optional, for full article extraction)
+#     Install: yay -S readability-cli  OR  npm -g install @niccolodidonato/readability-cli
+#   - pandoc (optional fallback for article extraction)
+#
+# CONFIGURATION:
+#   Set OBSIDIAN_VAULT env var or edit the default below.
+#   Notes go to: Inbox/Clippings/YYYY-MM-DD Title.md
+# =============================================================================
+
+set -euo pipefail
+
+# --- Configuration ---
+VAULT_NAME="Logic"
+VAULT_PATH="${OBSIDIAN_VAULT:-$HOME/Documents/Notes/Logic}"
+CLIPPINGS_DIR="Inbox/Clippings"
+DATE="$(date +%Y-%m-%d)"
+DATE_ISO="$(date +%Y-%m-%dT%H:%M:%S)"
+
+# --- Input ---
+URL="${1:?Usage: newsboat-to-obsidian <url> <title> [feed_title]}"
+TITLE="${2:-Untitled Clipping}"
+FEED="${3:-}"
+
+# --- Sanitize for note name ---
+sanitize() {
+    echo "$1" \
+        | sed 's/[/:*?"<>|\\]/-/g' \
+        | sed 's/  */ /g' \
+        | head -c 100 \
+        | sed 's/[- ]*$//'
+}
+
+SAFE_TITLE="$(sanitize "$TITLE")"
+NOTE_NAME="${DATE} ${SAFE_TITLE}"
+NOTE_PATH="${CLIPPINGS_DIR}/${NOTE_NAME}"
+
+# --- Extract article content (best-effort) ---
+BODY=""
+if command -v readable &>/dev/null; then
+    BODY="$(readable "$URL" --markdown 2>/dev/null || true)"
+elif command -v pandoc &>/dev/null; then
+    BODY="$(curl -sL --max-time 10 "$URL" 2>/dev/null | pandoc -f html -t markdown --wrap=none 2>/dev/null || true)"
+fi
+
+# If extraction failed or returned very little, just link to the article
+if [[ ${#BODY} -lt 50 ]]; then
+    BODY="[Read article](${URL})"
+fi
+
+# --- Build note content ---
+# Escape newlines for obsidian CLI content parameter
+build_content() {
+    local feed_line=""
+    if [[ -n "$FEED" ]]; then
+        feed_line="feed: \"${FEED}\"\n"
+    fi
+
+    printf '%s' "---\ntitle: \"${TITLE}\"\nurl: \"${URL}\"\n${feed_line}date: ${DATE_ISO}\ntype: clipping\ntags:\n  - clipping/rss\n---\n\n# ${TITLE}\n\n| Field | Value |\n|-------|-------|\n| **Source** | [${FEED:-Link}](${URL}) |\n| **Date** | ${DATE} |\n\n---\n\n${BODY}"
+}
+
+CONTENT="$(build_content)"
+
+# --- Try Obsidian CLI first, fall back to direct file write ---
+if command -v obsidian &>/dev/null; then
+    if obsidian create vault="$VAULT_NAME" path="$NOTE_PATH" content="$CONTENT" silent 2>/dev/null; then
+        echo "Clipped (via Obsidian CLI): ${NOTE_PATH}.md"
+        exit 0
+    fi
+fi
+
+# --- Fallback: write directly to vault ---
+FULL_PATH="${VAULT_PATH}/${NOTE_PATH}.md"
+
+# Avoid overwriting existing notes
+if [[ -f "$FULL_PATH" ]]; then
+    TIMESTAMP="$(date +%H%M%S)"
+    NOTE_NAME="${DATE} ${SAFE_TITLE} (${TIMESTAMP})"
+    FULL_PATH="${VAULT_PATH}/${CLIPPINGS_DIR}/${NOTE_NAME}.md"
+fi
+
+mkdir -p "$(dirname "$FULL_PATH")"
+
+# Write content, converting \n literals to actual newlines
+printf '%b' "$CONTENT" > "$FULL_PATH"
+
+echo "Clipped (direct write): ${FULL_PATH}"

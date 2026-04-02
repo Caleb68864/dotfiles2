@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# =============================================================================
+# newsboat-to-mpv -- Stream a URL in mpv
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/newsboat/scripts/newsboat-to-mpv
+# Installed to: ~/.config/newsboat/scripts/newsboat-to-mpv
+#
+# Launches mpv with the given URL. For YouTube links, mpv uses yt-dlp
+# automatically to resolve and stream the video.
+#
+# USAGE (called by newsboat macro):
+#   newsboat-to-mpv <url>
+#
+# DEPENDENCIES:
+#   - mpv
+#   - yt-dlp (for YouTube/streaming URLs)
+# =============================================================================
+
+set -euo pipefail
+
+URL="${1:?Usage: newsboat-to-mpv <url>}"
+
+# Detach mpv so newsboat isn't blocked
+exec mpv --force-window=immediate --no-terminal "$URL" &>/dev/null &
+disown
