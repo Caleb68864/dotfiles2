@@ -13,6 +13,9 @@
 --   - Powers other plugins like code folding, refactoring, and more
 -- ============================================================================
 
+-- Skip Treesitter on PDA (resource-constrained mobile device).
+if vim.env.PDA_MODE then return {} end
+
 return {
   -- The plugin from GitHub
   "nvim-treesitter/nvim-treesitter",

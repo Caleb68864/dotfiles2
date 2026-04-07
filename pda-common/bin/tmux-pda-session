@@ -1,0 +1,131 @@
+#!/bin/bash
+set -e
+# =============================================================================
+# tmux-pda-session -- Create the command-center tmux session for PDA mode
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/pda-common/bin/tmux-pda-session
+#
+# This script creates the PDA tmux session with pre-configured windows for
+# daily notes, inbox, feeds, calendar, reading, and more. It runs when you
+# want a personal-dashboard-style terminal layout focused on information
+# consumption and note-taking rather than development.
+#
+# WINDOW LAYOUT:
+#   Window 1:    note    -- Today's daily note in nvim (Alt+1)
+#   Window 2:    inbox   -- Obsidian Inbox/ directory in nvim (Alt+2)
+#   Window 3:    feed    -- newsboat RSS reader (Alt+3)
+#   Window 4:    cal     -- khal interactive calendar (Alt+4)
+#   Window 5:    book    -- bookratt or epy e-book reader (Alt+5)
+#   Window 6:    media   -- Empty shell, launch mpv on demand (Alt+6)
+#   Window 7:    ssh     -- Empty shell, connect manually (Alt+7)
+#   Window 0:    scratch -- Empty shell for quick one-offs (Alt+0)
+#
+# DAILY NOTE:
+#   On launch, the script ensures today's daily note exists in the vault
+#   at Calendar Notes/Daily Notes/YYYY-MM-DD.md with standard frontmatter.
+#   Window 1 opens this note in nvim automatically.
+#
+# USAGE:
+#   ~/bin/tmux-pda-session
+# =============================================================================
+
+SESSION="command-center"
+
+# If the session already exists (e.g., restored by tmux-continuum), just attach.
+# This prevents duplicate windows when continuum auto-restores a saved session
+# and this script also tries to create windows from scratch.
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+    exec tmux attach -t "$SESSION"
+fi
+
+# =========================================================================
+# Daily note -- ensure today's note file exists before creating windows
+# =========================================================================
+# The vault path defaults to ~/Notes if OBSIDIAN_VAULT is not set.
+# Daily notes live in Calendar Notes/Daily Notes/ with YYYY-MM-DD.md naming.
+
+VAULT="${OBSIDIAN_VAULT:-$HOME/Notes}"
+TODAY="$(date +%Y-%m-%d)"
+DAILY_DIR="$VAULT/Calendar Notes/Daily Notes"
+DAILY_NOTE="$DAILY_DIR/$TODAY.md"
+
+mkdir -p "$DAILY_DIR"
+
+if [ ! -f "$DAILY_NOTE" ]; then
+    cat > "$DAILY_NOTE" << EOF
+---
+title: "$TODAY"
+date: $TODAY
+type: daily
+tags:
+  - daily
+---
+
+# $TODAY
+
+EOF
+fi
+
+# =========================================================================
+# Window creation -- build the PDA session layout
+# =========================================================================
+# Each window is created at a specific index so keybindings (Alt+N) always
+# map to the same app. "command -v" checks if a program exists; skips if
+# not installed. This means on a fresh system, only installed apps get
+# windows.
+
+# --- Window 1: note (today's daily note in nvim) ---
+# Opens today's daily note for immediate journaling or review.
+tmux new-session -d -s "$SESSION" -n note -c "$VAULT"
+tmux send-keys -t "$SESSION:1" "nvim '$DAILY_NOTE'" Enter
+
+# --- Window 2: inbox (Obsidian Inbox/ in nvim) ---
+# Browse and process items that landed in your Inbox folder.
+tmux new-window -t "$SESSION:2" -n inbox -c "$VAULT"
+tmux send-keys -t "$SESSION:2" "nvim '$VAULT/Inbox/'" Enter
+
+# --- Window 3: feed (newsboat RSS reader) ---
+# "command -v" guard: only created if newsboat is installed.
+if command -v newsboat &> /dev/null; then
+    tmux new-window -t "$SESSION:3" -n feed
+    tmux send-keys -t "$SESSION:3" "newsboat" Enter
+fi
+
+# --- Window 4: cal (khal interactive calendar) ---
+# "command -v" guard: only created if khal is installed.
+if command -v khal &> /dev/null; then
+    tmux new-window -t "$SESSION:4" -n cal
+    tmux send-keys -t "$SESSION:4" "khal interactive" Enter
+fi
+
+# --- Window 5: book (e-book reader) ---
+# Tries bookratt first, falls back to epy. Skipped if neither is installed.
+if command -v bookratt &> /dev/null; then
+    tmux new-window -t "$SESSION:5" -n book
+    tmux send-keys -t "$SESSION:5" "bookratt" Enter
+elif command -v epy &> /dev/null; then
+    tmux new-window -t "$SESSION:5" -n book
+    tmux send-keys -t "$SESSION:5" "epy" Enter
+fi
+
+# --- Window 6: media (empty shell) ---
+# Launch mpv or other media players on demand.
+tmux new-window -t "$SESSION:6" -n media
+
+# --- Window 7: ssh (empty shell) ---
+# Connect to remote hosts manually as needed.
+tmux new-window -t "$SESSION:7" -n ssh
+
+# --- Window 0: scratch (empty shell) ---
+# A spare shell for quick one-off commands. Out of the way at Alt+0.
+tmux new-window -t "$SESSION:0" -n scratch
+
+# --- Focus on window 1 (note) ---
+# When tmux attaches, you want to land on your daily note, not on an
+# empty shell. This selects window 1 before attaching.
+tmux select-window -t "$SESSION:1"
+
+# --- Attach to the session ---
+# "exec" replaces the current shell process with tmux (no leftover shell
+# sitting underneath using memory).
+exec tmux attach -t "$SESSION"

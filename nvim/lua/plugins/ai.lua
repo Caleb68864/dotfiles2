@@ -17,6 +17,9 @@
 -- in case you want to switch back.
 -- ============================================================================
 
+-- Skip AI plugins entirely on PDA (resource-constrained mobile device).
+if vim.env.PDA_MODE then return {} end
+
 return {
   -- =========================================================================
   -- Pi Coding Agent -- The primary AI assistant

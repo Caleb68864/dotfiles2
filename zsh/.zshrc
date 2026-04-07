@@ -311,8 +311,11 @@ if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
         # Session does not exist yet -- run the layout builder script which
         # creates the session with all TUI app windows (mail, monitor, etc.)
         # and then attaches to it.
-        if [ -x "$HOME/bin/tmux-command-center" ]; then
-            exec "$HOME/bin/tmux-command-center"
+        # Use TMUX_SESSION_BUILDER if set (e.g., by PDA aliases), otherwise
+        # fall back to the desktop command-center script.
+        local _builder="${TMUX_SESSION_BUILDER:-$HOME/bin/tmux-command-center}"
+        if [ -x "$_builder" ]; then
+            exec "$_builder"
         else
             # Fallback: if the script isn't available, create a basic session
             exec tmux new-session -s command-center -n tactical

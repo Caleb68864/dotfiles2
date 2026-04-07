@@ -143,3 +143,38 @@ fonts:
 clear-cache:
     rm -rf "$HOME/.cache/zsh"
     @echo "Shell init cache cleared. Restart your shell to regenerate."
+
+# Install PDA environment (run on a fresh Pi)
+install-pda:
+    cd "{{dotfiles}}" && bash install-pda.sh
+
+# Stow only PDA-relevant packages
+stow-pda:
+    #!/bin/bash
+    cd "{{dotfiles}}"
+    declare -A TARGETS=( \
+        ["nvim"]="$HOME/.config/nvim" \
+        ["atuin"]="$HOME/.config/atuin" \
+        ["themes"]="$HOME/.config/themes" \
+        ["newsboat"]="$HOME/.config/newsboat" \
+    )
+    for pkg in zsh tmux nvim git atuin themes bin scripts newsboat pda-common; do
+        TARGET="${TARGETS[$pkg]:-$HOME}"
+        mkdir -p "$TARGET"
+        stow -Rv -t "$TARGET" "$pkg"
+    done
+
+# Unstow PDA packages
+unstow-pda:
+    #!/bin/bash
+    cd "{{dotfiles}}"
+    declare -A TARGETS=( \
+        ["nvim"]="$HOME/.config/nvim" \
+        ["atuin"]="$HOME/.config/atuin" \
+        ["themes"]="$HOME/.config/themes" \
+        ["newsboat"]="$HOME/.config/newsboat" \
+    )
+    for pkg in pda-common zsh tmux nvim git atuin themes bin scripts newsboat; do
+        TARGET="${TARGETS[$pkg]:-$HOME}"
+        stow -Dv -t "$TARGET" "$pkg" 2>/dev/null
+    done

@@ -43,6 +43,7 @@ return {
   -- browse help docs, find recent files, and much more.
   {
     "nvim-telescope/telescope.nvim",
+    enabled = not vim.env.PDA_MODE,  -- Skip on PDA (resource-constrained)
     branch = "0.1.x",  -- Use the stable 0.1 branch
     dependencies = {
       "nvim-lua/plenary.nvim",  -- Utility library (required by many plugins)

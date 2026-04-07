@@ -19,6 +19,9 @@
 --   4. nvim-dap-virtual-text -- Shows variable values right in your code
 -- ============================================================================
 
+-- Skip DAP plugins entirely on PDA (resource-constrained mobile device).
+if vim.env.PDA_MODE then return {} end
+
 return {
   -- =========================================================================
   -- DAP Core -- The main debugging engine

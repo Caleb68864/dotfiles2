@@ -1,0 +1,74 @@
+#!/bin/bash
+# =============================================================================
+# pda-note -- Instant capture: create a timestamped note in the Inbox
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/pda-common/bin/pda-note
+#
+# Creates a new note with YAML frontmatter in the vault's Inbox folder
+# and opens it in your editor. Designed for rapid capture — the note is
+# pre-populated with frontmatter and the cursor lands after it, ready
+# for writing.
+#
+# The filename is a timestamp (YYYY-MM-DD-HHMMSS.md) so notes sort
+# chronologically and never collide.
+#
+# USAGE:
+#   pda-note                     # capture to $OBSIDIAN_VAULT/Inbox
+#   pda-note --vault /path/to   # capture to a specific vault's Inbox
+#
+# ENVIRONMENT:
+#   OBSIDIAN_VAULT  Path to Obsidian vault (default: ~/Notes)
+#   EDITOR          Editor to open the note in (default: nvim)
+#
+# Called by other pda-* scripts or directly from the terminal for
+# quick inbox capture.
+# =============================================================================
+
+set -e
+
+# --- Vault configuration ---
+# Default vault path; overridden by --vault flag or OBSIDIAN_VAULT env var.
+VAULT="${OBSIDIAN_VAULT:-$HOME/Notes}"
+
+# --- Argument parsing ---
+# Supports --vault to override the vault path. Any other argument prints
+# usage and exits.
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --vault) VAULT="$2"; shift 2 ;;
+        *) echo "Usage: pda-note [--vault PATH]"; exit 1 ;;
+    esac
+done
+
+# --- Paths and timestamps ---
+# Inbox is the landing zone for uncategorized captures.
+# Timestamp format: YYYY-MM-DD-HHMMSS for filename, ISO 8601 for frontmatter.
+INBOX="$VAULT/Inbox"
+TIMESTAMP="$(date +%Y-%m-%d-%H%M%S)"
+DATE_ISO="$(date +%Y-%m-%dT%H:%M:%S)"
+NOTE="$INBOX/$TIMESTAMP.md"
+
+# --- Create Inbox directory if it doesn't exist ---
+mkdir -p "$INBOX"
+
+# --- Write frontmatter template ---
+# Matches SlingMD / Obsidian frontmatter conventions:
+#   title: empty — fill in after writing the note
+#   date:  ISO 8601 timestamp of creation
+#   type:  "note" for generic captures
+#   tags:  "inbox" so the review workflow can find unprocessed notes
+cat > "$NOTE" << EOF
+---
+title: ""
+date: $DATE_ISO
+type: note
+tags:
+  - inbox
+---
+
+EOF
+
+# --- Open in editor with cursor after frontmatter ---
+# "+normal Go" positions the cursor on a new line at the end of the file,
+# which is right after the frontmatter block, ready for content.
+${EDITOR:-nvim} "+normal Go" "$NOTE"

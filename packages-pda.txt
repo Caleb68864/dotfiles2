@@ -1,0 +1,39 @@
+# =============================================================================
+# PDA System Packages
+# =============================================================================
+# Install with: grep -v '^#' packages-pda.txt | grep -v '^$' | xargs yay -S --needed
+
+# Core terminal tools
+neovim
+tmux
+zsh
+starship
+atuin
+zoxide
+fzf
+ripgrep
+eza
+bat
+git
+stow
+
+# RSS and media
+newsboat
+mpv
+yt-dlp
+
+# Terminal browser (for newsboat xdg-open fallback)
+w3m
+
+# Calendar
+khal
+vdirsyncer
+
+# Bluetooth audio
+pipewire
+wireplumber
+bluez
+bluez-utils
+
+# TUI Bluetooth manager
+bluetuith
