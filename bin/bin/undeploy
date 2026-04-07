@@ -1,25 +1,47 @@
 #!/bin/bash
+# =============================================================================
+# undeploy -- Remove a dotfile package's symlinks using GNU Stow
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/bin/bin/undeploy
+#
+# USAGE:
+#   undeploy <package>       -- Remove a package
+#   undeploy <package> -n    -- Dry run (preview)
+# =============================================================================
 
-# Undeploy a dotfile package using GNU Stow
+set -e
 
-DOTFILES_DIR="$HOME/.files"
+DOTFILES_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../.." && pwd)"
 
-if [ ! -d "$DOTFILES_DIR" ]; then
-    DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-fi
+# Package → stow target mapping (must match deploy-all)
+declare -A STOW_TARGETS=(
+    ["nvim"]="$HOME/.config/nvim"
+    ["kitty"]="$HOME/.config/kitty"
+    ["hypr"]="$HOME/.config/hypr"
+    ["waybar"]="$HOME/.config/waybar"
+    ["swaync"]="$HOME/.config/swaync"
+    ["yazi"]="$HOME/.config/yazi"
+    ["atuin"]="$HOME/.config/atuin"
+    ["themes"]="$HOME/.config/themes"
+    ["aerc"]="$HOME/.config/aerc"
+    ["basalt"]="$HOME/.config/basalt"
+    ["newsboat"]="$HOME/.config/newsboat"
+    ["fonts"]="$HOME/.local/share/fonts"
+)
 
 if [ -z "$1" ]; then
-    echo "Usage: $0 <package>"
+    echo "Usage: $(basename "$0") <package> [-n]"
     echo ""
     echo "Available packages:"
-    echo "  zsh, tmux, nvim, hypr, waybar, wofi, hyprpaper, hyprlock, hypridle, swaync, git, fonts"
-    echo ""
-    echo "Example:"
-    echo "  $0 nvim"
+    cd "$DOTFILES_DIR"
+    for dir in */; do
+        [ -d "$dir" ] && [ "$dir" != "docs/" ] && echo "  ${dir%/}"
+    done
     exit 1
 fi
 
 PACKAGE="$1"
+DRY_RUN="$2"
 
 cd "$DOTFILES_DIR" || exit 1
 
@@ -28,9 +50,10 @@ if [ ! -d "$PACKAGE" ]; then
     exit 1
 fi
 
-echo "Removing symlinks for $PACKAGE..."
-stow -Dvt "$HOME" "$PACKAGE"
+TARGET="${STOW_TARGETS[$PACKAGE]:-$HOME}"
+
+echo "Removing $PACKAGE (target: $TARGET)..."
+stow $DRY_RUN -Dv -t "$TARGET" "$PACKAGE"
 
 echo ""
 echo "Package '$PACKAGE' has been undeployed."
-echo ""

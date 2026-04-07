@@ -136,6 +136,9 @@ mkdir -p "$HOME/.local/share/mail"       # Maildir for email (if needed)
 mkdir -p "$HOME/scratch"                  # Scratch directory for quick AI sessions
 mkdir -p "$HOME/Pictures/Wallpapers"      # Wallpaper directory for random-wallpaper.sh
 mkdir -p "$HOME/Pictures/Screenshots"     # Screenshots directory for hyprshot
+
+# Create empty local override files (sourced by configs, must exist)
+touch "$HOME/.config/hypr/hyprland.local.conf"  # Machine-specific Hyprland overrides
 success "Directories created"
 
 # Backup existing dotfiles
@@ -276,6 +279,17 @@ for script in "${EXECUTABLE_SCRIPTS[@]}"; do
         success "chmod +x $(basename $script)"
     fi
 done
+
+# Copy aerc accounts template if no real config exists yet
+if [ -f "$HOME/.config/aerc/accounts.conf.template" ] && [ ! -f "$HOME/.config/aerc/accounts.conf" ]; then
+    status "Creating aerc accounts.conf from template..."
+    cp "$HOME/.config/aerc/accounts.conf.template" "$HOME/.config/aerc/accounts.conf"
+    chmod 600 "$HOME/.config/aerc/accounts.conf"
+    warning "Edit ~/.config/aerc/accounts.conf with your real credentials"
+elif [ -f "$HOME/.config/aerc/accounts.conf" ]; then
+    chmod 600 "$HOME/.config/aerc/accounts.conf"
+    success "aerc accounts.conf already exists (not overwritten)"
+fi
 
 # Symlink aerc scripts to PATH so aerc keybindings can find them
 if [ -d "$HOME/.config/aerc/scripts" ]; then

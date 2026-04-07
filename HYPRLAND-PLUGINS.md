@@ -1,5 +1,7 @@
 # Hyprland Plugins Installation Guide
 
+> **Status:** Reference only. These plugins are **not currently installed or configured** in `hyprland.conf`. This document describes plugins that could be added in the future.
+
 > **Note:** `hyprscroller` was removed. It is incompatible with Hyprland 0.54+ due to a layout API rewrite and the upstream repo was archived in April 2025. All hyprscroller keybindings and plugin references have been removed from `hyprland.conf`.
 
 

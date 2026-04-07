@@ -2,3 +2,14 @@
 *.swp
 *.swo
 .DS_Store
+bash.exe.stackdump
+
+# Machine-specific overrides (not tracked)
+*.local
+*.local.conf
+hyprland.local.conf
+
+# Secrets -- never commit credentials
+aerc/accounts.conf
+aerc/*.gpg
+*.gpg

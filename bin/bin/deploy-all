@@ -1,51 +1,80 @@
 #!/bin/bash
+# =============================================================================
+# deploy-all -- Deploy all dotfile packages using GNU Stow
+# =============================================================================
+# Managed by GNU Stow from ~/dotfiles/bin/bin/deploy-all
+#
+# Detects the dotfiles directory from the script's own location, then stows
+# every package to its correct target.
+#
+# USAGE:
+#   deploy-all           -- Deploy everything
+#   deploy-all --dry-run -- Preview what would happen (stow -n)
+# =============================================================================
 
-# Deploy all dotfile packages using GNU Stow
+set -e
 
-DOTFILES_DIR="$HOME/.files"
+DOTFILES_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../.." && pwd)"
 
-if [ ! -d "$DOTFILES_DIR" ]; then
-    DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DRY_RUN=""
+if [ "$1" = "--dry-run" ] || [ "$1" = "-n" ]; then
+    DRY_RUN="-n"
+    echo "=== DRY RUN (no changes will be made) ==="
+    echo ""
 fi
 
 cd "$DOTFILES_DIR" || exit 1
 
-PACKAGES=(
-    "zsh"
-    "tmux"
-    "nvim"
-    "hypr"
-    "waybar"
-    "wofi"
-    "hyprpaper"
-    "hyprlock"
-    "hypridle"
-    "swaync"
-    "git"
-    "fonts"
+# Packages and their stow targets
+# Format: "package:target" where target defaults to $HOME if omitted
+PACKAGE_TARGETS=(
+    "zsh:$HOME"
+    "tmux:$HOME"
+    "git:$HOME"
+    "bin:$HOME"
+    "scripts:$HOME"
+    "pi:$HOME"
+    "nvim:$HOME/.config/nvim"
+    "kitty:$HOME/.config/kitty"
+    "hypr:$HOME/.config/hypr"
+    "waybar:$HOME/.config/waybar"
+    "swaync:$HOME/.config/swaync"
+    "yazi:$HOME/.config/yazi"
+    "atuin:$HOME/.config/atuin"
+    "themes:$HOME/.config/themes"
+    "aerc:$HOME/.config/aerc"
+    "basalt:$HOME/.config/basalt"
+    "newsboat:$HOME/.config/newsboat"
+    "fonts:$HOME/.local/share/fonts"
 )
 
-echo "Deploying all dotfile packages..."
+echo "Deploying dotfiles from $DOTFILES_DIR"
 echo ""
 
-for package in "${PACKAGES[@]}"; do
+for entry in "${PACKAGE_TARGETS[@]}"; do
+    package="${entry%%:*}"
+    target="${entry#*:}"
+
     if [ -d "$package" ]; then
-        echo "Deploying $package..."
-        stow -vRt "$HOME" "$package"
+        echo "  Stowing $package → $target"
+        mkdir -p "$target"
+        stow $DRY_RUN -Rv -t "$target" "$package"
     else
-        echo "Warning: $package directory not found, skipping"
+        echo "  Skipping $package (not found)"
     fi
 done
 
-echo ""
-echo "Refreshing font cache..."
-fc-cache -rv "$HOME/.local/share/fonts"
+# Refresh font cache
+if [ -z "$DRY_RUN" ] && [ -d "$HOME/.local/share/fonts" ]; then
+    echo ""
+    echo "Refreshing font cache..."
+    fc-cache -rv "$HOME/.local/share/fonts"
+fi
 
 echo ""
-echo "All packages deployed successfully!"
+echo "All packages deployed."
 echo ""
 echo "Usage:"
-echo "  Deploy single package:  stow -vRt \$HOME <package>"
-echo "  Remove package:         stow -DvRt \$HOME <package>"
-echo "  Dry run:                stow -nvt \$HOME <package>"
-echo ""
+echo "  Deploy one:    stow -Rv -t \$TARGET <package>"
+echo "  Remove one:    stow -Dv -t \$TARGET <package>"
+echo "  Dry run:       deploy-all --dry-run"

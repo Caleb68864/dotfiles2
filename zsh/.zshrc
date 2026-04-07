@@ -28,7 +28,10 @@ export ZSH="$HOME/.oh-my-zsh"
 # tools like hyprctl can talk to the right Hyprland instance.
 # Without this, commands like "hyprctl reload" would not know which
 # Hyprland session to control.
-export HYPRLAND_INSTANCE_SIGNATURE=$(/usr/bin/ls -1 /run/user/1000/hypr/ | grep '^[a-f0-9]' | sort -t_ -k2 -n | tail -1)
+# Guarded so it only runs on machines with Hyprland installed.
+if [ -d /run/user/1000/hypr ]; then
+    export HYPRLAND_INSTANCE_SIGNATURE=$(/usr/bin/ls -1 /run/user/1000/hypr/ | grep '^[a-f0-9]' | sort -t_ -k2 -n | tail -1)
+fi
 
 # --- THEME ---
 # We use Starship prompt (set up at the bottom of this file) instead of
@@ -245,8 +248,9 @@ zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza -1 --color=always --ico
 # and keybindings live in separate files for organization. Each file is
 # loaded here if it exists. This keeps .zshrc cleaner and easier to navigate.
 
-# Load shortcut aliases (like "gs" for "git status")
-[ -f ~/.zsh/aliases.zsh ] && source ~/.zsh/aliases.zsh
+# Load alias modules (aliases-editor.zsh, aliases-git.zsh, etc.)
+# Adding a new aliases-*.zsh file to ~/.zsh/ auto-loads it — no .zshrc edit needed.
+for f in ~/.zsh/aliases-*.zsh(N); do source "$f"; done
 
 # Load helper functions (like "mkcd" to create and enter a directory)
 [ -f ~/.zsh/functions.zsh ] && source ~/.zsh/functions.zsh
@@ -322,35 +326,58 @@ fi
 # =============================================================================
 # These tools need to be initialized LAST because they hook into the shell
 # and some need to override things set up by Oh-My-Zsh or plugins above.
+#
+# Each tool's init output is cached in ~/.cache/zsh/ to avoid forking a
+# subprocess on every shell startup. The cache auto-regenerates when the
+# tool binary changes (e.g., after an update).
+
+# --- CACHED EVAL HELPER ---
+# Usage: cached_eval <command> <args...>
+# Caches the output of "command args..." and sources it on subsequent shells.
+# Invalidates when the binary's modification time changes.
+cached_eval() {
+    local cmd="$1"; shift
+    local cache_dir="$HOME/.cache/zsh"
+    local cache_file="$cache_dir/${cmd}-init.zsh"
+    local bin_path="$(command -v "$cmd" 2>/dev/null)"
+
+    # Skip if the tool isn't installed
+    [[ -z "$bin_path" ]] && return
+
+    mkdir -p "$cache_dir"
+
+    # Regenerate cache if missing or binary is newer than cache
+    if [[ ! -f "$cache_file" ]] || [[ "$bin_path" -nt "$cache_file" ]]; then
+        "$cmd" "$@" > "$cache_file" 2>/dev/null
+    fi
+
+    source "$cache_file"
+}
 
 # --- ATUIN ---
 # Atuin replaces the default Ctrl+R history search with a much better one.
 # It stores your command history in a database, supports fuzzy search,
 # and can even sync history across multiple machines.
-eval "$(atuin init zsh)"
+cached_eval atuin init zsh
 
 # --- ZOXIDE ---
 # Zoxide is a smarter "cd" command. Type "z project" and it jumps to
 # whichever directory named "project" you visit most often. It learns
 # your habits over time (tracking "frecency" -- frequency + recency).
-if command -v zoxide &> /dev/null; then
-    eval "$(zoxide init zsh)"
-fi
+cached_eval zoxide init zsh
 
 # --- DIRENV ---
 # Direnv auto-loads .envrc files when you cd into a project directory.
 # Use it to set per-project env vars (API keys, Python venvs, PATH tweaks)
 # without polluting your global shell. Run "direnv allow" in a directory
 # to trust its .envrc file.
-if command -v direnv &> /dev/null; then
-    eval "$(direnv hook zsh)"
-fi
+cached_eval direnv hook zsh
 
 # --- STARSHIP PROMPT ---
 # Starship is the program that draws your command prompt (the text before
 # your cursor). It shows useful info like the current directory, git branch,
 # Python version, etc. -- all customized in ~/.config/starship.toml.
-eval "$(starship init zsh)"
+cached_eval starship init zsh
 
 # Optional: Powerlevel10k is an alternative prompt. To use it instead of
 # Starship, uncomment the line below and comment out the Starship init above.
