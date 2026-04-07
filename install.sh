@@ -137,8 +137,6 @@ mkdir -p "$HOME/scratch"                  # Scratch directory for quick AI sessi
 mkdir -p "$HOME/Pictures/Wallpapers"      # Wallpaper directory for random-wallpaper.sh
 mkdir -p "$HOME/Pictures/Screenshots"     # Screenshots directory for hyprshot
 
-# Create empty local override files (sourced by configs, must exist)
-touch "$HOME/.config/hypr/hyprland.local.conf"  # Machine-specific Hyprland overrides
 success "Directories created"
 
 # Backup existing dotfiles
@@ -224,6 +222,19 @@ declare -A STOW_TARGETS=(
     ["newsboat"]="$HOME/.config/newsboat"
 )
 
+# Unstow all packages first to clean up orphaned symlinks from removed or
+# renamed files (e.g., aliases.zsh -> aliases-*.zsh). Without this, old
+# symlinks linger and stow -R won't remove them.
+status "Cleaning old symlinks..."
+for package in "${PACKAGES[@]}"; do
+    if [ -d "$package" ]; then
+        target="${STOW_TARGETS[$package]:-$HOME}"
+        stow -Dv -t "$target" "$package" 2>/dev/null || true
+    fi
+done
+success "Old symlinks cleaned"
+
+# Now stow everything fresh
 for package in "${PACKAGES[@]}"; do
     if [ -d "$package" ]; then
         status "Stowing $package..."
@@ -235,6 +246,10 @@ for package in "${PACKAGES[@]}"; do
         warning "$package directory not found, skipping"
     fi
 done
+
+# Create empty local override files AFTER stow (target dirs now exist)
+# These are sourced by configs and must exist to avoid errors.
+touch "$HOME/.config/hypr/hyprland.local.conf" 2>/dev/null || true
 
 # Symlink KDE applications.menu for Dolphin "Open With" support
 # On non-Plasma desktops (Hyprland), kbuildsycoca6 can't find applications.menu
@@ -271,7 +286,10 @@ EXECUTABLE_SCRIPTS=(
     "$HOME/bin/undeploy"
     "$HOME/bin/get-fonts.sh"
     "$HOME/bin/switch-theme.sh"
+    "$HOME/bin/yt2rss"
     "$HOME/.config/hypr/scripts/random-wallpaper.sh"
+    "$HOME/.config/newsboat/scripts/newsboat-to-mpv"
+    "$HOME/.config/newsboat/scripts/newsboat-to-obsidian"
 )
 for script in "${EXECUTABLE_SCRIPTS[@]}"; do
     if [ -f "$script" ]; then

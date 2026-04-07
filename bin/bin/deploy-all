@@ -51,6 +51,20 @@ PACKAGE_TARGETS=(
 echo "Deploying dotfiles from $DOTFILES_DIR"
 echo ""
 
+# Unstow all packages first to clean up orphaned symlinks from removed or
+# renamed files (e.g., aliases.zsh -> aliases-*.zsh split). Without this,
+# old symlinks linger and stow -R won't remove them.
+if [ -z "$DRY_RUN" ]; then
+    echo "Cleaning old symlinks..."
+    for entry in "${PACKAGE_TARGETS[@]}"; do
+        package="${entry%%:*}"
+        target="${entry#*:}"
+        [ -d "$package" ] && stow -Dv -t "$target" "$package" 2>/dev/null || true
+    done
+    echo ""
+fi
+
+# Now stow everything fresh
 for entry in "${PACKAGE_TARGETS[@]}"; do
     package="${entry%%:*}"
     target="${entry#*:}"

@@ -193,6 +193,18 @@ declare -A STOW_TARGETS=(
 )
 # All others (zsh, tmux, git, bin, scripts, pda-common) default to $HOME
 
+# Unstow all packages first to clean up orphaned symlinks from removed or
+# renamed files. Without this, old symlinks linger after config changes.
+status "Cleaning old symlinks..."
+for package in "${PACKAGES[@]}"; do
+    if [ -d "$package" ]; then
+        target="${STOW_TARGETS[$package]:-$HOME}"
+        stow -Dv -t "$target" "$package" 2>/dev/null || true
+    fi
+done
+success "Old symlinks cleaned"
+
+# Now stow everything fresh
 for package in "${PACKAGES[@]}"; do
     if [ -d "$package" ]; then
         status "Stowing $package..."
