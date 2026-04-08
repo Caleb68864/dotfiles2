@@ -60,18 +60,18 @@ return {
       -- instead of just listing individual keymaps.
       -- For example, when you press Space, it shows "f = Find" instead
       -- of listing every Space+f+? keymap individually.
-      wk.register({
-        ["<leader>f"] = { name = "Find" },           -- Space+f = Find things (Telescope)
-        ["<leader>g"] = { name = "Git" },             -- Space+g = Git operations
-        ["<leader>p"] = { name = "Pi" },              -- Space+p = Pi AI assistant
-        ["<leader>t"] = { name = "Test" },            -- Space+t = Testing (Neotest)
-        ["<leader>x"] = { name = "Trouble" },         -- Space+x = Trouble diagnostics
-        ["<leader>r"] = { name = "Refactor" },        -- Space+r = Refactoring tools
-        ["<leader>d"] = { name = "Debug" },           -- Space+d = Debugging
-        ["<leader>y"] = { name = "Yank" },            -- Space+y = Yank (copy) paths
-        ["<leader>h"] = { name = "Harpoon" },         -- Space+h = Harpoon file bookmarks
-        ["<leader>s"] = { name = "Search/Replace" },  -- Space+s = Search and replace (Spectre)
-        ["<leader>w"] = { name = "Workspace" },       -- Space+w = Workspace management
+      wk.add({
+        { "<leader>f", group = "Find" },           -- Space+f = Find things (Telescope)
+        { "<leader>g", group = "Git" },             -- Space+g = Git operations
+        { "<leader>p", group = "Pi" },              -- Space+p = Pi AI assistant
+        { "<leader>t", group = "Test" },            -- Space+t = Testing (Neotest)
+        { "<leader>x", group = "Trouble" },         -- Space+x = Trouble diagnostics
+        { "<leader>r", group = "Refactor" },        -- Space+r = Refactoring tools
+        { "<leader>d", group = "Debug" },           -- Space+d = Debugging
+        { "<leader>y", group = "Yank" },            -- Space+y = Yank (copy) paths
+        { "<leader>h", group = "Harpoon" },         -- Space+h = Harpoon file bookmarks
+        { "<leader>s", group = "Search/Replace" },  -- Space+s = Search and replace (Spectre)
+        { "<leader>w", group = "Workspace" },       -- Space+w = Workspace management
       })
     end,
   },

@@ -16,7 +16,7 @@
 #   Called by tmux keybindings (see .tmux.conf)
 #
 # WINDOW MAP:
-#   6 = comms (weechat+gomuks+scli, monocle)
+#   6 = (disabled)
 #   7 = notes (basalt)
 #   8 = info (mail+calendar+news, monocle)
 #   9 = music (ncmpcpp+cava, side-by-side)
@@ -33,36 +33,7 @@ if tmux list-windows -t "$SESSION" -F '#{window_index}' 2>/dev/null | grep -q "^
 else
     # Window doesn't exist -- create it with the right app
     case "$WINDOW" in
-        6)
-            # Comms: monocle with weechat + gomuks + scli
-            tmux new-window -t "$SESSION:6" -n comms
-            FIRST=true
-            if command -v weechat &> /dev/null; then
-                tmux send-keys -t "$SESSION:6" "weechat" Enter
-                FIRST=false
-            fi
-            if command -v gomuks &> /dev/null; then
-                if [ "$FIRST" = false ]; then
-                    sleep 0.3
-                    tmux split-window -v -t "$SESSION:6" -l 50%
-                    tmux send-keys "gomuks" Enter
-                else
-                    tmux send-keys -t "$SESSION:6" "gomuks" Enter
-                    FIRST=false
-                fi
-            fi
-            if command -v scli &> /dev/null; then
-                if [ "$FIRST" = false ]; then
-                    sleep 0.3
-                    tmux split-window -v -t "$SESSION:6" -l 33%
-                    tmux send-keys "scli" Enter
-                else
-                    tmux send-keys -t "$SESSION:6" "scli" Enter
-                fi
-            fi
-            tmux select-pane -t "$SESSION:6.0"
-            tmux resize-pane -Z -t "$SESSION:6.0"
-            ;;
+        # 6) Comms -- disabled
         7)
             tmux new-window -t "$SESSION:7" -n notes
             tmux send-keys -t "$SESSION:7" "basalt" Enter

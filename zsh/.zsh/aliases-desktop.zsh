@@ -32,6 +32,9 @@ if command -v btop &> /dev/null; then
     alias top='btop'                  # System monitor (replaces htop/top)
 fi
 alias notes='basalt'                  # Obsidian vault browser TUI (also Alt+4 in tmux)
+alias tmux-reset='rm -f ~/.local/share/tmux/resurrect/last && tmux kill-server'
+                                      # Nuke resurrect state and restart tmux fresh
+                                      # (use after changing window names/layout in config)
 
 # --- Pi Coding Agent ---
 alias pa='pi'           # Run Pi in normal interactive mode

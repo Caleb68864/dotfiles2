@@ -73,6 +73,10 @@ bind-key l open
 bind-key h quit
 bind-key n next-unread
 bind-key N prev-unread
+bind-key m toggle-article-read
+bind-key f edit-flags
+bind-key F set-filter
+bind-key BACKSPACE clear-filter
 
 # =============================================================================
 # Macros (prefix: , )
@@ -84,9 +88,10 @@ bind-key N prev-unread
 #   ,c  = Copy URL to clipboard
 #   ,d  = Download with yt-dlp
 #
-# Flags (press F then type the flag character):
+# Flags (press f then type the flag character):
 #   w = To-Watch    r = To-Read    s = Saved
-#   (clear by pressing F and entering empty string)
+#   (clear by pressing f and entering empty string)
+# Filters: F = set filter, Backspace = clear filter
 
 # Stream in mpv (detached so newsboat isn't blocked)
 macro m set browser "~/.config/newsboat/scripts/newsboat-to-mpv %u" ; open-in-browser ; set browser "xdg-open %u"
@@ -179,8 +184,8 @@ color title          color4   default  bold
 # =============================================================================
 
 # How feeds are displayed in the feed list
-# %4i = index, %n = new flag, %11U = unread count, %T = first tag, %t = title
-feedlist-format "%4i %n %11U  %-12T  %t"
+# %4i = index, %n = new flag, %u = unread/total, %T = first tag, %t = title
+feedlist-format "%4i %n %11u  %-12T  %t"
 
 # How articles are displayed in the article list
 # %D = date, %f = feed title, %T = tag, %F = flags, %t = article title

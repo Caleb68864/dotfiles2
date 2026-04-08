@@ -72,36 +72,36 @@ tmux new-session -d -s "$SESSION" -n tactical
 # "command -v" checks if a program exists; skips if not installed.
 # This means on a fresh system, only installed apps get windows.
 
-# --- Window 6: comms (monocle: weechat + gomuks + scli) ---
-# All chat apps stacked as panes, first one zoomed to full-screen.
-# prefix+o = cycle to next chat app (stays zoomed/full-screen)
-# prefix+z = unzoom to see all as split panes, then zoom back
-COMMS_CREATED=false
-if command -v weechat &> /dev/null; then
-    tmux new-window -t "$SESSION:6" -n comms
-    tmux send-keys -t "$SESSION:6" "weechat" Enter
-    COMMS_CREATED=true
-fi
-if command -v gomuks &> /dev/null; then
-    if [ "$COMMS_CREATED" = true ]; then
-        tmux split-window -v -t "$SESSION:6" -l 50%
-        tmux send-keys "gomuks" Enter
-    else
-        tmux new-window -t "$SESSION:6" -n comms
-        tmux send-keys -t "$SESSION:6" "gomuks" Enter
-        COMMS_CREATED=true
-    fi
-fi
-if command -v scli &> /dev/null; then
-    if [ "$COMMS_CREATED" = true ]; then
-        tmux split-window -v -t "$SESSION:6" -l 33%
-        tmux send-keys "scli" Enter
-    else
-        tmux new-window -t "$SESSION:6" -n comms
-        tmux send-keys -t "$SESSION:6" "scli" Enter
-        COMMS_CREATED=true
-    fi
-fi
+# --- Window 6: comms (disabled) ---
+# # All chat apps stacked as panes, first one zoomed to full-screen.
+# # prefix+o = cycle to next chat app (stays zoomed/full-screen)
+# # prefix+z = unzoom to see all as split panes, then zoom back
+# COMMS_CREATED=false
+# if command -v weechat &> /dev/null; then
+#     tmux new-window -t "$SESSION:6" -n comms
+#     tmux send-keys -t "$SESSION:6" "weechat" Enter
+#     COMMS_CREATED=true
+# fi
+# if command -v gomuks &> /dev/null; then
+#     if [ "$COMMS_CREATED" = true ]; then
+#         tmux split-window -v -t "$SESSION:6" -l 50%
+#         tmux send-keys "gomuks" Enter
+#     else
+#         tmux new-window -t "$SESSION:6" -n comms
+#         tmux send-keys -t "$SESSION:6" "gomuks" Enter
+#         COMMS_CREATED=true
+#     fi
+# fi
+# if command -v scli &> /dev/null; then
+#     if [ "$COMMS_CREATED" = true ]; then
+#         tmux split-window -v -t "$SESSION:6" -l 33%
+#         tmux send-keys "scli" Enter
+#     else
+#         tmux new-window -t "$SESSION:6" -n comms
+#         tmux send-keys -t "$SESSION:6" "scli" Enter
+#         COMMS_CREATED=true
+#     fi
+# fi
 # Zoom the first pane so you start with one app full-screen
 if [ "$COMMS_CREATED" = true ]; then
     tmux select-pane -t "$SESSION:6.0"

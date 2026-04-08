@@ -175,9 +175,7 @@ for item in "${CONFLICT_ITEMS[@]}"; do
 done
 
 if [ -d "$BACKUP_DIR" ] && [ "$(ls -A $BACKUP_DIR 2>/dev/null)" ]; then
-    success "Backup completed: $BACKUP_DIR"
-else
-    rm -rf "$BACKUP_DIR"
+    success "Conflict backup completed: $BACKUP_DIR"
 fi
 
 # Deploy dotfiles using Stow
@@ -240,7 +238,34 @@ for package in "${PACKAGES[@]}"; do
         status "Stowing $package..."
         target="${STOW_TARGETS[$package]:-$HOME}"
         mkdir -p "$target"
+
+        # Back up user data files (non-symlinks) in stow target before restowing.
+        # Stow only manages symlinks — real files like newsboat/urls are user data
+        # that would be lost when stow replaces the directory contents.
+        pkg_backup_dir="$BACKUP_DIR/stow-userdata/$package"
+        if [ -d "$target" ]; then
+            while IFS= read -r -d '' userfile; do
+                rel="${userfile#$target/}"
+                mkdir -p "$pkg_backup_dir/$(dirname "$rel")"
+                cp -a "$userfile" "$pkg_backup_dir/$rel"
+            done < <(find "$target" -maxdepth 3 -type f -print0 2>/dev/null)
+        fi
+
         stow -Rv -t "$target" "$package"
+
+        # Restore user data files that stow doesn't manage
+        if [ -d "$pkg_backup_dir" ]; then
+            while IFS= read -r -d '' backed; do
+                rel="${backed#$pkg_backup_dir/}"
+                dest="$target/$rel"
+                if [ ! -e "$dest" ]; then
+                    mkdir -p "$(dirname "$dest")"
+                    cp -a "$backed" "$dest"
+                    success "Restored user data: $rel"
+                fi
+            done < <(find "$pkg_backup_dir" -type f -print0 2>/dev/null)
+        fi
+
         success "$package stowed"
     else
         warning "$package directory not found, skipping"
@@ -250,6 +275,11 @@ done
 # Create empty local override files AFTER stow (target dirs now exist)
 # These are sourced by configs and must exist to avoid errors.
 touch "$HOME/.config/hypr/hyprland.local.conf" 2>/dev/null || true
+
+# Clean up empty backup dir
+if [ -d "$BACKUP_DIR" ] && [ -z "$(ls -A "$BACKUP_DIR" 2>/dev/null)" ]; then
+    rm -rf "$BACKUP_DIR"
+fi
 
 # Symlink KDE applications.menu for Dolphin "Open With" support
 # On non-Plasma desktops (Hyprland), kbuildsycoca6 can't find applications.menu

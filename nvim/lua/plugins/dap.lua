@@ -36,6 +36,7 @@ return {
     config = function()
       local dap = require("dap")
       local dapui = require("dapui")
+      dapui.setup()
 
       -- =======================================================================
       -- Auto-open and auto-close the debug UI
@@ -133,9 +134,7 @@ return {
   -- Without this, you'd be debugging with just text commands (much harder).
   {
     "rcarriga/nvim-dap-ui",
-    config = function()
-      require("dapui").setup()  -- Use default layout and settings
-    end,
+    -- setup() is called in nvim-dap's config above (must happen before dapui is used)
   },
 
   -- =========================================================================
