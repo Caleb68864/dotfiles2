@@ -178,3 +178,8 @@ unstow-pda:
         TARGET="${TARGETS[$pkg]:-$HOME}"
         stow -Dv -t "$TARGET" "$pkg" 2>/dev/null
     done
+
+# Run the Neovim Lua test suite headlessly
+test-nvim:
+    nvim --headless -u nvim/tests/minimal_init.lua \
+      -c "PlenaryBustedDirectory nvim/tests/ {minimal_init='nvim/tests/minimal_init.lua'}"
