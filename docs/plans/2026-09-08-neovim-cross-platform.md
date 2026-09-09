@@ -1530,8 +1530,8 @@ end
 vim.g.neovide_remember_window_size = true   -- Reopen at the size you left it
 vim.g.neovide_hide_mouse_when_typing = true -- Pointer gets out of the way
 
--- Frames per second to render at. Neovide defaults to 60; matching your
--- actual monitor makes scrolling look right. `idle` drops the rate right down
+-- Frames per second to render at. This is a FIXED value, not auto-detected --
+-- set it to match your monitor if yours is not 60Hz. `idle` drops the rate down
 -- when nothing is happening, so an open-but-unused window is not burning GPU.
 vim.g.neovide_refresh_rate = 60
 vim.g.neovide_refresh_rate_idle = 5
@@ -1553,9 +1553,9 @@ local function change_scale(delta)
   vim.g.neovide_scale_factor = math.min(math.max(new, 0.5), 3.0)
 end
 
-vim.keymap.set("n", "<C-=>", function() change_scale(0.1) end, { desc = "Zoom in" })
-vim.keymap.set("n", "<C-->", function() change_scale(-0.1) end, { desc = "Zoom out" })
-vim.keymap.set("n", "<C-0>", function() vim.g.neovide_scale_factor = 1.0 end, { desc = "Zoom reset" })
+vim.keymap.set({ "n", "i" }, "<C-=>", function() change_scale(0.1) end, { desc = "Zoom in" })
+vim.keymap.set({ "n", "i" }, "<C-->", function() change_scale(-0.1) end, { desc = "Zoom out" })
+vim.keymap.set({ "n", "i" }, "<C-0>", function() vim.g.neovide_scale_factor = 1.0 end, { desc = "Zoom reset" })
 vim.keymap.set({ "n", "i" }, "<C-ScrollWheelUp>", function() change_scale(0.1) end, { desc = "Zoom in" })
 vim.keymap.set({ "n", "i" }, "<C-ScrollWheelDown>", function() change_scale(-0.1) end, { desc = "Zoom out" })
 ```
