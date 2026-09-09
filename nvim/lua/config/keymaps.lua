@@ -182,3 +182,28 @@ vim.keymap.set("n", "<leader>?", function()
   vim.keymap.set("n", "q", "<cmd>close<CR>", { buffer = buf, silent = true })
   vim.keymap.set("n", "<Esc>", "<cmd>close<CR>", { buffer = buf, silent = true })
 end, { desc = "Show cheat sheet" })
+
+-- ============================================================================
+-- Scratchpad -- park temporary text that survives a restart
+-- ============================================================================
+-- Space+Space is THE quick pad: one eternal note, one keypress. Use it the
+-- way you would use an unsaved Notepad++ tab -- paste a command, come back
+-- to it tomorrow. Nothing here ever asks you to save or name a file.
+local scratch = require("config.scratch")
+
+vim.keymap.set("n", "<leader><leader>", scratch.toggle_quick, { desc = "Scratch: toggle quick pad" })
+vim.keymap.set("n", "<leader>nn", scratch.new_scratch, { desc = "Scratch: [n]ew [n]amed scratch" })
+vim.keymap.set("n", "<leader>nf", scratch.pick, { desc = "Scratch: [f]ind scratches" })
+vim.keymap.set("n", "<leader>ng", scratch.grep, { desc = "Scratch: [g]rep scratches" })
+vim.keymap.set("n", "<leader>nd", scratch.delete_current, { desc = "Scratch: [d]elete this scratch" })
+
+-- Promote moves the quick pad's contents into a dated file and clears the
+-- pad, for when something you scribbled turns out to be worth keeping.
+vim.keymap.set("n", "<leader>np", function()
+  local path = scratch.promote()
+  if path then
+    vim.notify("Promoted to " .. vim.fn.fnamemodify(path, ":t"))
+  else
+    vim.notify("Quick pad is empty -- nothing to promote", vim.log.levels.INFO)
+  end
+end, { desc = "Scratch: [p]romote quick pad" })

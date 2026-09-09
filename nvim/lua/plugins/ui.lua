@@ -70,6 +70,7 @@ return {
         { "<leader>d", group = "Debug" },           -- Space+d = Debugging
         { "<leader>y", group = "Yank" },            -- Space+y = Yank (copy) paths
         { "<leader>h", group = "Harpoon" },         -- Space+h = Harpoon file bookmarks
+        { "<leader>n", group = "Notes/Scratch" }, -- Space+n = Scratchpad
         { "<leader>s", group = "Search/Replace" },  -- Space+s = Search and replace (Spectre)
         { "<leader>w", group = "Workspace" },       -- Space+w = Workspace management
       })

@@ -67,6 +67,12 @@ require("config.options")      -- Editor settings (line numbers, tabs, etc.)
 require("config.keymaps")      -- Custom keyboard shortcuts
 require("config.autocommands") -- Automatic actions (trim whitespace on save, etc.)
 
+-- Scratchpad: persistent parking spot for temporary text.
+-- setup() with no arguments uses the default root of ~/scratch.
+local scratch = require("config.scratch")
+scratch.setup()
+scratch.enable_autosave()
+
 -- ============================================================================
 -- Load plugins (auto-discovers all files in lua/plugins/)
 -- ============================================================================
