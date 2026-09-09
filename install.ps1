@@ -122,9 +122,39 @@ if (-not $existing) {
     New-Item -ItemType Junction -Path $NvimTarget -Target $NvimSource | Out-Null
 }
 
+# --- Neovim itself -----------------------------------------------------------
+#
+# Neovim comes from winget, not from scoop, and it is the one deliberate
+# exception to the scoop-for-everything rule below. winget puts it in
+# C:\Program Files\Neovim and registers it in Add/Remove Programs. scoop would
+# install a SECOND copy under ~\scoop\apps and drop a shim in ~\scoop\shims,
+# which sits ahead of Program Files on PATH.
+#
+# Two Neovims is not visibly broken, which is what makes it worth avoiding:
+# both read %LOCALAPPDATA%\nvim-data, so plugins and parsers are shared and
+# each one launches fine. What you get is `nvim` resolving by PATH order while
+# a shortcut or another shim quietly runs the other version.
+#
+# `winget install` exits nonzero when the package is already present -- the
+# normal case on every re-run -- and on PowerShell 7.4+ that nonzero exit is
+# promoted to a terminating error by $PSNativeCommandUseErrorActionPreference,
+# which $ErrorActionPreference = "Stop" would then act on. So test first and
+# only install when it is genuinely missing.
+
+if (Get-Command nvim -ErrorAction SilentlyContinue) {
+    Write-Host "Neovim already installed: $((Get-Command nvim).Source)" -ForegroundColor DarkGray
+} elseif (Get-Command winget -ErrorAction SilentlyContinue) {
+    Write-Host "Installing Neovim via winget..." -ForegroundColor Cyan
+    winget install --id Neovim.Neovim --source winget `
+        --accept-source-agreements --accept-package-agreements --silent
+} else {
+    Write-Host "Neovim is missing and winget is not available." -ForegroundColor Red
+    Write-Host "  Install it from https://github.com/neovim/neovim/releases, then re-run."
+    exit 1
+}
+
 # --- External tools ----------------------------------------------------------
 #
-# neovim  - the editor itself
 # neovide - the GUI front end; the whole point of the Windows setup
 # zig     - a C compiler for treesitter. NOT optional: auto_install is on, so
 #           without a compiler every new filetype throws an error popup.
@@ -165,7 +195,7 @@ try {
 } catch {
     Write-Host "  (extras bucket already added)" -ForegroundColor DarkGray
 }
-scoop install neovim neovide zig ripgrep fd cmake git gh lazygit yazi fzf pwsh netcoredbg
+scoop install neovide zig ripgrep fd cmake git gh lazygit yazi fzf pwsh netcoredbg
 
 # --- Fonts -------------------------------------------------------------------
 #
