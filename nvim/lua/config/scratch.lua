@@ -95,4 +95,85 @@ function M.title_of(path)
   return "(empty)"
 end
 
+--- All named scratches, newest first. The quick pad is deliberately excluded:
+--- it is always reachable by its own keypress and would otherwise always sit
+--- at the top of the list as noise.
+--- @return table array of { path, title, mtime }
+function M.list()
+  if vim.fn.isdirectory(config.root) == 0 then
+    return {}
+  end
+  local quick = M.quick_path()
+  local items = {}
+  -- vim.fn.glob with the last two args as 0,1 returns a LIST of paths.
+  for _, path in ipairs(vim.fn.glob(config.root .. "/*.md", 0, 1)) do
+    local normalized = vim.fs.normalize(path)
+    if normalized ~= quick then
+      table.insert(items, {
+        path = normalized,
+        title = M.title_of(normalized),
+        mtime = vim.fn.getftime(normalized),
+      })
+    end
+  end
+  table.sort(items, function(a, b) return a.mtime > b.mtime end)
+  return items
+end
+
+--- Return true if the file has no non-whitespace content.
+--- @param path string
+--- @return boolean
+local function is_blank(path)
+  if vim.fn.filereadable(path) == 0 then
+    return true
+  end
+  for _, line in ipairs(vim.fn.readfile(path)) do
+    if vim.trim(line) ~= "" then
+      return false
+    end
+  end
+  return true
+end
+
+--- Move the quick pad's contents into a new dated scratch, leaving the pad
+--- empty. This exists because you usually only realise something matters
+--- AFTER you have already scribbled it into the pad.
+--- @return string|nil path of the new scratch, or nil if the pad was empty
+function M.promote()
+  local quick = M.quick_path()
+  if is_blank(quick) then
+    return nil
+  end
+  M.ensure_root()
+  local target = M.new_path()
+  vim.fn.writefile(vim.fn.readfile(quick), target)
+  -- Truncate the pad rather than deleting it -- it must always exist.
+  vim.fn.writefile({}, quick)
+
+  -- If the pad is currently open in a buffer, reload it so the window does
+  -- not keep showing the text we just moved away.
+  local buf = vim.fn.bufnr(quick)
+  if buf ~= -1 and vim.api.nvim_buf_is_loaded(buf) then
+    vim.api.nvim_buf_call(buf, function() vim.cmd("silent edit!") end)
+  end
+  return target
+end
+
+--- Delete a named scratch. The quick pad is protected: deleting it would
+--- break the "there is always a pad" guarantee, and the user almost
+--- certainly meant to clear it instead.
+--- @param path string
+--- @return boolean ok, string|nil reason
+function M.delete(path)
+  local normalized = vim.fs.normalize(path)
+  if normalized == M.quick_path() then
+    return false, "refusing to delete the quick pad -- clear its contents instead"
+  end
+  if vim.fn.filereadable(normalized) == 0 then
+    return false, "not a scratch file: " .. normalized
+  end
+  vim.fn.delete(normalized)
+  return true
+end
+
 return M

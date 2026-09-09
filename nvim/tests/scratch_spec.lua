@@ -70,3 +70,75 @@ describe("scratch titles", function()
     assert.are.equal("(empty)", scratch.title_of(dir .. "/nope.md"))
   end)
 end)
+
+describe("scratch listing", function()
+  it("lists newest first and excludes the quick pad", function()
+    local dir = fresh_root()
+    scratch.ensure_root()
+    write_file(dir .. "/quick.md", { "the pad" })
+    write_file(dir .. "/2026-09-01-1000.md", { "older" })
+    write_file(dir .. "/2026-09-02-1000.md", { "newer" })
+    -- Force distinct mtimes. Both files are created in the same second, so
+    -- without this the sort order is undefined and the test flakes.
+    -- fs_utime is used rather than shelling out to `touch -d`, because that
+    -- flag is GNU-specific and this suite must also run on Windows.
+    vim.loop.fs_utime(dir .. "/2026-09-01-1000.md", 1000000, 1000000)
+    vim.loop.fs_utime(dir .. "/2026-09-02-1000.md", 2000000, 2000000)
+
+    local items = scratch.list()
+    assert.are.equal(2, #items)
+    assert.are.equal("newer", items[1].title)
+    assert.are.equal("older", items[2].title)
+  end)
+
+  it("returns an empty list when the root does not exist", function()
+    fresh_root()
+    assert.are.same({}, scratch.list())
+  end)
+end)
+
+describe("scratch promote", function()
+  it("moves pad contents to a dated file and empties the pad", function()
+    local dir = fresh_root()
+    scratch.ensure_root()
+    write_file(scratch.quick_path(), { "keep me", "line two" })
+
+    local new = scratch.promote()
+
+    assert.is_truthy(new)
+    assert.are.same({ "keep me", "line two" }, vim.fn.readfile(new))
+    assert.are.same({}, vim.fn.readfile(scratch.quick_path()))
+  end)
+
+  it("refuses to promote an empty pad", function()
+    local dir = fresh_root()
+    scratch.ensure_root()
+    write_file(scratch.quick_path(), { "", "   " })
+    assert.is_nil(scratch.promote())
+  end)
+
+  it("refuses to promote a pad that does not exist", function()
+    fresh_root()
+    assert.is_nil(scratch.promote())
+  end)
+end)
+
+describe("scratch delete", function()
+  it("deletes a named scratch", function()
+    local dir = fresh_root()
+    scratch.ensure_root()
+    local p = dir .. "/2026-09-08-1432.md"
+    write_file(p, { "junk" })
+    assert.is_true(scratch.delete(p))
+    assert.are.equal(0, vim.fn.filereadable(p))
+  end)
+
+  it("refuses to delete the quick pad", function()
+    fresh_root()
+    scratch.ensure_root()
+    write_file(scratch.quick_path(), { "pad" })
+    local ok = scratch.delete(scratch.quick_path())
+    assert.is_false(ok)
+    assert.are.equal(1, vim.fn.filereadable(scratch.quick_path()))
+  end)
+end)
