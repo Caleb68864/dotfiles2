@@ -1594,6 +1594,17 @@ git commit -m "feat(neovide): add GUI settings with a single animations switch"
 
 - [ ] **Step 1: Write the installer**
 
+> **The listing below is the ORIGINAL draft and is now superseded.** Review of
+> Task 11 found two Important defects in it, both since fixed in the real file:
+> the font install wrote to `%WINDIR%\Fonts` via COM `CopyHere`, which silently
+> no-ops on the non-elevated Developer-Mode path the preflight itself permits
+> (now a per-user install under `%LOCALAPPDATA%\Microsoft\Windows\Fonts` with
+> HKCU registration); and `scoop bucket add extras 2>$null` suppressed only the
+> stderr text, not the exit code, so on PowerShell 7.4+ an already-added bucket
+> aborted the whole script on any second run (now wrapped in try/catch).
+>
+> **`install.ps1` in the repo root is authoritative.** Read that, not this.
+
 `~/dotfiles/install.ps1`:
 
 ```powershell
@@ -1755,6 +1766,11 @@ Launch `neovide` and confirm each item. These cannot be automated — mouse inpu
 - [ ] `Ctrl+ScrollWheel` zooms; window size is remembered across restarts
 - [ ] `<Space>ff` (Telescope) returns results quickly — proves fzf-native built
 - [ ] `:!echo hi` prints `hi` — proves the PowerShell shell settings work
+- [ ] Icons render as glyphs, not boxes. **If they are boxes, log out and back
+      in before investigating anything else.** `install.ps1` registers the Nerd
+      Font per-user, which does not broadcast `WM_FONTCHANGE`, so apps launched
+      in the same session may not see it until the next logon. The font is
+      installed correctly; only the running session's font cache is stale.
 
 - [ ] **Step 4: Run the same checklist on Linux**
 
