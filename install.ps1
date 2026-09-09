@@ -9,9 +9,13 @@
     %LOCALAPPDATA%\nvim rather than ~/.config/nvim, so this script does the
     equivalent job: link the config, then install the external tools.
 
-    Creating a symlink on Windows requires EITHER Developer Mode to be enabled
-    OR an elevated shell. This script checks up front and tells you which is
-    missing, rather than failing later with an opaque access-denied error.
+    The config is linked with a DIRECTORY JUNCTION, not a symbolic link. Neovim
+    follows both transparently, but a symlink needs EITHER Developer Mode or an
+    elevated shell, while a junction needs neither -- so this script runs from
+    an ordinary prompt on a stock machine, and there is no permission preflight
+    to fail. The one constraint a junction adds is that its target must be a
+    local absolute path (no UNC path, no mapped network drive), which holds for
+    any ordinary clone of this repo.
 #>
 
 $ErrorActionPreference = "Stop"
@@ -20,28 +24,11 @@ $RepoRoot = $PSScriptRoot
 $NvimTarget = Join-Path $env:LOCALAPPDATA "nvim"
 $NvimSource = Join-Path $RepoRoot "nvim"
 
-function Test-CanSymlink {
-    # Developer Mode lets a non-elevated process create symlinks.
-    $key = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
-    $devMode = (Get-ItemProperty -Path $key -Name AllowDevelopmentWithoutDevLicense -ErrorAction SilentlyContinue).AllowDevelopmentWithoutDevLicense -eq 1
-
-    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $elevated = ([Security.Principal.WindowsPrincipal]$identity).IsInRole(
-        [Security.Principal.WindowsBuiltInRole]::Administrator)
-
-    return @{ DevMode = $devMode; Elevated = $elevated; Ok = ($devMode -or $elevated) }
-}
-
 # --- Preflight ---------------------------------------------------------------
-
-$symlink = Test-CanSymlink
-if (-not $symlink.Ok) {
-    Write-Host "Cannot create symlinks." -ForegroundColor Red
-    Write-Host "Fix ONE of these, then re-run:"
-    Write-Host "  1. Enable Developer Mode:  Settings > System > For developers > Developer Mode"
-    Write-Host "  2. Or re-run this script from an Administrator PowerShell"
-    exit 1
-}
+#
+# There is no permission check here on purpose: see the note at the top of this
+# file. A junction needs neither Developer Mode nor elevation, so the only thing
+# that has to be true before starting is that scoop exists.
 
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Write-Host "scoop is not installed. Install it first with:" -ForegroundColor Red
@@ -52,9 +39,10 @@ if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
 
 # --- Link the Neovim config --------------------------------------------------
 #
-# The symlink is what this script exists to do, so it happens FIRST. Both of
-# the steps below it can abort the whole script under $ErrorActionPreference =
-# "Stop" -- a package that fails to install, or a missing fonts/ directory --
+# Linking the config is what this script exists to do, so it happens FIRST.
+# Both of the steps below it can abort the whole script under
+# $ErrorActionPreference = "Stop" -- a package that fails to install, or a
+# missing fonts/ directory --
 # and if the link came last, that abort would leave the machine with new tools
 # and no config. Ordered this way, a later failure still leaves a working
 # Neovim and you can re-run to pick up the rest.
@@ -66,7 +54,7 @@ if (Test-Path $NvimTarget) {
 }
 
 Write-Host "Linking $NvimTarget -> $NvimSource" -ForegroundColor Cyan
-New-Item -ItemType SymbolicLink -Path $NvimTarget -Target $NvimSource | Out-Null
+New-Item -ItemType Junction -Path $NvimTarget -Target $NvimSource | Out-Null
 
 # --- External tools ----------------------------------------------------------
 #
@@ -79,6 +67,21 @@ New-Item -ItemType SymbolicLink -Path $NvimTarget -Target $NvimSource | Out-Null
 # cmake   - needed to build telescope-fzf-native on Windows (there is no make)
 # lazygit - git TUI (the nvim plugin is skipped if this is absent)
 # yazi    - file manager (likewise)
+# pwsh    - PowerShell 7. NOT optional either, and specifically the scoop copy.
+#           options.lua points 'shell' at pwsh when it can find one and falls
+#           back to Windows PowerShell 5.1 when it cannot, and 5.1 cannot parse
+#           `&&` -- which is what telescope-fzf-native's Windows build command
+#           uses, so on 5.1 that build fails and Telescope silently drops to
+#           slow pure-Lua matching. Installing pwsh from the Microsoft Store or
+#           `winget install Microsoft.PowerShell` does NOT fix this: those put
+#           an App Execution Alias in WindowsApps, a zero-byte reparse point
+#           that `vim.fn.executable("pwsh")` reports as absent, so Neovim never
+#           sees it however well it works from a prompt. scoop lays down a real
+#           executable, which Neovim does find.
+# netcoredbg - the C# debug adapter dap.lua names. Without it :checkhealth
+#           reports the coreclr adapter's `command` as not executable. Nothing
+#           breaks at startup, because the adapter is only built on first use,
+#           so this is only needed if you actually debug C# on this machine.
 
 Write-Host "Installing tools via scoop..." -ForegroundColor Cyan
 
@@ -96,19 +99,19 @@ try {
 } catch {
     Write-Host "  (extras bucket already added)" -ForegroundColor DarkGray
 }
-scoop install neovim neovide zig ripgrep fd cmake git gh lazygit yazi fzf
+scoop install neovim neovide zig ripgrep fd cmake git gh lazygit yazi fzf pwsh netcoredbg
 
 # --- Fonts -------------------------------------------------------------------
 #
 # Fonts are installed PER-USER (into %LOCALAPPDATA%\Microsoft\Windows\Fonts
-# plus an HKCU registry entry) instead of system-wide (%WINDIR%\Fonts). The
-# preflight above accepts EITHER Developer Mode OR elevation -- so a user can
-# legitimately reach this point in a non-elevated shell. Writing to the
-# system font folder needs elevation; on that non-elevated path the old
-# Shell.Application CopyHere() call would either silently no-op (COM does not
-# throw, so $ErrorActionPreference can't catch it) or pop an unexpected UAC
-# prompt mid-script. The per-user location needs no elevation at all, so it
-# behaves identically on both preflight branches.
+# plus an HKCU registry entry) instead of system-wide (%WINDIR%\Fonts). Nothing
+# else in this script needs elevation -- the junction above deliberately removed
+# the last thing that did -- so the normal way to run it is from an ordinary
+# prompt. Writing to the system font folder needs elevation; from a normal
+# prompt the old Shell.Application CopyHere() call would either silently no-op
+# (COM does not throw, so $ErrorActionPreference can't catch it) or pop an
+# unexpected UAC prompt mid-script. The per-user location needs no elevation at
+# all, so it behaves the same however the script was launched.
 
 Write-Host "Installing JetBrainsMono Nerd Font..." -ForegroundColor Cyan
 $fontDir = Join-Path $RepoRoot "fonts"
