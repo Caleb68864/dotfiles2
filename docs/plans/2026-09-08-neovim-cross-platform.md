@@ -44,7 +44,7 @@
 | `nvim/lua/plugins/editor.lua` | nvim-tree `on_attach`; tmux-navigator guard; fzf-native build. | Modify |
 | `nvim/lua/plugins/ui.lua` | which-key `<leader>n` group. | Modify |
 | `nvim/lua/plugins/treesitter.lua` | Windows compiler list. | Modify |
-| `nvim/lua/plugins/tools.lua` | lazygit/yazi executable guards. | Modify |
+| `nvim/lua/plugins/git.lua` | lazygit executable guard (lazygit lives here, NOT tools.lua). | Modify |
 | `install.ps1` | Windows deploy + scoop deps. | Create |
 | `docs/neovim-windows-setup-notes.md` | Stale. | Delete |
 
@@ -1309,7 +1309,7 @@ git commit -m "feat(platform): add cross-platform detection module"
 - Modify: `nvim/init.lua`
 - Modify: `nvim/lua/config/options.lua`
 - Modify: `nvim/lua/plugins/editor.lua` (tmux-navigator, fzf-native build)
-- Modify: `nvim/lua/plugins/tools.lua` (lazygit, yazi)
+- Modify: `nvim/lua/plugins/git.lua` (lazygit). Note: yazi and tmux-navigator both live in editor.lua.
 - Modify: `nvim/lua/plugins/treesitter.lua`
 
 - [ ] **Step 1: Require platform first in init.lua**
@@ -1389,7 +1389,7 @@ In `nvim/lua/plugins/editor.lua`, in the `christoomey/vim-tmux-navigator` spec (
     cond = not require("config.platform").is_windows,
 ```
 
-In `nvim/lua/plugins/tools.lua`, add to the `kdheepak/lazygit.nvim` spec:
+In `nvim/lua/plugins/git.lua` (NOT tools.lua -- lazygit lives in git.lua), add to the `kdheepak/lazygit.nvim` spec:
 
 ```lua
     -- Only load if the lazygit binary is actually installed. Without this the
@@ -1453,7 +1453,7 @@ Then open `nvim` and confirm: `<Space>lg` still opens lazygit, `<Space>y` still 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add nvim/init.lua nvim/lua/config/options.lua nvim/lua/plugins/editor.lua nvim/lua/plugins/tools.lua nvim/lua/plugins/treesitter.lua
+git add nvim/init.lua nvim/lua/config/options.lua nvim/lua/plugins/editor.lua nvim/lua/plugins/git.lua nvim/lua/plugins/treesitter.lua
 git commit -m "feat(platform): guard Linux-only plugins and fix Windows shell, compiler, and fzf build"
 ```
 
