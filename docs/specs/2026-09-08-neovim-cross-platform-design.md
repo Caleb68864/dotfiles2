@@ -1,7 +1,7 @@
 # Neovim as Daily Driver — Cross-Platform Design
 
 **Date:** 2026-09-08
-**Status:** Approved design, not yet implemented
+**Status:** Implemented on branch `nvim-crossplatform`
 **Supersedes:** `docs/neovim-windows-setup-notes.md` (now stale — every plugin it
 lists as "to add on Windows" has since been added to the Linux config)
 
