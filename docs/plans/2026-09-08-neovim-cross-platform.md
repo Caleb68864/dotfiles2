@@ -1335,9 +1335,13 @@ Append to `nvim/lua/config/options.lua`:
 -- so searches silently return nothing and `:!` commands fail in confusing
 -- ways. Pointing `shell` at PowerShell 7 (`pwsh`) fixes both.
 --
--- These shellquote/shellxquote values look like line noise; they are the
--- documented incantation from `:help shell-powershell` and should be copied
--- exactly rather than reasoned about.
+-- The shellredir and shellpipe values below (and shellcmdflag) look like line
+-- noise. They are the documented incantation from `:help shell-powershell` and
+-- should be copied exactly rather than reasoned about. In particular the
+-- DOUBLED percent signs are deliberate, not a typo -- "correcting" them is the
+-- most likely way a future reader breaks this block.
+-- shellquote and shellxquote are deliberately set to empty strings, which is
+-- what that same help topic prescribes for PowerShell.
 local platform = require("config.platform")
 
 if platform.is_windows then
