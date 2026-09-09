@@ -45,6 +45,8 @@ A dotfiles configuration for **EndeavourOS/Arch Linux** featuring **Hyprland**, 
 
 ### Installation
 
+#### Linux (Arch / EndeavourOS)
+
 ```bash
 # Clone the repository
 git clone git@github.com:Caleb68864/dotfiles2.git ~/dotfiles
@@ -65,6 +67,32 @@ The installation script will:
 6. Install lazy.nvim for Neovim
 7. Refresh font cache
 8. Offer to change your default shell to Zsh
+
+#### Windows (native, Neovim only)
+
+Only the Neovim config is deployed on Windows — the rest of this repo is
+Linux-specific. GNU Stow does not exist there, and Windows Neovim reads its
+config from `%LOCALAPPDATA%\nvim`, so `install.ps1` does the equivalent job.
+
+Requires PowerShell 7 and [scoop](https://scoop.sh/). Creating the symlink
+needs **either** Developer Mode enabled **or** an elevated shell; the script
+checks up front and tells you which is missing.
+
+```powershell
+git clone git@github.com:Caleb68864/dotfiles2.git $HOME\dotfiles
+cd $HOME\dotfiles
+.\install.ps1
+```
+
+The script will:
+1. Link `%LOCALAPPDATA%\nvim` to this repo's `nvim/` (backing up any existing
+   config to `nvim.backup-[timestamp]`)
+2. Install neovim, neovide, zig, ripgrep, fd, cmake, git, gh, lazygit, yazi
+   and fzf via scoop
+3. Install the JetBrainsMono Nerd Font per-user (no elevation needed)
+
+Then run `nvim --headless "+Lazy! sync" +qa` and `nvim --headless +checkhealth +qa`,
+and launch the GUI with `neovide`.
 
 ### Post-Installation
 
@@ -332,6 +360,28 @@ The prefix key is `Ctrl + a` (instead of default `Ctrl + b`)
 | `<leader>ci` | CodeCompanion inline |
 | `<leader>ca` | CodeCompanion actions |
 
+#### Scratchpad
+
+Somewhere to park temporary text that survives a restart — the Notepad++
+"unsaved tab" habit, but it actually persists. Scratches live in `~/scratch/`
+and are saved for you whenever you look away; you never save one by hand.
+
+| Key | Action |
+|-----|--------|
+| `<leader><leader>` | Toggle the quick pad (one eternal note) |
+| `<leader>nn` | New named scratch |
+| `<leader>nf` | Find scratches |
+| `<leader>ng` | Grep across scratches |
+| `<leader>np` | Promote the quick pad into a named scratch |
+| `<leader>nd` | Delete the scratch in the current buffer |
+
+#### Buffers
+| Key | Action |
+|-----|--------|
+| `<leader>bd` | Close buffer |
+| `<leader>bp` | Pin buffer (bufferline) |
+| `<leader>bc` | Pick a buffer to close (bufferline) |
+
 ## Configuration
 
 ### Neovim
@@ -345,6 +395,19 @@ Configured LSP servers (auto-installed via Mason):
 - **ts_ls** - TypeScript/JavaScript
 - **bashls** - Bash
 - **jsonls** - JSON
+
+#### Tests
+
+The Neovim Lua config has a headless test suite (plenary + busted style) under
+`nvim/tests/`. It loads only `nvim/lua/`, not the plugin set, so it is fast and
+does not need plugins installed:
+
+```bash
+just test-nvim
+```
+
+Plenary prints a separate pass/fail summary per spec file rather than one
+combined total.
 
 #### AI Assistant
 
