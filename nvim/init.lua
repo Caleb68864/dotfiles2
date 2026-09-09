@@ -77,6 +77,10 @@ local scratch = require("config.scratch")
 scratch.setup()
 scratch.enable_autosave()
 
+-- Neovide GUI settings. This file returns immediately when not in Neovide,
+-- so it is safe (and free) to load on every platform.
+require("config.neovide")
+
 -- ============================================================================
 -- Load plugins (auto-discovers all files in lua/plugins/)
 -- ============================================================================
