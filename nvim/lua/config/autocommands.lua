@@ -56,3 +56,42 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     vim.fn.setpos(".", save_cursor)              -- Restore cursor position
   end,
 })
+
+-- ============================================================================
+-- Right-click context menu
+-- ============================================================================
+-- Neovim already ships a small right-click menu (its "PopUp" menu) and
+-- already defaults `mousemodel` to popup_setpos, which is what makes right
+-- click open it. We EXTEND that menu rather than replacing it, so the stock
+-- Cut/Copy/Paste entries survive.
+--
+-- The LSP entries (Go to Definition and friends) are rebuilt every time the
+-- menu opens, and only added when a language server is actually attached to
+-- this buffer. A menu that offers "Go to Definition" in a plain text file and
+-- then silently does nothing is worse than not offering it at all.
+vim.api.nvim_create_autocmd("MenuPopup", {
+  group = vim.api.nvim_create_augroup("ContextMenu", { clear = true }),
+  pattern = "*",
+  callback = function()
+    -- Remove anything we added last time so entries never accumulate.
+    vim.cmd([[silent! aunmenu PopUp.Go\ to\ Definition]])
+    vim.cmd([[silent! aunmenu PopUp.Find\ References]])
+    vim.cmd([[silent! aunmenu PopUp.Rename\ Symbol]])
+    vim.cmd([[silent! aunmenu PopUp.Format]])
+    vim.cmd([[silent! aunmenu PopUp.-lspsep-]])
+
+    if #vim.lsp.get_clients({ bufnr = 0 }) == 0 then
+      return  -- No language server here; leave the stock menu alone.
+    end
+
+    -- "10." forces these to the TOP of the menu, above Cut/Copy/Paste.
+    vim.cmd([[
+      nnoremenu 10.100 PopUp.Go\ to\ Definition <cmd>lua vim.lsp.buf.definition()<CR>
+      nnoremenu 10.110 PopUp.Find\ References   <cmd>lua vim.lsp.buf.references()<CR>
+      nnoremenu 10.120 PopUp.Rename\ Symbol     <cmd>lua vim.lsp.buf.rename()<CR>
+      nnoremenu 10.130 PopUp.Format             <cmd>lua vim.lsp.buf.format()<CR>
+      nnoremenu 10.140 PopUp.-lspsep-           <Nop>
+    ]])
+  end,
+  desc = "Add LSP actions to the right-click menu when a server is attached",
+})

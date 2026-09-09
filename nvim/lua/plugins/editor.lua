@@ -20,6 +20,41 @@ return {
       { "<leader>e", "<cmd>NvimTreeToggle<CR>", desc = "Toggle file [e]xplorer" },
     },
     config = function()
+      local api = require("nvim-tree.api")
+
+      -- on_attach runs once per file-explorer buffer and sets up its keymaps.
+      -- We call default_on_attach FIRST so every stock nvim-tree binding still
+      -- works, then add our mouse bindings on top. Never skip that call --
+      -- doing so silently removes every default key.
+      local function on_attach(bufnr)
+        api.config.mappings.default_on_attach(bufnr)
+
+        local function opts(desc)
+          return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+        end
+
+        -- Single click opens a file / expands a folder, matching VSCode.
+        -- nvim-tree needs a DOUBLE click by default.
+        --
+        -- We bind LeftRelease rather than LeftMouse, and check that the
+        -- release landed on an actual node. Without that check, dragging to
+        -- select text inside the tree would open whatever file you released
+        -- the button over.
+        vim.keymap.set("n", "<LeftRelease>", function()
+          if api.tree.get_node_under_cursor() then
+            api.node.open.edit()
+          end
+        end, opts("Open on single click"))
+
+        -- Right click moves the cursor to the node under the POINTER before
+        -- opening the menu. Without this the menu acts on wherever the cursor
+        -- happened to be, which is a classic and infuriating bug.
+        vim.keymap.set("n", "<RightMouse>", function()
+          vim.cmd.exe('"normal! \\<LeftMouse>"')
+          vim.cmd.popup("PopUpNvimTree")
+        end, opts("Context menu"))
+      end
+
       require("nvim-tree").setup({
         view = { width = 35 },            -- The tree panel is 35 characters wide
         renderer = {
@@ -28,7 +63,21 @@ return {
           icons = { show = { git = true } },  -- Show git status icons (modified, added, etc.)
         },
         filters = { dotfiles = false },    -- Show hidden files (files starting with .)
+        on_attach = on_attach,
       })
+
+      -- The right-click menu shown inside the file explorer.
+      -- Defined here because it only makes sense alongside nvim-tree.
+      vim.cmd([[
+        silent! aunmenu PopUpNvimTree
+        nnoremenu PopUpNvimTree.New\ File     <cmd>lua require("nvim-tree.api").fs.create()<CR>
+        nnoremenu PopUpNvimTree.New\ Folder   <cmd>lua require("nvim-tree.api").fs.create()<CR>
+        nnoremenu PopUpNvimTree.-sep1-        <Nop>
+        nnoremenu PopUpNvimTree.Rename        <cmd>lua require("nvim-tree.api").fs.rename()<CR>
+        nnoremenu PopUpNvimTree.Delete        <cmd>lua require("nvim-tree.api").fs.remove()<CR>
+        nnoremenu PopUpNvimTree.-sep2-        <Nop>
+        nnoremenu PopUpNvimTree.Copy\ Path    <cmd>lua require("nvim-tree.api").fs.copy.absolute_path()<CR>
+      ]])
     end,
   },
 
