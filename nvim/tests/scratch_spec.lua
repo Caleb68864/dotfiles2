@@ -182,3 +182,26 @@ describe("scratch promote with write failure", function()
     assert.are.same({ "keep me", "important" }, vim.fn.readfile(scratch.quick_path()))
   end)
 end)
+
+describe("scratch default root normalization", function()
+  it("normalizes the default root even without calling setup()", function()
+    -- The default root must be normalized at declaration, not lazily in setup().
+    -- On Windows, an unnormalized root causes silent autosave failure later
+    -- (Task 4's is_scratch_file predicate won't match). Test the default path
+    -- on a fresh module instance to avoid fresh_root()'s override.
+    local old_loaded = package.loaded["config.scratch"]
+    package.loaded["config.scratch"] = nil
+
+    local fresh = require("config.scratch")
+    local root = fresh.root()
+
+    -- Restore the original module for the rest of the test suite
+    package.loaded["config.scratch"] = old_loaded
+
+    -- A normalized path is idempotent under normalization. This assertion
+    -- catches unnormalized roots on any platform: Linux (expand returns
+    -- forward slashes, so the bug was invisible) and Windows (backslashes
+    -- would not be normalized, breaking the equality).
+    assert.are.equal(vim.fs.normalize(root), root)
+  end)
+end)
