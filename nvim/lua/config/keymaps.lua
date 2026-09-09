@@ -217,10 +217,16 @@ vim.keymap.set("n", "<leader>nd", scratch.delete_current, { desc = "Scratch: [d]
 -- Promote moves the quick pad's contents into a dated file and clears the
 -- pad, for when something you scribbled turns out to be worth keeping.
 vim.keymap.set("n", "<leader>np", function()
-  local path = scratch.promote()
+  local path, reason, code = scratch.promote()
   if path then
     vim.notify("Promoted to " .. vim.fn.fnamemodify(path, ":t"))
+  elseif code == "empty" then
+    -- Routine: you pressed the key with nothing in the pad.
+    vim.notify(reason, vim.log.levels.INFO)
   else
-    vim.notify("Quick pad is empty -- nothing to promote", vim.log.levels.INFO)
+    -- A failed write means the text is STILL in the pad and something is
+    -- wrong on disk. This must not be quiet, and it must not be reported as
+    -- an empty pad -- that would tell the user the opposite of what happened.
+    vim.notify(reason, vim.log.levels.ERROR)
   end
 end, { desc = "Scratch: [p]romote quick pad" })

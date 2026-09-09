@@ -81,7 +81,10 @@ function M.new_path(timestamp)
   local stamp = os.date("%Y-%m-%d-%H%M", timestamp or os.time())
   local path = config.root .. "/" .. stamp .. ".md"
   local n = 1
-  while vim.fn.filereadable(path) == 1 do
+  -- fs_stat rather than filereadable: filereadable is false for a path that
+  -- exists as a DIRECTORY, so such a name would be treated as free and then
+  -- written to. fs_stat returns non-nil for anything that exists.
+  while vim.loop.fs_stat(path) do
     n = n + 1
     path = config.root .. "/" .. stamp .. "-" .. n .. ".md"
   end
@@ -154,19 +157,37 @@ end
 --- Move the quick pad's contents into a new dated scratch, leaving the pad
 --- empty. This exists because you usually only realise something matters
 --- AFTER you have already scribbled it into the pad.
---- @return string|nil path of the new scratch, or nil if the pad was empty or the copy failed
+---
+--- On failure the two cases must stay distinguishable: "the pad was empty" is
+--- routine and "the copy could not be written" means the user's text is still
+--- in the pad and something went wrong. A caller that cannot tell them apart
+--- ends up telling the user their pad was empty when it was not.
+--- @return string|nil path of the new scratch, nil on failure
+--- @return string|nil reason a message to show the user when path is nil
+--- @return string|nil code "empty" or "write_failed"; for picking a log level
 function M.promote()
   local quick = M.quick_path()
   if is_blank(quick) then
-    return nil
+    return nil, "Quick pad is empty -- nothing to promote", "empty"
   end
   M.ensure_root()
   local target = M.new_path()
-  -- vim.fn.writefile returns -1 on failure (permission error, disk full, etc).
-  -- Copy MUST succeed before we touch the pad. If it fails, leave the pad intact.
-  local copy_result = vim.fn.writefile(vim.fn.readfile(quick), target)
-  if copy_result == -1 then
-    return nil
+
+  -- The copy MUST succeed before we touch the pad; if it fails the pad is
+  -- left exactly as it was. vim.fn.writefile signals failure in two different
+  -- ways depending on the Neovim version -- some return -1, current versions
+  -- throw E482 -- so catch both and turn either into a reason the caller can
+  -- report. Letting the error escape would put a raw Lua traceback in front
+  -- of the user; returning a bare nil would be worse still, because the
+  -- caller cannot then tell a failed write from an empty pad and would tell
+  -- the user their pad was empty when their text is still sitting in it.
+  local wrote, result = pcall(vim.fn.writefile, vim.fn.readfile(quick), target)
+  if not wrote or result == -1 then
+    -- The thrown error already names the file; the -1 form does not.
+    local detail = wrote and ("could not write " .. target) or tostring(result)
+    return nil,
+      "Promote failed, the quick pad is untouched: " .. detail,
+      "write_failed"
   end
   -- Truncate the pad rather than deleting it -- it must always exist.
   vim.fn.writefile({}, quick)

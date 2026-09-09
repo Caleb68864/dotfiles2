@@ -117,6 +117,16 @@ describe("scratch promote", function()
     assert.is_nil(scratch.promote())
   end)
 
+  it("names a collided path that exists as a directory", function()
+    -- filereadable() is false for a directory, so a candidate name that is
+    -- already a directory used to look free and would then be written to.
+    local dir = fresh_root()
+    local t = os.time({ year = 2026, month = 9, day = 8, hour = 14, min = 32 })
+    scratch.ensure_root()
+    vim.fn.mkdir(dir .. "/2026-09-08-1432.md", "p")
+    assert.is_truthy(scratch.new_path(t):match("2026%-09%-08%-1432%-2%.md$"))
+  end)
+
   it("refuses to promote a pad that does not exist", function()
     fresh_root()
     assert.is_nil(scratch.promote())
@@ -153,6 +163,48 @@ describe("scratch delete", function()
     vim.fn.chdir(old_cwd)
     assert.is_false(ok)
     assert.are.equal(1, vim.fn.filereadable(scratch.quick_path()))
+  end)
+end)
+
+describe("scratch promote failure reasons", function()
+  -- Make the scratch directory read-only so the copy cannot be written, run
+  -- promote(), then restore the permissions whatever happened.
+  -- vim.loop.fs_chmod takes mode as decimal; 0o500 = r-x------, no write.
+  local function promote_into_readonly_root()
+    local dir = fresh_root()
+    scratch.ensure_root()
+    write_file(scratch.quick_path(), { "keep me", "important" })
+
+    local old_mode = vim.loop.fs_stat(dir).mode
+    vim.loop.fs_chmod(dir, tonumber("500", 8))
+    local path, reason, code = scratch.promote()
+    vim.loop.fs_chmod(dir, old_mode)
+
+    return path, reason, code
+  end
+
+  it("distinguishes a failed write from an empty pad", function()
+    -- Both used to return a bare nil, so the <leader>np keymap told the user
+    -- "quick pad is empty" when in fact the write had failed and their text
+    -- was still sitting in the pad -- the opposite of what happened.
+    local dir = fresh_root()
+    scratch.ensure_root()
+    write_file(scratch.quick_path(), { "", "  " })
+    local empty_path, empty_reason, empty_code = scratch.promote()
+
+    local fail_path, fail_reason, fail_code = promote_into_readonly_root()
+
+    assert.is_nil(empty_path)
+    assert.is_nil(fail_path)
+    assert.are.equal("empty", empty_code)
+    assert.are.equal("write_failed", fail_code)
+    assert.are_not.equal(empty_reason, fail_reason)
+  end)
+
+  it("leaves the pad intact when the copy cannot be written", function()
+    local _, _, code = promote_into_readonly_root()
+    assert.are.equal("write_failed", code)
+    assert.are.same({ "keep me", "important" }, vim.fn.readfile(scratch.quick_path()))
   end)
 end)
 
