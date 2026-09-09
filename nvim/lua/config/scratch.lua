@@ -19,22 +19,36 @@
 
 local M = {}
 
+--- Absolutize and normalize a path so that two spellings of the same file
+--- compare equal (relative vs absolute, backslashes vs forward slashes, ~).
+---
+--- EVERY path this module compares goes through this one function -- the root
+--- itself, the quick pad, and anything handed in from outside. Both sides of
+--- a comparison have to be built the same way. If the root were merely
+--- normalized while inputs were also absolutized, the two could disagree, and
+--- the is_scratch_file test further down would then quietly never match: the
+--- pad would stop autosaving with no error anywhere.
+--- @param path string
+--- @return string absolute, normalized path
+local function _normalize_path(path)
+  return vim.fs.normalize(vim.fn.fnamemodify(path, ":p"))
+end
+
 -- Where scratches live. Machine-local on purpose -- these are NOT synced.
 -- Kept in a table field (not a local) so tests can point it at a temp dir.
--- Normalized at declaration so that production and test paths use the same
--- absolute form on all platforms, preventing silent data loss on Windows.
 local config = {
-  root = vim.fs.normalize(vim.fn.expand("~/scratch")),
+  root = _normalize_path(vim.fn.expand("~/scratch")),
 }
 
 --- Configure the module. Called from init.lua, and from tests with a temp dir.
+--- The root goes through the same absolutize-and-normalize step as every
+--- other path, so even a relative root still compares equal to the absolute
+--- paths Neovim reports for open buffers.
 --- @param opts table|nil  { root = string }
 function M.setup(opts)
   opts = opts or {}
   if opts.root then
-    -- vim.fs.normalize turns backslashes into forward slashes and expands ~,
-    -- so the rest of this file can assume one path style on every platform.
-    config.root = vim.fs.normalize(opts.root)
+    config.root = _normalize_path(opts.root)
   end
 end
 
@@ -55,15 +69,7 @@ end
 
 --- @return string path to THE quick pad
 function M.quick_path()
-  return vim.fs.normalize(config.root .. "/quick.md")
-end
-
---- Absolutize and normalize a path for consistent comparison across spelling
---- variations (relative vs absolute, backslashes on Windows, etc).
---- @param path string
---- @return string absolute, normalized path
-local function _normalize_path(path)
-  return vim.fs.normalize(vim.fn.fnamemodify(path, ":p"))
+  return _normalize_path(config.root .. "/quick.md")
 end
 
 --- Build a unique path for a new named scratch.
@@ -174,30 +180,10 @@ function M.promote()
   return target
 end
 
---- Delete a named scratch. The quick pad is protected: deleting it would
---- break the "there is always a pad" guarantee, and the user almost
---- certainly meant to clear it instead.
---- @param path string
---- @return boolean ok, string|nil reason
-function M.delete(path)
-  local absolute = _normalize_path(path)
-  if absolute == M.quick_path() then
-    return false, "refusing to delete the quick pad -- clear its contents instead"
-  end
-  if vim.fn.filereadable(absolute) == 0 then
-    return false, "not a scratch file: " .. absolute
-  end
-  vim.fn.delete(absolute)
-  return true
-end
-
--- Handle of the currently open scratch float, so toggling can close it.
-local float_win = nil
-
 --- Is the given path inside our scratch directory?
---- Used by autosave. We compare normalized prefixes rather than using an
---- autocmd `pattern`, because autocmd patterns and Windows backslashes
---- interact badly.
+--- Used by autosave and by M.delete. We compare normalized prefixes rather
+--- than using an autocmd `pattern`, because autocmd patterns and Windows
+--- backslashes interact badly.
 --- @param path string
 --- @return boolean
 local function is_scratch_file(path)
@@ -206,6 +192,36 @@ local function is_scratch_file(path)
   end
   return vim.startswith(_normalize_path(path), config.root .. "/")
 end
+
+--- Delete a named scratch.
+---
+--- The scratch-root check lives HERE rather than in the caller, because this
+--- function calls vim.fn.delete() and so is the last place that can stop an
+--- unrelated file from being removed. Without it, any readable path on the
+--- machine would be deleted by a mistaken call.
+---
+--- The quick pad is protected separately: deleting it would break the "there
+--- is always a pad" guarantee, and the user almost certainly meant to clear
+--- it instead.
+--- @param path string
+--- @return boolean ok, string|nil reason
+function M.delete(path)
+  local absolute = _normalize_path(path)
+  if absolute == M.quick_path() then
+    return false, "refusing to delete the quick pad -- clear its contents instead"
+  end
+  if not is_scratch_file(absolute) then
+    return false, "not a scratch file: " .. absolute
+  end
+  if vim.fn.filereadable(absolute) == 0 then
+    return false, "no such scratch: " .. absolute
+  end
+  vim.fn.delete(absolute)
+  return true
+end
+
+-- Handle of the currently open scratch float, so toggling can close it.
+local float_win = nil
 
 --- Open a scratch file in a centered floating window.
 --- @param path string
@@ -277,7 +293,10 @@ end
 
 --- Delete the scratch shown in the current buffer, then close the float.
 function M.delete_current()
-  local path = vim.api.nvim_buf_get_name(0)
+  -- Capture the buffer handle BEFORE anything closes a window, because after
+  -- the float is gone `0` no longer refers to the scratch.
+  local buf = vim.api.nvim_get_current_buf()
+  local path = vim.api.nvim_buf_get_name(buf)
   if not is_scratch_file(path) then
     vim.notify("Not a scratch file", vim.log.levels.WARN)
     return
@@ -287,10 +306,31 @@ function M.delete_current()
     vim.notify(reason, vim.log.levels.WARN)
     return
   end
+
+  -- Getting rid of the buffer is the delicate part.
+  --
+  -- The buffer is almost always `modified` here -- the whole design is that
+  -- you type into a scratch and never save it. Anything that leaves the
+  -- buffer fires BufLeave, and the autosave autocommand below writes any
+  -- modified scratch buffer. So closing the float on a still-modified buffer
+  -- writes the file straight back out and the "deleted" scratch reappears on
+  -- disk. Wiping alone is not enough either: BufLeave still fires on the way
+  -- out, while `modified` is still set.
+  --
+  -- So clear `modified` FIRST -- that is what makes autosave skip this
+  -- buffer -- and only then wipe it. Wiping (rather than leaving the buffer
+  -- loaded) also takes it out of the buffer list, so a deleted scratch does
+  -- not linger as a tab in bufferline. Wiping closes the windows showing the
+  -- buffer, which is why the float below usually needs no closing.
+  if vim.api.nvim_buf_is_valid(buf) then
+    vim.bo[buf].modified = false
+    vim.api.nvim_buf_delete(buf, { force = true })
+  end
   if float_win and vim.api.nvim_win_is_valid(float_win) then
     vim.api.nvim_win_close(float_win, true)
-    float_win = nil
   end
+  float_win = nil
+
   vim.notify("Deleted " .. vim.fn.fnamemodify(path, ":t"))
 end
 
@@ -329,7 +369,10 @@ function M.pick()
       prompt = "Scratches",
       format_item = function(item) return item.title end,
     }, function(choice)
-      if choice then vim.cmd.edit(vim.fn.fnameescape(choice.path)) end
+      -- Raw path, NOT fnameescape()d: vim.cmd.edit hands its argument to
+      -- nvim_cmd already parsed, so the backslashes fnameescape adds would
+      -- survive into the filename and a root containing a space would break.
+      if choice then vim.cmd.edit(choice.path) end
     end)
     return
   end
@@ -360,7 +403,8 @@ function M.pick()
       actions.select_default:replace(function()
         actions.close(bufnr)
         local entry = action_state.get_selected_entry()
-        if entry then vim.cmd.edit(vim.fn.fnameescape(entry.path)) end
+        -- Raw path -- see the note on the vim.ui.select fallback above.
+        if entry then vim.cmd.edit(entry.path) end
       end)
       return true
     end,

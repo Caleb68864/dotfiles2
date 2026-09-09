@@ -204,4 +204,87 @@ describe("scratch default root normalization", function()
     -- would not be normalized, breaking the equality).
     assert.are.equal(vim.fs.normalize(root), root)
   end)
+
+  it("absolutizes a relative root passed to setup()", function()
+    -- The root is one half of every path comparison this module makes. If
+    -- setup() stored "tmp/scratch" verbatim while inputs were absolutized,
+    -- nothing would ever be recognised as a scratch file: autosave would
+    -- stop, silently, and the quick-pad delete guard would stop matching.
+    local base = vim.fn.tempname()
+    vim.fn.mkdir(base, "p")
+    local old_cwd = vim.fn.getcwd()
+    vim.fn.chdir(base)
+    -- Read the cwd back rather than trusting `base`: on some systems the
+    -- temp directory is reached through a symlink and getcwd() resolves it.
+    local cwd = vim.fs.normalize(vim.fn.getcwd())
+
+    scratch.setup({ root = "tmp/scratch" })
+    local root = scratch.root()
+
+    vim.fn.chdir(old_cwd)
+    assert.are.equal(cwd .. "/tmp/scratch", root)
+  end)
+end)
+
+describe("scratch delete guards", function()
+  it("refuses a file outside the scratch root", function()
+    fresh_root()
+    local outsider = vim.fn.tempname() .. ".md"
+    write_file(outsider, { "somebody else's file" })
+
+    local ok, reason = scratch.delete(outsider)
+
+    assert.is_false(ok)
+    assert.is_truthy(reason:match("^not a scratch file: "))
+    assert.are.equal(1, vim.fn.filereadable(outsider))
+    vim.fn.delete(outsider)
+  end)
+
+  it("reports a missing scratch differently from a non-scratch", function()
+    local dir = fresh_root()
+    scratch.ensure_root()
+
+    local ok, reason = scratch.delete(dir .. "/never-existed.md")
+
+    assert.is_false(ok)
+    assert.is_truthy(reason:match("^no such scratch: "))
+  end)
+end)
+
+describe("scratch delete_current", function()
+  it("does not let autosave recreate the file it just deleted", function()
+    fresh_root()
+    scratch.ensure_root()
+    scratch.enable_autosave()
+
+    scratch.new_scratch()
+    local buf = vim.api.nvim_get_current_buf()
+    local path = vim.api.nvim_buf_get_name(buf)
+    -- The ordinary state of a scratch: typed into, never saved by hand.
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "unsaved text" })
+    assert.is_true(vim.bo[buf].modified)
+    assert.are.equal(1, vim.fn.filereadable(path))
+
+    scratch.delete_current()
+
+    -- Before the fix the file came straight back: closing the float fired
+    -- BufLeave on a still-modified buffer and autosave wrote it out again.
+    assert.are.equal(0, vim.fn.filereadable(path))
+    -- Wiped, not just hidden -- otherwise the deleted scratch lingers in the
+    -- buffer list and as a bufferline tab.
+    assert.is_false(vim.api.nvim_buf_is_valid(buf))
+  end)
+
+  it("leaves ordinary autosave working", function()
+    fresh_root()
+    scratch.ensure_root()
+    scratch.enable_autosave()
+
+    scratch.toggle_quick()
+    local buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "parked text" })
+    scratch.toggle_quick()   -- close the float; BufLeave should write the pad
+
+    assert.are.same({ "parked text" }, vim.fn.readfile(scratch.quick_path()))
+  end)
 end)
