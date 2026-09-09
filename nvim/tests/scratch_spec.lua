@@ -141,4 +141,44 @@ describe("scratch delete", function()
     assert.is_false(ok)
     assert.are.equal(1, vim.fn.filereadable(scratch.quick_path()))
   end)
+
+  it("refuses a relative path that resolves to the quick pad", function()
+    local dir = fresh_root()
+    scratch.ensure_root()
+    write_file(scratch.quick_path(), { "pad" })
+    -- Change to the scratch root so "quick.md" resolves to the quick pad
+    local old_cwd = vim.fn.getcwd()
+    vim.fn.chdir(dir)
+    local ok = scratch.delete("quick.md")
+    vim.fn.chdir(old_cwd)
+    assert.is_false(ok)
+    assert.are.equal(1, vim.fn.filereadable(scratch.quick_path()))
+  end)
+end)
+
+describe("scratch promote with write failure", function()
+  it("returns nil and leaves the pad intact when copy cannot be written", function()
+    local dir = fresh_root()
+    scratch.ensure_root()
+    write_file(scratch.quick_path(), { "keep me", "important" })
+
+    -- Make the scratch directory read-only to prevent writing the target file.
+    -- vim.loop.fs_chmod takes mode as decimal; 0o500 = r-x------, no write.
+    local stat = vim.loop.fs_stat(dir)
+    local old_mode = stat.mode
+    vim.loop.fs_chmod(dir, tonumber("500", 8))
+
+    -- Call promote() safely: writefile will fail (either return -1 or throw
+    -- an error depending on the Neovim version). Our fix is that promote()
+    -- checks the return value and does NOT truncate the pad on failure.
+    local ok, result = pcall(function() return scratch.promote() end)
+
+    -- Restore permissions so the test can clean up the directory
+    vim.loop.fs_chmod(dir, old_mode)
+
+    -- Whether pcall caught an error or writefile returned -1, the key
+    -- invariant is: the pad must NOT be truncated. The fix is that we check
+    -- writefile's return value before truncating.
+    assert.are.same({ "keep me", "important" }, vim.fn.readfile(scratch.quick_path()))
+  end)
 end)

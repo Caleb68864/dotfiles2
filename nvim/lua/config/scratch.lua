@@ -21,8 +21,10 @@ local M = {}
 
 -- Where scratches live. Machine-local on purpose -- these are NOT synced.
 -- Kept in a table field (not a local) so tests can point it at a temp dir.
+-- Normalized at declaration so that production and test paths use the same
+-- absolute form on all platforms, preventing silent data loss on Windows.
 local config = {
-  root = vim.fn.expand("~/scratch"),
+  root = vim.fs.normalize(vim.fn.expand("~/scratch")),
 }
 
 --- Configure the module. Called from init.lua, and from tests with a temp dir.
@@ -53,7 +55,15 @@ end
 
 --- @return string path to THE quick pad
 function M.quick_path()
-  return config.root .. "/quick.md"
+  return vim.fs.normalize(config.root .. "/quick.md")
+end
+
+--- Absolutize and normalize a path for consistent comparison across spelling
+--- variations (relative vs absolute, backslashes on Windows, etc).
+--- @param path string
+--- @return string absolute, normalized path
+local function _normalize_path(path)
+  return vim.fs.normalize(vim.fn.fnamemodify(path, ":p"))
 end
 
 --- Build a unique path for a new named scratch.
@@ -107,7 +117,7 @@ function M.list()
   local items = {}
   -- vim.fn.glob with the last two args as 0,1 returns a LIST of paths.
   for _, path in ipairs(vim.fn.glob(config.root .. "/*.md", 0, 1)) do
-    local normalized = vim.fs.normalize(path)
+    local normalized = _normalize_path(path)
     if normalized ~= quick then
       table.insert(items, {
         path = normalized,
@@ -138,7 +148,7 @@ end
 --- Move the quick pad's contents into a new dated scratch, leaving the pad
 --- empty. This exists because you usually only realise something matters
 --- AFTER you have already scribbled it into the pad.
---- @return string|nil path of the new scratch, or nil if the pad was empty
+--- @return string|nil path of the new scratch, or nil if the pad was empty or the copy failed
 function M.promote()
   local quick = M.quick_path()
   if is_blank(quick) then
@@ -146,7 +156,12 @@ function M.promote()
   end
   M.ensure_root()
   local target = M.new_path()
-  vim.fn.writefile(vim.fn.readfile(quick), target)
+  -- vim.fn.writefile returns -1 on failure (permission error, disk full, etc).
+  -- Copy MUST succeed before we touch the pad. If it fails, leave the pad intact.
+  local copy_result = vim.fn.writefile(vim.fn.readfile(quick), target)
+  if copy_result == -1 then
+    return nil
+  end
   -- Truncate the pad rather than deleting it -- it must always exist.
   vim.fn.writefile({}, quick)
 
@@ -165,14 +180,14 @@ end
 --- @param path string
 --- @return boolean ok, string|nil reason
 function M.delete(path)
-  local normalized = vim.fs.normalize(path)
-  if normalized == M.quick_path() then
+  local absolute = _normalize_path(path)
+  if absolute == M.quick_path() then
     return false, "refusing to delete the quick pad -- clear its contents instead"
   end
-  if vim.fn.filereadable(normalized) == 0 then
-    return false, "not a scratch file: " .. normalized
+  if vim.fn.filereadable(absolute) == 0 then
+    return false, "not a scratch file: " .. absolute
   end
-  vim.fn.delete(normalized)
+  vim.fn.delete(absolute)
   return true
 end
 
