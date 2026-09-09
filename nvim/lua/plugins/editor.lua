@@ -98,7 +98,17 @@ return {
       "nvim-lua/plenary.nvim",  -- Utility library (required by many plugins)
       -- fzf-native makes Telescope MUCH faster by using a compiled C program
       -- for the fuzzy matching instead of pure Lua.
-      { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+      -- fzf-native is a small C program that makes Telescope's fuzzy matching
+      -- dramatically faster. It has to be COMPILED after download.
+      -- On Linux that is a plain `make`. Native Windows has no `make`, so it
+      -- needs the cmake invocation instead -- without this the build fails
+      -- silently on Windows and Telescope quietly falls back to slow matching.
+      {
+        "nvim-telescope/telescope-fzf-native.nvim",
+        build = require("config.platform").is_windows
+            and "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build"
+            or "make",
+      },
     },
     config = function()
       require("telescope").setup({
@@ -170,6 +180,7 @@ return {
   -- files, preview them, and open them without leaving Neovim.
   {
     "mikavilpas/yazi.nvim",
+    cond = require("config.platform").has("yazi"),
     event = "VeryLazy",  -- Load only when first needed (not at startup)
     keys = {
       -- Space+y = open Yazi showing the CURRENT file's directory
@@ -353,6 +364,9 @@ return {
   -- These work whether you're moving between Neovim windows or Tmux panes!
   {
     "christoomey/vim-tmux-navigator",
+    -- There is no tmux on native Windows, so this plugin and its keymaps
+    -- would just be dead weight there.
+    cond = not require("config.platform").is_windows,
     -- Only load this plugin when one of these commands is triggered
     cmd = {
       "TmuxNavigateLeft",

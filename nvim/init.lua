@@ -63,6 +63,10 @@ vim.opt.rtp:prepend(lazypath)
 -- "require" in Lua is like "import" in Python -- it runs the code in that file.
 -- Neovim automatically looks inside the "lua/" folder, so "config.options"
 -- means "lua/config/options.lua".
+-- Platform detection must load before anything else, because options and
+-- plugin specs both branch on it.
+require("config.platform")
+
 require("config.options")      -- Editor settings (line numbers, tabs, etc.)
 require("config.keymaps")      -- Custom keyboard shortcuts
 require("config.autocommands") -- Automatic actions (trim whitespace on save, etc.)

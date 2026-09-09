@@ -71,6 +71,9 @@ return {
   -- It's like a visual Git GUI but stays in the terminal.
   {
     "kdheepak/lazygit.nvim",
+    -- Only load if the lazygit binary is actually installed. Without this the
+    -- keybinding exists but fails with a confusing error.
+    cond = require("config.platform").has("lazygit"),
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {
       -- Space+l+g = open Lazygit in a floating window

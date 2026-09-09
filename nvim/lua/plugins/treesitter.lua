@@ -25,6 +25,13 @@ return {
   build = ":TSUpdate",
 
   config = function()
+    -- Treesitter COMPILES a small C parser for each language. Linux always has
+    -- a C compiler; Windows usually does not, and because `auto_install` is on
+    -- below, a missing compiler means an error popup on every new filetype you
+    -- open. `zig` is listed first because `scoop install zig` is the easiest
+    -- way to get a working compiler on Windows.
+    require("nvim-treesitter.install").compilers = { "zig", "clang", "cl", "gcc", "cc" }
+
     require("nvim-treesitter.configs").setup({
       -- These are the programming languages we want treesitter to understand.
       -- It will automatically download a "parser" (language brain) for each one.

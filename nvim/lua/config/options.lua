@@ -198,3 +198,53 @@ opt.autoread = true  -- Auto-reload files changed externally (e.g., by AI agents
 -- tells Neovim "pretend these plugins are already loaded" so they never start.
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
+
+-- ============================================================================
+-- Windows: use PowerShell instead of cmd.exe
+-- ============================================================================
+-- Native Windows Neovim shells out to cmd.exe by default. cmd.exe cannot
+-- handle the quoting that Telescope's grep and plain `:!` commands generate,
+-- so searches silently return nothing and `:!` commands fail in confusing
+-- ways. Pointing `shell` at PowerShell 7 (`pwsh`) fixes both.
+--
+-- These shellquote/shellxquote values look like line noise; they are the
+-- documented incantation from `:help shell-powershell` and should be copied
+-- exactly rather than reasoned about.
+local platform = require("config.platform")
+
+if platform.is_windows then
+  local powershell = platform.has("pwsh") and "pwsh" or "powershell"
+  opt.shell = powershell
+  opt.shellcmdflag =
+    "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
+  opt.shellredir = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
+  opt.shellpipe = '2>&1 | %%{ "$_" } | Tee-Object %s; exit $LastExitCode'
+  opt.shellquote = ""
+  opt.shellxquote = ""
+end
+
+-- ============================================================================
+-- Windows: pin the Python interpreter
+-- ============================================================================
+-- Neovim finds a Python for its plugin host by searching PATH. On Windows
+-- that search frequently lands on the Microsoft Store stub, or on whichever
+-- virtualenv happened to be active when Neovim launched -- which means Mason
+-- and the debugger resolve a DIFFERENT Python than the one the packages were
+-- installed into, and fail in ways that look random.
+--
+-- Pinning it removes the guesswork. We only pin if the file actually exists,
+-- so a machine without this exact layout falls back to the default search
+-- rather than breaking outright.
+if platform.is_windows then
+  local candidates = {
+    vim.fn.expand("~/scoop/apps/python/current/python.exe"),
+    vim.fn.expand("~/AppData/Local/Programs/Python/Python312/python.exe"),
+    vim.fn.expand("~/AppData/Local/Programs/Python/Python311/python.exe"),
+  }
+  for _, candidate in ipairs(candidates) do
+    if vim.fn.executable(candidate) == 1 then
+      vim.g.python3_host_prog = candidate
+      break
+    end
+  end
+end
