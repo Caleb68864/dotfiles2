@@ -207,9 +207,13 @@ vim.g.loaded_netrwPlugin = 1
 -- so searches silently return nothing and `:!` commands fail in confusing
 -- ways. Pointing `shell` at PowerShell 7 (`pwsh`) fixes both.
 --
--- These shellquote/shellxquote values look like line noise; they are the
--- documented incantation from `:help shell-powershell` and should be copied
--- exactly rather than reasoned about.
+-- The cryptic ones here are shellcmdflag, shellredir, and shellpipe -- they
+-- are the documented incantation from `:help shell-powershell` and should be
+-- copied exactly rather than reasoned about. In particular, the doubled `%%`
+-- in shellredir/shellpipe is deliberate PowerShell escaping, not a typo --
+-- do NOT "simplify" it to a single `%`, or redirected output silently breaks.
+-- shellquote/shellxquote, by contrast, are boring: that same help topic says
+-- to set both to empty strings for PowerShell, so there's nothing to explain.
 local platform = require("config.platform")
 
 if platform.is_windows then
