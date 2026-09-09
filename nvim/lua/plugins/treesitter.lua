@@ -20,6 +20,21 @@ return {
   -- The plugin from GitHub
   "nvim-treesitter/nvim-treesitter",
 
+  -- Pinned to `master` deliberately. nvim-treesitter's DEFAULT branch is now
+  -- `main`, a rewrite that deleted the whole module system -- including
+  -- `nvim-treesitter.configs`, which everything below is written against. With
+  -- no branch here lazy.nvim follows the remote default, so a fresh install
+  -- silently lands on `main` and then throws "module 'nvim-treesitter.configs'
+  -- not found" on EVERY startup. The plugin looks installed and the error is
+  -- the only sign, so it is worth stating why this line exists.
+  --
+  -- `master` is in maintenance mode, so this is a deferral, not a final answer.
+  -- Porting to `main` means: require("nvim-treesitter").setup{} plus .install{},
+  -- highlighting started from a FileType autocmd with vim.treesitter.start(),
+  -- no `auto_install` and no indent module, and tree-sitter-cli as a new
+  -- dependency. That is a behaviour change, not a rename, hence not done here.
+  branch = "master",
+
   -- After installing or updating treesitter, run ":TSUpdate" to download/update
   -- the language parsers (the things that understand each programming language).
   build = ":TSUpdate",
