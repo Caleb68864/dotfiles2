@@ -346,7 +346,7 @@ return M
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `just test-nvim`
-Expected: PASS, 10 successes (8 new + 2 smoke), 0 failures.
+Expected: smoke_spec 2 successes, scratch_spec 8 successes, 0 failed, 0 errors in both. Plenary prints a separate summary per FILE -- there is no combined total.
 
 - [ ] **Step 5: Commit**
 
@@ -543,7 +543,7 @@ end
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `just test-nvim`
-Expected: PASS, 17 successes, 0 failures.
+Expected: smoke_spec 2 successes, scratch_spec 15 successes, 0 failed, 0 errors in both.
 
 - [ ] **Step 5: Commit**
 
@@ -774,7 +774,7 @@ end
 - [ ] **Step 3: Verify the existing tests still pass**
 
 Run: `just test-nvim`
-Expected: PASS, 17 successes, 0 failures. (No new unit tests here — this is UI code.)
+Expected: smoke_spec 2 successes, scratch_spec 15 successes, 0 failed, 0 errors in both. (Plenary prints a separate summary per FILE -- there is no combined total. No new unit tests here — this is UI code.)
 
 - [ ] **Step 4: Commit**
 
@@ -870,7 +870,7 @@ Expected: `hello scratch` is still there. No save prompt was ever shown. `~/scra
 - [ ] **Step 5: Verify tests still pass**
 
 Run: `just test-nvim`
-Expected: PASS, 17 successes.
+Expected: smoke_spec 2 successes, scratch_spec 15 successes, 0 failed, 0 errors in both. Plenary prints a separate summary per FILE -- there is no combined total.
 
 - [ ] **Step 6: Commit**
 
@@ -1155,7 +1155,7 @@ Expected:
 - [ ] **Step 4: Verify tests still pass**
 
 Run: `just test-nvim`
-Expected: PASS, 17 successes.
+Expected: smoke_spec 2 successes, scratch_spec 15 successes, 0 failed, 0 errors in both. Plenary prints a separate summary per FILE -- there is no combined total.
 
 - [ ] **Step 5: Commit**
 
@@ -1289,7 +1289,7 @@ return M
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `just test-nvim`
-Expected: PASS, 23 successes, 0 failures.
+Expected: smoke_spec 2, scratch_spec 15, platform_spec 6 successes, 0 failed, 0 errors in all three. Plenary prints a separate summary per FILE -- there is no combined total.
 
 - [ ] **Step 5: Commit**
 
