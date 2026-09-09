@@ -63,20 +63,69 @@ if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
 # yazi    - file manager (likewise)
 
 Write-Host "Installing tools via scoop..." -ForegroundColor Cyan
-scoop bucket add extras 2>$null
+
+# `scoop bucket add` exits nonzero when the bucket is already registered --
+# which is the normal case on every run after the first. On PowerShell 7.4+,
+# $PSNativeCommandUseErrorActionPreference defaults to $true, so a nonzero
+# exit from a native command (scoop included) is promoted into a terminating
+# error, and $ErrorActionPreference = "Stop" up top would then kill this
+# script before a single package installs -- on the most ordinary re-run
+# there is. try/catch swallows that one expected failure so re-running the
+# installer stays safe. (`scoop install` below is deliberately left
+# unguarded: a real package-install failure SHOULD stop the script.)
+try {
+    scoop bucket add extras
+} catch {
+    Write-Host "  (extras bucket already added)" -ForegroundColor DarkGray
+}
 scoop install neovim neovide zig ripgrep fd cmake git gh lazygit yazi fzf
 
 # --- Fonts -------------------------------------------------------------------
+#
+# Fonts are installed PER-USER (into %LOCALAPPDATA%\Microsoft\Windows\Fonts
+# plus an HKCU registry entry) instead of system-wide (%WINDIR%\Fonts). The
+# preflight above accepts EITHER Developer Mode OR elevation -- so a user can
+# legitimately reach this point in a non-elevated shell. Writing to the
+# system font folder needs elevation; on that non-elevated path the old
+# Shell.Application CopyHere() call would either silently no-op (COM does not
+# throw, so $ErrorActionPreference can't catch it) or pop an unexpected UAC
+# prompt mid-script. The per-user location needs no elevation at all, so it
+# behaves identically on both preflight branches.
 
 Write-Host "Installing JetBrainsMono Nerd Font..." -ForegroundColor Cyan
 $fontDir = Join-Path $RepoRoot "fonts"
-$shell = New-Object -ComObject Shell.Application
-$fonts = $shell.Namespace(0x14)
+$userFontDir = Join-Path $env:LOCALAPPDATA "Microsoft\Windows\Fonts"
+New-Item -ItemType Directory -Path $userFontDir -Force | Out-Null
+
+$fontRegKey = "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Fonts"
+if (-not (Test-Path $fontRegKey)) {
+    New-Item -Path $fontRegKey -Force | Out-Null
+}
+
+# Reading the real font-family name out of each file (rather than guessing it
+# from the filename) is required because the registry value's NAME has to
+# match what Windows will display as the font name, not the .ttf's filename.
+Add-Type -AssemblyName System.Drawing
+
 Get-ChildItem -Path $fontDir -Filter "*.ttf" | ForEach-Object {
-    $installed = Join-Path $env:WINDIR "Fonts\$($_.Name)"
-    if (-not (Test-Path $installed)) {
-        $fonts.CopyHere($_.FullName, 0x10)
-    }
+    $destPath = Join-Path $userFontDir $_.Name
+
+    # -Force overwrites a stale copy from a previous run rather than erroring,
+    # which is what makes re-running this installer safe.
+    Copy-Item -Path $_.FullName -Destination $destPath -Force
+
+    $collection = New-Object System.Drawing.Text.PrivateFontCollection
+    $collection.AddFontFile($destPath)
+    $familyName = $collection.Families[0].Name
+    $collection.Dispose()
+
+    # Per-user font registrations store the FULL FILE PATH as the value.
+    # (System-wide registrations can get away with just a filename, because
+    # Windows already knows to look in %WINDIR%\Fonts -- that shortcut does
+    # not apply here.) Set-ItemProperty overwrites an existing value of the
+    # same name, so re-running this script does not create duplicate entries.
+    $valueName = "$familyName (TrueType)"
+    Set-ItemProperty -Path $fontRegKey -Name $valueName -Value $destPath -Type String -Force
 }
 
 # --- Link the Neovim config --------------------------------------------------
