@@ -173,6 +173,30 @@ if (-not (Test-Path $fontDir)) {
         Write-Host "  (System.Drawing unavailable -- naming font entries from filenames)" -ForegroundColor DarkGray
     }
 
+    # Clear the registrations a PREVIOUS run of this script made, before writing
+    # fresh ones. Set-ItemProperty only overwrites a value of the same NAME, and
+    # the two naming paths above do not agree: System.Drawing gives
+    # "JetBrainsMono NF Bold" where the filename fallback gives
+    # "JetBrainsMonoNerdFont Bold", with no overlap at all between the two sets.
+    # So a machine that takes one path once and the other later keeps both --
+    # 46 live entries beside 46 stale ones -- and "re-running is safe" quietly
+    # stops being true. (The paths differ by PowerShell version, so this is not
+    # hypothetical: 5.1 always has System.Drawing, 7 only has it with the
+    # Windows Desktop runtime.)
+    #
+    # Matching on the VALUE rather than the name is what makes this safe. Only
+    # an entry pointing at a file in our per-user folder that we are about to
+    # install gets removed, so a font this script never installed is untouched.
+    $ourFiles = @(Get-ChildItem -Path $fontDir -Filter "*.ttf" |
+        ForEach-Object { Join-Path $userFontDir $_.Name })
+
+    Get-Item -Path $fontRegKey | Select-Object -ExpandProperty Property | ForEach-Object {
+        $existing = (Get-ItemProperty -Path $fontRegKey -Name $_).$_
+        if ($ourFiles -contains $existing) {
+            Remove-ItemProperty -Path $fontRegKey -Name $_
+        }
+    }
+
     Get-ChildItem -Path $fontDir -Filter "*.ttf" | ForEach-Object {
         $destPath = Join-Path $userFontDir $_.Name
 
@@ -210,21 +234,40 @@ if (-not (Test-Path $fontDir)) {
         }
         if (-not $familyName) { $familyName = $famFromFile }
 
-        # The family is NOT enough on its own. Regular, Bold, Italic and
-        # BoldItalic all report the SAME family ("JetBrainsMono Nerd Font"), so a
-        # family-named registry value means every face overwrites the previous
-        # one: 46 font files collapse into about 12 registrations, and bold and
-        # italic end up unregistered and synthesized by the renderer.
-        #
-        # Each value name therefore needs the FACE, e.g.
-        # "JetBrainsMono Nerd Font Bold (TrueType)". Neither System.Drawing nor
-        # the filename gives the face directly, so $style above was split out of
-        # the part after the hyphen ("-ExtraBoldItalic" -> "Extra Bold Italic").
-        # Combined with the family (which does differ between the base, Mono and
-        # Propo variants) that gives one distinct value name per file.
+        # The family is NOT enough on its own: several faces share one family,
+        # so a family-named registry value means each one overwrites the last,
+        # and the losers end up unregistered and synthesized by the renderer.
+        # Each value name therefore needs the FACE, e.g. "JetBrainsMono NF Bold
+        # (TrueType)". Neither System.Drawing nor the filename gives the face
+        # directly, so $style above was split out of the part after the hyphen
+        # ("-ExtraBoldItalic" -> "Extra Bold Italic").
         #
         # "Regular" is the unmarked face; Windows names it by the family alone.
         if ($style -eq "Regular") { $style = "" }
+
+        # The family frequently carries the weight ALREADY. System.Drawing
+        # reports 20 distinct families across these 46 files, not one per
+        # variant -- "JetBrainsMono NF Light" comes back for every Light face --
+        # so appending the whole style doubles it: "NF Light Light", "NF
+        # SemiBold Semi Bold". That was happening on 17 of the 46.
+        #
+        # Dropping the leading style words the family already ends with also
+        # handles the partial case, which a plain suffix test would miss:
+        # "Light Italic" against a "...NF Light" family has to leave "Italic",
+        # not the whole string. Longest match first, so "Extra Bold Italic"
+        # against "...NF ExtraBold" consumes both words rather than neither.
+        if ($style) {
+            $famFlat = ($familyName -replace '\s', '')
+            $words = $style -split ' '
+            for ($n = $words.Count; $n -gt 0; $n--) {
+                $head = ($words[0..($n - 1)] -join '')
+                if ($famFlat -match ("{0}$" -f [regex]::Escape($head))) {
+                    $style = if ($n -eq $words.Count) { "" } else { ($words[$n..($words.Count - 1)]) -join ' ' }
+                    break
+                }
+            }
+        }
+
         $faceName = if ($style) { "$familyName $style" } else { $familyName }
 
         # Per-user font registrations store the FULL FILE PATH as the value.
