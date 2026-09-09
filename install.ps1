@@ -1,4 +1,3 @@
-#Requires -Version 7.0
 <#
 .SYNOPSIS
     Deploy this dotfiles repo's Neovim config on native Windows.
@@ -16,9 +15,36 @@
     to fail. The one constraint a junction adds is that its target must be a
     local absolute path (no UNC path, no mapped network drive), which holds for
     any ordinary clone of this repo.
+
+.NOTES
+    Runs on Windows PowerShell 5.1 -- the version built into Windows 10 and 11
+    -- as well as PowerShell 7.x. There is deliberately no "#Requires -Version
+    7.0" here. Nothing in this script needs 7.x, and requiring it would reject
+    the shell most people actually launch: "powershell.exe", which is what the
+    Start Menu entry and right-click "Run with PowerShell" both give you, is
+    5.1. "pwsh.exe" is 7.x and has to be installed and opened on purpose.
+
+    That matters more since the junction change above. The point of a junction
+    is that this script runs from an ordinary prompt on a stock machine -- and
+    the ordinary prompt on a stock machine is 5.1.
+
+    5.1 is the real floor, because New-Item -ItemType Junction needs 5.0 and
+    5.1 is what ships with Windows anyway.
+
+    Note this is about the shell running the INSTALLER. Neovim itself still
+    wants pwsh at runtime, which is why it is in the scoop list below.
 #>
 
 $ErrorActionPreference = "Stop"
+
+# Checked at runtime rather than with #Requires, so a too-old shell gets a
+# sentence it can act on instead of a parser error about a version number.
+if ($PSVersionTable.PSVersion -lt [Version]"5.1") {
+    Write-Host "This script needs Windows PowerShell 5.1 or newer." -ForegroundColor Red
+    Write-Host "  You are running: $($PSVersionTable.PSVersion)"
+    Write-Host "  5.1 ships with Windows 10 and 11; check you are in 'Windows PowerShell', not the legacy v2 shell."
+    exit 1
+}
 
 $RepoRoot = $PSScriptRoot
 $NvimTarget = Join-Path $env:LOCALAPPDATA "nvim"
@@ -130,7 +156,22 @@ if (-not (Test-Path $fontDir)) {
         New-Item -Path $fontRegKey -Force | Out-Null
     }
 
-    Add-Type -AssemblyName System.Drawing
+    # System.Drawing is used ONLY to read a font's family name for the registry
+    # value below, and that value is a human-readable label -- Windows resolves
+    # faces from the font file's own name table, not from this string. So it
+    # must not be a hard dependency, and the version story is the reverse of
+    # what you would guess: it is always present on Windows PowerShell 5.1
+    # (.NET Framework) but is NOT in the base framework on PowerShell 7 (.NET
+    # Core), where it depends on the Windows Desktop runtime being installed.
+    # If it will not load we name entries from the filename instead, which
+    # costs nothing that affects rendering.
+    $useDrawing = $false
+    try {
+        Add-Type -AssemblyName System.Drawing -ErrorAction Stop
+        $useDrawing = $true
+    } catch {
+        Write-Host "  (System.Drawing unavailable -- naming font entries from filenames)" -ForegroundColor DarkGray
+    }
 
     Get-ChildItem -Path $fontDir -Filter "*.ttf" | ForEach-Object {
         $destPath = Join-Path $userFontDir $_.Name
@@ -139,12 +180,35 @@ if (-not (Test-Path $fontDir)) {
         # which is what makes re-running this installer safe.
         Copy-Item -Path $_.FullName -Destination $destPath -Force
 
-        # The family name is read out of the font file itself, so the entry
-        # matches what Windows will call the font rather than the .ttf filename.
-        $collection = New-Object System.Drawing.Text.PrivateFontCollection
-        $collection.AddFontFile($destPath)
-        $familyName = $collection.Families[0].Name
-        $collection.Dispose()
+        # Split the filename once, up front: "JetBrainsMonoNerdFontMono-Bold"
+        # gives a family stem and a style. Both halves are needed below, and
+        # doing it in a single match keeps $matches from being clobbered by a
+        # second one partway through.
+        if ($_.BaseName -match '^(?<fam>.+?)-(?<sty>.+)$') {
+            $famFromFile = $matches['fam']
+            $style = ($matches['sty'] -creplace '(?<!^)(?=[A-Z])', ' ')
+        } else {
+            $famFromFile = $_.BaseName
+            $style = ""
+        }
+
+        # Prefer the family name read out of the font file, so the entry matches
+        # what Windows calls the font rather than the .ttf filename. Falls back
+        # to the filename stem when System.Drawing did not load, or when one
+        # particular file will not parse -- a worse label, never a failed
+        # install.
+        $familyName = $null
+        if ($useDrawing) {
+            try {
+                $collection = New-Object System.Drawing.Text.PrivateFontCollection
+                $collection.AddFontFile($destPath)
+                $familyName = $collection.Families[0].Name
+                $collection.Dispose()
+            } catch {
+                $familyName = $null
+            }
+        }
+        if (-not $familyName) { $familyName = $famFromFile }
 
         # The family is NOT enough on its own. Regular, Bold, Italic and
         # BoldItalic all report the SAME family ("JetBrainsMono Nerd Font"), so a
@@ -153,15 +217,12 @@ if (-not (Test-Path $fontDir)) {
         # italic end up unregistered and synthesized by the renderer.
         #
         # Each value name therefore needs the FACE, e.g.
-        # "JetBrainsMono Nerd Font Bold (TrueType)". System.Drawing does not
-        # expose the face name, so the weight/slant comes from the part of the
-        # filename after the hyphen ("-ExtraBoldItalic"), split back into words.
+        # "JetBrainsMono Nerd Font Bold (TrueType)". Neither System.Drawing nor
+        # the filename gives the face directly, so $style above was split out of
+        # the part after the hyphen ("-ExtraBoldItalic" -> "Extra Bold Italic").
         # Combined with the family (which does differ between the base, Mono and
         # Propo variants) that gives one distinct value name per file.
-        $style = ""
-        if ($_.BaseName -match '-(.+)$') {
-            $style = ($matches[1] -creplace '(?<!^)(?=[A-Z])', ' ')
-        }
+        #
         # "Regular" is the unmarked face; Windows names it by the family alone.
         if ($style -eq "Regular") { $style = "" }
         $faceName = if ($style) { "$familyName $style" } else { $familyName }
