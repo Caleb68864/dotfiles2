@@ -28,8 +28,18 @@ vim.keymap.set("n", "<C-Right>", ":vertical resize +2<CR>") -- Ctrl+Right = make
 -- "Buffers" are like browser tabs -- each open file is a buffer.
 -- Shift+L goes to the next file, Shift+H goes to the previous one.
 -- (L and H are like "right" and "left" in Vim's world.)
-vim.keymap.set("n", "<S-l>", ":bnext<CR>")      -- Shift+L = next buffer (file)
-vim.keymap.set("n", "<S-h>", ":bprevious<CR>")  -- Shift+H = previous buffer (file)
+-- Shift+L / Shift+H cycle through open files.
+-- These use BufferLineCycle rather than :bnext/:bprevious so that keyboard
+-- cycling follows the order the tabs are DISPLAYED in. Plain :bnext follows
+-- internal buffer numbers, which stop matching the visible order as soon as
+-- you close a file or drag a tab -- very disorienting.
+vim.keymap.set("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", { desc = "Next buffer" })
+vim.keymap.set("n", "<S-h>", "<cmd>BufferLineCyclePrev<CR>", { desc = "Previous buffer" })
+
+-- Space+b+p = PIN a tab so it stays at the left and is not closed by
+-- "close others". Space+b+c = pick a tab to close by pressing its letter.
+vim.keymap.set("n", "<leader>bp", "<cmd>BufferLineTogglePin<CR>", { desc = "[b]uffer [p]in" })
+vim.keymap.set("n", "<leader>bc", "<cmd>BufferLinePickClose<CR>", { desc = "[b]uffer pick [c]lose" })
 
 -- ============================================================================
 -- Close buffer -- Close a file without closing the whole window

@@ -46,6 +46,16 @@ opt.cmdheight = 1
 -- one statusline per split. This looks cleaner when you have multiple splits open.
 opt.laststatus = 3  -- Global statusline
 
+-- Always show the tab bar at the top, even with only one file open.
+-- bufferline draws our clickable file tabs there; without this the tabs
+-- appear and disappear as you open files, which makes the layout jump.
+opt.showtabline = 2
+
+-- Report mouse MOVEMENT (not just clicks) to Neovim. Required for bufferline
+-- to highlight the tab you are hovering over, and for the close "x" on each
+-- tab to light up. Without it the tabs are clickable but feel dead.
+opt.mousemoveevent = true
+
 -- Always keep at least 8 lines visible above and below the cursor when scrolling.
 -- This way you can always see context around where you are typing.
 opt.scrolloff = 8
