@@ -29,9 +29,10 @@ return {
       -- Mouse behaviour. %d is filled in with the buffer number by bufferline.
       left_mouse_command = "buffer %d",     -- Click a tab to switch to it
       middle_mouse_command = "bdelete! %d", -- Middle-click a tab to close it
-      -- right_mouse_command is deliberately left nil so right-clicking a tab
-      -- does nothing rather than closing a file by accident.
-      right_mouse_command = nil,
+      -- Disable right-click's default action (close buffer). Bufferline defaults
+      -- right_mouse_command to "bdelete! %d", which closes the file. We set it to
+      -- false to prevent accidental closes; a context menu is coming in the next task.
+      right_mouse_command = false,
 
       -- Reserve space on the left for the nvim-tree file explorer, so the
       -- tabs start BESIDE the tree instead of running underneath it. Without
