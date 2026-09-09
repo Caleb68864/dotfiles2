@@ -940,9 +940,12 @@ return {
       -- Mouse behaviour. %d is filled in with the buffer number by bufferline.
       left_mouse_command = "buffer %d",     -- Click a tab to switch to it
       middle_mouse_command = "bdelete! %d", -- Middle-click a tab to close it
-      -- right_mouse_command is deliberately left nil so right-clicking a tab
-      -- does nothing rather than closing a file by accident.
-      right_mouse_command = nil,
+      -- bufferline DEFAULTS right-click to "bdelete! %d" -- i.e. closing the
+      -- file. We disable it, because Task 7 puts a real context menu on right
+      -- click and because closing a file by accident is a nasty surprise.
+      -- It must be `false`, NOT `nil`: assigning nil in a Lua table constructor
+      -- creates no key at all, so the plugin's default would survive untouched.
+      right_mouse_command = false,
 
       -- Reserve space on the left for the nvim-tree file explorer, so the
       -- tabs start BESIDE the tree instead of running underneath it. Without
