@@ -36,10 +36,12 @@ return {
         -- Single click opens a file / expands a folder, matching VSCode.
         -- nvim-tree needs a DOUBLE click by default.
         --
-        -- We bind LeftRelease rather than LeftMouse, and check that the
-        -- release landed on an actual node. Without that check, dragging to
-        -- select text inside the tree would open whatever file you released
-        -- the button over.
+        -- We bind LeftRelease rather than LeftMouse so the click only counts
+        -- once the button comes back up. The node check is a separate guard:
+        -- by the time LeftRelease fires the cursor is already wherever you
+        -- released, so it cannot tell a drag from a click. What it does do is
+        -- make a release on a line that holds no node (a blank line in the
+        -- tree buffer) do nothing at all, rather than error.
         vim.keymap.set("n", "<LeftRelease>", function()
           if api.tree.get_node_under_cursor() then
             api.node.open.edit()
@@ -68,10 +70,14 @@ return {
 
       -- The right-click menu shown inside the file explorer.
       -- Defined here because it only makes sense alongside nvim-tree.
+      --
+      -- There is no separate "new folder" call in nvim-tree's API: fs.create()
+      -- prompts for a name and creates a directory instead of a file if you
+      -- end the name with a "/". So there is one entry, not two -- a second
+      -- "New Folder" item running the identical call would just be a lie.
       vim.cmd([[
         silent! aunmenu PopUpNvimTree
-        nnoremenu PopUpNvimTree.New\ File     <cmd>lua require("nvim-tree.api").fs.create()<CR>
-        nnoremenu PopUpNvimTree.New\ Folder   <cmd>lua require("nvim-tree.api").fs.create()<CR>
+        nnoremenu PopUpNvimTree.New\ File\ or\ Folder   <cmd>lua require("nvim-tree.api").fs.create()<CR>
         nnoremenu PopUpNvimTree.-sep1-        <Nop>
         nnoremenu PopUpNvimTree.Rename        <cmd>lua require("nvim-tree.api").fs.rename()<CR>
         nnoremenu PopUpNvimTree.Delete        <cmd>lua require("nvim-tree.api").fs.remove()<CR>

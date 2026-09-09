@@ -7,7 +7,7 @@
     The Linux side of this repo uses GNU Stow to symlink configs into place.
     Stow does not exist on Windows, and Windows Neovim reads its config from
     %LOCALAPPDATA%\nvim rather than ~/.config/nvim, so this script does the
-    equivalent job: install the external tools, then link the config.
+    equivalent job: link the config, then install the external tools.
 
     Creating a symlink on Windows requires EITHER Developer Mode to be enabled
     OR an elevated shell. This script checks up front and tells you which is
@@ -49,6 +49,24 @@ if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Write-Host "  Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression"
     exit 1
 }
+
+# --- Link the Neovim config --------------------------------------------------
+#
+# The symlink is what this script exists to do, so it happens FIRST. Both of
+# the steps below it can abort the whole script under $ErrorActionPreference =
+# "Stop" -- a package that fails to install, or a missing fonts/ directory --
+# and if the link came last, that abort would leave the machine with new tools
+# and no config. Ordered this way, a later failure still leaves a working
+# Neovim and you can re-run to pick up the rest.
+
+if (Test-Path $NvimTarget) {
+    $backup = "$NvimTarget.backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+    Write-Host "Existing config found. Moving it to $backup" -ForegroundColor Yellow
+    Move-Item -Path $NvimTarget -Destination $backup
+}
+
+Write-Host "Linking $NvimTarget -> $NvimSource" -ForegroundColor Cyan
+New-Item -ItemType SymbolicLink -Path $NvimTarget -Target $NvimSource | Out-Null
 
 # --- External tools ----------------------------------------------------------
 #
@@ -95,49 +113,65 @@ scoop install neovim neovide zig ripgrep fd cmake git gh lazygit yazi fzf
 Write-Host "Installing JetBrainsMono Nerd Font..." -ForegroundColor Cyan
 $fontDir = Join-Path $RepoRoot "fonts"
 $userFontDir = Join-Path $env:LOCALAPPDATA "Microsoft\Windows\Fonts"
-New-Item -ItemType Directory -Path $userFontDir -Force | Out-Null
 
-$fontRegKey = "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Fonts"
-if (-not (Test-Path $fontRegKey)) {
-    New-Item -Path $fontRegKey -Force | Out-Null
+if (-not (Test-Path $fontDir)) {
+    # Get-ChildItem on a missing directory is a terminating error under
+    # $ErrorActionPreference = "Stop", which would kill the rest of the
+    # script. Missing fonts are not worth that, so say so and carry on.
+    Write-Host "  No fonts/ directory in the repo -- skipping fonts." -ForegroundColor Yellow
+} else {
+    New-Item -ItemType Directory -Path $userFontDir -Force | Out-Null
+
+    $fontRegKey = "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Fonts"
+    if (-not (Test-Path $fontRegKey)) {
+        New-Item -Path $fontRegKey -Force | Out-Null
+    }
+
+    Add-Type -AssemblyName System.Drawing
+
+    Get-ChildItem -Path $fontDir -Filter "*.ttf" | ForEach-Object {
+        $destPath = Join-Path $userFontDir $_.Name
+
+        # -Force overwrites a stale copy from a previous run rather than erroring,
+        # which is what makes re-running this installer safe.
+        Copy-Item -Path $_.FullName -Destination $destPath -Force
+
+        # The family name is read out of the font file itself, so the entry
+        # matches what Windows will call the font rather than the .ttf filename.
+        $collection = New-Object System.Drawing.Text.PrivateFontCollection
+        $collection.AddFontFile($destPath)
+        $familyName = $collection.Families[0].Name
+        $collection.Dispose()
+
+        # The family is NOT enough on its own. Regular, Bold, Italic and
+        # BoldItalic all report the SAME family ("JetBrainsMono Nerd Font"), so a
+        # family-named registry value means every face overwrites the previous
+        # one: 46 font files collapse into about 12 registrations, and bold and
+        # italic end up unregistered and synthesized by the renderer.
+        #
+        # Each value name therefore needs the FACE, e.g.
+        # "JetBrainsMono Nerd Font Bold (TrueType)". System.Drawing does not
+        # expose the face name, so the weight/slant comes from the part of the
+        # filename after the hyphen ("-ExtraBoldItalic"), split back into words.
+        # Combined with the family (which does differ between the base, Mono and
+        # Propo variants) that gives one distinct value name per file.
+        $style = ""
+        if ($_.BaseName -match '-(.+)$') {
+            $style = ($matches[1] -creplace '(?<!^)(?=[A-Z])', ' ')
+        }
+        # "Regular" is the unmarked face; Windows names it by the family alone.
+        if ($style -eq "Regular") { $style = "" }
+        $faceName = if ($style) { "$familyName $style" } else { $familyName }
+
+        # Per-user font registrations store the FULL FILE PATH as the value.
+        # (System-wide registrations can get away with just a filename, because
+        # Windows already knows to look in %WINDIR%\Fonts -- that shortcut does
+        # not apply here.) Set-ItemProperty overwrites an existing value of the
+        # same name, so re-running this script does not create duplicate entries.
+        $valueName = "$faceName (TrueType)"
+        Set-ItemProperty -Path $fontRegKey -Name $valueName -Value $destPath -Type String -Force
+    }
 }
-
-# Reading the real font-family name out of each file (rather than guessing it
-# from the filename) is required because the registry value's NAME has to
-# match what Windows will display as the font name, not the .ttf's filename.
-Add-Type -AssemblyName System.Drawing
-
-Get-ChildItem -Path $fontDir -Filter "*.ttf" | ForEach-Object {
-    $destPath = Join-Path $userFontDir $_.Name
-
-    # -Force overwrites a stale copy from a previous run rather than erroring,
-    # which is what makes re-running this installer safe.
-    Copy-Item -Path $_.FullName -Destination $destPath -Force
-
-    $collection = New-Object System.Drawing.Text.PrivateFontCollection
-    $collection.AddFontFile($destPath)
-    $familyName = $collection.Families[0].Name
-    $collection.Dispose()
-
-    # Per-user font registrations store the FULL FILE PATH as the value.
-    # (System-wide registrations can get away with just a filename, because
-    # Windows already knows to look in %WINDIR%\Fonts -- that shortcut does
-    # not apply here.) Set-ItemProperty overwrites an existing value of the
-    # same name, so re-running this script does not create duplicate entries.
-    $valueName = "$familyName (TrueType)"
-    Set-ItemProperty -Path $fontRegKey -Name $valueName -Value $destPath -Type String -Force
-}
-
-# --- Link the Neovim config --------------------------------------------------
-
-if (Test-Path $NvimTarget) {
-    $backup = "$NvimTarget.backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-    Write-Host "Existing config found. Moving it to $backup" -ForegroundColor Yellow
-    Move-Item -Path $NvimTarget -Destination $backup
-}
-
-Write-Host "Linking $NvimTarget -> $NvimSource" -ForegroundColor Cyan
-New-Item -ItemType SymbolicLink -Path $NvimTarget -Target $NvimSource | Out-Null
 
 # --- Done --------------------------------------------------------------------
 

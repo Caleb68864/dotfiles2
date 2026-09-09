@@ -207,22 +207,48 @@ vim.g.loaded_netrwPlugin = 1
 -- so searches silently return nothing and `:!` commands fail in confusing
 -- ways. Pointing `shell` at PowerShell 7 (`pwsh`) fixes both.
 --
--- The cryptic ones here are shellcmdflag, shellredir, and shellpipe -- they
--- are the documented incantation from `:help shell-powershell` and should be
--- copied exactly rather than reasoned about. In particular, the doubled `%%`
--- in shellredir/shellpipe is deliberate PowerShell escaping, not a typo --
--- do NOT "simplify" it to a single `%`, or redirected output silently breaks.
--- shellquote/shellxquote, by contrast, are boring: that same help topic says
--- to set both to empty strings for PowerShell, so there's nothing to explain.
+-- These settings follow the recipe under `:help shell-powershell` (and, for
+-- pwsh specifically, `:help shell-pwsh`). Line by line:
+--
+--   shelltemp = false   Send commands to the shell on its command line rather
+--                       than through a temporary file. The help recipe starts
+--                       with this and the rest assumes it.
+--   shellcmdflag        The flags plus a prelude that runs before every
+--                       command: force UTF-8 on the console's input and
+--                       output, and make Out-File write UTF-8 too. Without
+--                       that prelude, any non-ASCII output comes back mangled.
+--   shellpipe           How `:make` and friends capture output. `%s` is where
+--                       Neovim substitutes the temp file it wants to read.
+--   shellquote /        Both empty, as the help says: PowerShell needs no
+--   shellxquote         extra quoting layer around the command.
+--
+-- Note what is deliberately NOT set: 'shellredir'. The help topic does not
+-- give a PowerShell value for it, so the built-in default stands.
+--
+-- These are copied from the help rather than invented, so check them against
+-- `:help shell-powershell` before changing them -- but do check, rather than
+-- assuming they are correct.
 local platform = require("config.platform")
 
 if platform.is_windows then
   local powershell = platform.has("pwsh") and "pwsh" or "powershell"
   opt.shell = powershell
-  opt.shellcmdflag =
-    "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
-  opt.shellredir = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
-  opt.shellpipe = '2>&1 | %%{ "$_" } | Tee-Object %s; exit $LastExitCode'
+  opt.shelltemp = false
+
+  local cmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command "
+    .. "[Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();"
+    .. "$PSDefaultParameterValues['Out-File:Encoding']='utf8';"
+
+  if powershell == "pwsh" then
+    -- PowerShell 7 colours its own output with ANSI escapes, which end up as
+    -- garbage characters in a quickfix list or a `:!` capture. These two
+    -- lines are the workaround `:help shell-pwsh` prescribes.
+    cmdflag = cmdflag .. "$PSStyle.OutputRendering = 'PlainText';"
+    vim.env.__SuppressAnsiEscapeSequences = "1"
+  end
+
+  opt.shellcmdflag = cmdflag
+  opt.shellpipe = "> %s 2>&1"
   opt.shellquote = ""
   opt.shellxquote = ""
 end
