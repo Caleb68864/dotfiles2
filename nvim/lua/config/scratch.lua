@@ -191,4 +191,192 @@ function M.delete(path)
   return true
 end
 
+-- Handle of the currently open scratch float, so toggling can close it.
+local float_win = nil
+
+--- Is the given path inside our scratch directory?
+--- Used by autosave. We compare normalized prefixes rather than using an
+--- autocmd `pattern`, because autocmd patterns and Windows backslashes
+--- interact badly.
+--- @param path string
+--- @return boolean
+local function is_scratch_file(path)
+  if path == nil or path == "" then
+    return false
+  end
+  return vim.startswith(_normalize_path(path), config.root .. "/")
+end
+
+--- Open a scratch file in a centered floating window.
+--- @param path string
+local function open_float(path)
+  M.ensure_root()
+  -- Make sure the file exists so the buffer is backed by something on disk.
+  if vim.fn.filereadable(path) == 0 then
+    vim.fn.writefile({}, path)
+  end
+
+  local buf = vim.fn.bufadd(path)
+  vim.fn.bufload(buf)
+
+  -- markdown gives us syntax highlighting inside ``` fences, which is exactly
+  -- what you want when parking shell commands.
+  vim.bo[buf].filetype = "markdown"
+  -- No swap file: closing a scratch by closing its window must never produce
+  -- a "swap file found" recovery prompt next time.
+  vim.bo[buf].swapfile = false
+  -- Keep the buffer alive when the float closes, so reopening is instant.
+  vim.bo[buf].bufhidden = "hide"
+
+  local width = math.min(100, math.floor(vim.o.columns * 0.8))
+  local height = math.floor(vim.o.lines * 0.8)
+
+  float_win = vim.api.nvim_open_win(buf, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = math.floor((vim.o.lines - height) / 2),
+    col = math.floor((vim.o.columns - width) / 2),
+    style = "minimal",
+    border = "rounded",
+    title = " " .. vim.fn.fnamemodify(path, ":t") .. " ",
+    title_pos = "center",
+  })
+
+  -- q and Esc close the float. The autosave autocommand writes on the way out,
+  -- so there is nothing for the user to do.
+  local function close()
+    if float_win and vim.api.nvim_win_is_valid(float_win) then
+      vim.api.nvim_win_close(float_win, false)
+    end
+    float_win = nil
+  end
+  vim.keymap.set("n", "q", close, { buffer = buf, silent = true, desc = "Close scratch" })
+  vim.keymap.set("n", "<Esc>", close, { buffer = buf, silent = true, desc = "Close scratch" })
+end
+
+--- Toggle THE quick pad. This is the 30-second parking spot.
+function M.toggle_quick()
+  if float_win and vim.api.nvim_win_is_valid(float_win) then
+    vim.api.nvim_win_close(float_win, false)
+    float_win = nil
+    return
+  end
+  open_float(M.quick_path())
+end
+
+--- Create and open a brand new named scratch.
+function M.new_scratch()
+  M.ensure_root()
+  if float_win and vim.api.nvim_win_is_valid(float_win) then
+    vim.api.nvim_win_close(float_win, false)
+    float_win = nil
+  end
+  open_float(M.new_path())
+end
+
+--- Delete the scratch shown in the current buffer, then close the float.
+function M.delete_current()
+  local path = vim.api.nvim_buf_get_name(0)
+  if not is_scratch_file(path) then
+    vim.notify("Not a scratch file", vim.log.levels.WARN)
+    return
+  end
+  local ok, reason = M.delete(path)
+  if not ok then
+    vim.notify(reason, vim.log.levels.WARN)
+    return
+  end
+  if float_win and vim.api.nvim_win_is_valid(float_win) then
+    vim.api.nvim_win_close(float_win, true)
+    float_win = nil
+  end
+  vim.notify("Deleted " .. vim.fn.fnamemodify(path, ":t"))
+end
+
+--- Install autosave. Scratches are written whenever you look away, so the
+--- user never types :w and never sees a prompt.
+function M.enable_autosave()
+  local group = vim.api.nvim_create_augroup("ScratchAutosave", { clear = true })
+  vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost", "VimLeavePre" }, {
+    group = group,
+    pattern = "*",
+    callback = function(ev)
+      local name = vim.api.nvim_buf_get_name(ev.buf)
+      if is_scratch_file(name) and vim.bo[ev.buf].modified then
+        vim.api.nvim_buf_call(ev.buf, function()
+          vim.cmd("silent write")
+        end)
+      end
+    end,
+    desc = "Autosave scratch buffers -- the user never saves manually",
+  })
+end
+
+--- Pick a scratch to open.
+--- Uses Telescope when available. Telescope is disabled in PDA_MODE, so this
+--- falls back to vim.ui.select rather than erroring on that profile.
+function M.pick()
+  local items = M.list()
+  if #items == 0 then
+    vim.notify("No named scratches yet -- <leader>nn makes one", vim.log.levels.INFO)
+    return
+  end
+
+  local has_telescope, pickers = pcall(require, "telescope.pickers")
+  if not has_telescope then
+    vim.ui.select(items, {
+      prompt = "Scratches",
+      format_item = function(item) return item.title end,
+    }, function(choice)
+      if choice then vim.cmd.edit(vim.fn.fnameescape(choice.path)) end
+    end)
+    return
+  end
+
+  local finders = require("telescope.finders")
+  local conf = require("telescope.config").values
+  local actions = require("telescope.actions")
+  local action_state = require("telescope.actions.state")
+
+  pickers.new({}, {
+    prompt_title = "Scratches",
+    finder = finders.new_table({
+      results = items,
+      -- display is what you see; ordinal is what fuzzy matching searches.
+      entry_maker = function(item)
+        return {
+          value = item,
+          display = string.format("%-60s  %s", item.title,
+            os.date("%Y-%m-%d %H:%M", item.mtime)),
+          ordinal = item.title .. " " .. item.path,
+          path = item.path,
+        }
+      end,
+    }),
+    sorter = conf.generic_sorter({}),
+    previewer = conf.file_previewer({}),
+    attach_mappings = function(bufnr)
+      actions.select_default:replace(function()
+        actions.close(bufnr)
+        local entry = action_state.get_selected_entry()
+        if entry then vim.cmd.edit(vim.fn.fnameescape(entry.path)) end
+      end)
+      return true
+    end,
+  }):find()
+end
+
+--- Live-grep across every scratch. Telescope-only; there is no sensible
+--- built-in fallback for interactive grep.
+function M.grep()
+  local ok, builtin = pcall(require, "telescope.builtin")
+  if not ok then
+    vim.notify("Telescope not available -- scratch grep is disabled", vim.log.levels.WARN)
+    return
+  end
+  M.ensure_root()
+  builtin.live_grep({ search_dirs = { config.root }, prompt_title = "Grep scratches" })
+end
+
 return M
