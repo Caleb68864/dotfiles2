@@ -68,19 +68,59 @@ if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
 # Linking the config is what this script exists to do, so it happens FIRST.
 # Both of the steps below it can abort the whole script under
 # $ErrorActionPreference = "Stop" -- a package that fails to install, or a
-# missing fonts/ directory --
-# and if the link came last, that abort would leave the machine with new tools
-# and no config. Ordered this way, a later failure still leaves a working
-# Neovim and you can re-run to pick up the rest.
+# missing fonts/ directory -- and if the link came last, that abort would leave
+# the machine with new tools and no config. Ordered this way, a later failure
+# still leaves a working Neovim and you can re-run to pick up the rest.
+#
+# A link that ALREADY points where we want it is left alone. The previous
+# version tested Test-Path and moved unconditionally, so every re-run renamed
+# the junction the last run had made to nvim.backup-<timestamp> and built
+# another. They accumulated one per run, and because each backup was itself a
+# junction to this same repo, they all opened as a working config -- litter
+# that looked exactly like something worth keeping.
+#
+# Anything ELSE at that path is still moved aside: a real directory, or a link
+# aimed somewhere other than this repo, is somebody's existing config and this
+# script must not eat it.
 
-if (Test-Path $NvimTarget) {
-    $backup = "$NvimTarget.backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-    Write-Host "Existing config found. Moving it to $backup" -ForegroundColor Yellow
-    Move-Item -Path $NvimTarget -Destination $backup
+$existing = Get-Item -LiteralPath $NvimTarget -Force -ErrorAction SilentlyContinue
+
+if ($existing) {
+    # Windows PowerShell 5.1 returns a string[] here where 7 returns a string,
+    # so normalise before comparing. Both report a plain absolute path -- no
+    # \??\ device prefix -- and the trailing separator is the only wobble.
+    $linkTarget = @($existing.Target)[0]
+    $alreadyLinked = $existing.LinkType -in @("Junction", "SymbolicLink") -and
+        $linkTarget -and
+        ($linkTarget.TrimEnd('\') -ieq $NvimSource.TrimEnd('\'))
+
+    if ($alreadyLinked) {
+        Write-Host "Already linked: $NvimTarget -> $linkTarget" -ForegroundColor DarkGray
+    } else {
+        # The timestamp is only good to the second, which is not unique enough
+        # on its own -- and the way it fails is silent. Move-Item onto a name
+        # that already exists moves the source INSIDE it instead of erroring, so
+        # a second backup in the same second becomes a child of the first
+        # (nvim.backup-<stamp>\nvim) rather than a sibling, and the message
+        # still names the sibling that was not created. Suffix until free.
+        $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+        $backup = "$NvimTarget.backup-$stamp"
+        $suffix = 2
+        while (Test-Path -LiteralPath $backup) {
+            $backup = "$NvimTarget.backup-$stamp-$suffix"
+            $suffix++
+        }
+
+        Write-Host "Existing config found. Moving it to $backup" -ForegroundColor Yellow
+        Move-Item -LiteralPath $NvimTarget -Destination $backup
+        $existing = $null
+    }
 }
 
-Write-Host "Linking $NvimTarget -> $NvimSource" -ForegroundColor Cyan
-New-Item -ItemType Junction -Path $NvimTarget -Target $NvimSource | Out-Null
+if (-not $existing) {
+    Write-Host "Linking $NvimTarget -> $NvimSource" -ForegroundColor Cyan
+    New-Item -ItemType Junction -Path $NvimTarget -Target $NvimSource | Out-Null
+}
 
 # --- External tools ----------------------------------------------------------
 #
