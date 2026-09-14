@@ -17,9 +17,9 @@
 #
 # WINDOW MAP:
 #   6 = (disabled)
-#   7 = notes (basalt)
-#   8 = info (mail+calendar+news, monocle)
-#   9 = music (ncmpcpp+cava, side-by-side)
+#   7 = notes (Claude Code in Caleb's Vault)
+#   8 = (disabled)
+#   9 = (disabled)
 #   0 = scratch (empty shell)
 # =============================================================================
 
@@ -35,49 +35,53 @@ else
     case "$WINDOW" in
         # 6) Comms -- disabled
         7)
-            tmux new-window -t "$SESSION:7" -n notes
-            tmux send-keys -t "$SESSION:7" "basalt" Enter
+            # Notes: Claude Code running inside Caleb's Obsidian vault
+            NOTES_VAULT="$HOME/Documents/Notes/Caleb's Vault"
+            tmux new-window -t "$SESSION:7" -n notes -c "$NOTES_VAULT"
+            tmux send-keys -t "$SESSION:7" "claude --dangerously-skip-permissions" Enter
             ;;
-        8)
-            # Info: 3 vertical columns (aerc | khal | newsboat), zoom for monocle
-            tmux new-window -t "$SESSION:8" -n info
-            FIRST=true
-            if command -v aerc &> /dev/null; then
-                tmux send-keys -t "$SESSION:8" "aerc" Enter
-                FIRST=false
-            fi
-            if command -v khal &> /dev/null; then
-                if [ "$FIRST" = false ]; then
-                    sleep 0.3
-                    tmux split-window -h -t "$SESSION:8" -l 66%
-                    tmux send-keys "khal interactive" Enter
-                else
-                    tmux send-keys -t "$SESSION:8" "khal interactive" Enter
-                    FIRST=false
-                fi
-            fi
-            if command -v newsboat &> /dev/null; then
-                if [ "$FIRST" = false ]; then
-                    sleep 0.3
-                    tmux split-window -h -t "$SESSION:8" -l 50%
-                    tmux send-keys "newsboat" Enter
-                else
-                    tmux send-keys -t "$SESSION:8" "newsboat" Enter
-                fi
-            fi
-            tmux select-pane -t "$SESSION:8.0"
-            tmux resize-pane -Z -t "$SESSION:8.0"
-            ;;
-        9)
-            tmux new-window -t "$SESSION:9" -n music
-            tmux send-keys -t "$SESSION:9" "ncmpcpp" Enter
-            if command -v cava &> /dev/null; then
-                sleep 0.3
-                tmux split-window -h -t "$SESSION:9" -l 40%
-                tmux send-keys -t "$SESSION:9.1" "cava" Enter
-                tmux select-pane -t "$SESSION:9.0"
-            fi
-            ;;
+        # 8) Info -- disabled
+        # 9) Music -- disabled
+        # 8)
+        #     # Info: 3 vertical columns (aerc | khal | newsboat), zoom for monocle
+        #     tmux new-window -t "$SESSION:8" -n info
+        #     FIRST=true
+        #     if command -v aerc &> /dev/null; then
+        #         tmux send-keys -t "$SESSION:8" "aerc" Enter
+        #         FIRST=false
+        #     fi
+        #     if command -v khal &> /dev/null; then
+        #         if [ "$FIRST" = false ]; then
+        #             sleep 0.3
+        #             tmux split-window -h -t "$SESSION:8" -l 66%
+        #             tmux send-keys "khal interactive" Enter
+        #         else
+        #             tmux send-keys -t "$SESSION:8" "khal interactive" Enter
+        #             FIRST=false
+        #         fi
+        #     fi
+        #     if command -v newsboat &> /dev/null; then
+        #         if [ "$FIRST" = false ]; then
+        #             sleep 0.3
+        #             tmux split-window -h -t "$SESSION:8" -l 50%
+        #             tmux send-keys "newsboat" Enter
+        #         else
+        #             tmux send-keys -t "$SESSION:8" "newsboat" Enter
+        #         fi
+        #     fi
+        #     tmux select-pane -t "$SESSION:8.0"
+        #     tmux resize-pane -Z -t "$SESSION:8.0"
+        #     ;;
+        # 9)
+        #     tmux new-window -t "$SESSION:9" -n music
+        #     tmux send-keys -t "$SESSION:9" "ncmpcpp" Enter
+        #     if command -v cava &> /dev/null; then
+        #         sleep 0.3
+        #         tmux split-window -h -t "$SESSION:9" -l 40%
+        #         tmux send-keys -t "$SESSION:9.1" "cava" Enter
+        #         tmux select-pane -t "$SESSION:9.0"
+        #     fi
+        #     ;;
         0)
             tmux new-window -t "$SESSION:0" -n scratch
             ;;

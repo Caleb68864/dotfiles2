@@ -13,9 +13,9 @@
 #   Window 1:    tactical  -- Your default working shell (Alt+1)
 #   Window 2-5:  (open)    -- User-created, pi-workspace agent, etc.
 #   Window 6:    comms     -- weechat + gomuks + scli (Alt+6, monocle)
-#   Window 7:    notes     -- basalt Obsidian vault browser (Alt+7)
-#   Window 8:    info      -- mail + calendar + news (Alt+8, monocle)
-#   Window 9:    music     -- ncmpcpp + cava split panes (Alt+9)
+#   Window 7:    notes     -- Claude Code in Caleb's Vault (Alt+7)
+#   Window 8:    info      -- (disabled)
+#   Window 9:    music     -- (disabled)
 #   Window 0:    scratch   -- Empty shell for quick one-offs (Alt+0)
 #
 # MONOCLE MODE (windows 6 and 8):
@@ -108,62 +108,61 @@ if [ "$COMMS_CREATED" = true ]; then
     tmux resize-pane -Z -t "$SESSION:6.0"
 fi
 
-# --- Window 7: notes (basalt) ---
-# Full-screen Obsidian vault browser. Renders markdown, understands wikilinks.
-# Press Ctrl+Alt+E inside basalt to open a note in Neovim.
-if command -v basalt &> /dev/null; then
-    tmux new-window -t "$SESSION:7" -n notes
-    tmux send-keys -t "$SESSION:7" "basalt" Enter
-fi
+# --- Window 7: notes (Claude Code in Caleb's Vault) ---
+# Opens a shell in the Obsidian vault and starts Claude Code with
+# permission prompts disabled so it can edit notes freely.
+NOTES_VAULT="$HOME/Documents/Notes/Caleb's Vault"
+tmux new-window -t "$SESSION:7" -n notes -c "$NOTES_VAULT"
+tmux send-keys -t "$SESSION:7" "claude --dangerously-skip-permissions" Enter
 
-# --- Window 8: info (monocle: mail + calendar + news) ---
-# All info apps stacked as panes, first one zoomed to full-screen.
-# prefix+o = cycle between aerc, khal, newsboat (stays full-screen)
-# prefix+z = unzoom to see all three, then zoom back
-INFO_CREATED=false
-if command -v aerc &> /dev/null; then
-    tmux new-window -t "$SESSION:8" -n info
-    tmux send-keys -t "$SESSION:8" "aerc" Enter
-    INFO_CREATED=true
-fi
-if command -v khal &> /dev/null; then
-    if [ "$INFO_CREATED" = true ]; then
-        tmux split-window -v -t "$SESSION:8" -l 50%
-        tmux send-keys "khal interactive" Enter
-    else
-        tmux new-window -t "$SESSION:8" -n info
-        tmux send-keys -t "$SESSION:8" "khal interactive" Enter
-        INFO_CREATED=true
-    fi
-fi
-if command -v newsboat &> /dev/null; then
-    if [ "$INFO_CREATED" = true ]; then
-        tmux split-window -v -t "$SESSION:8" -l 33%
-        tmux send-keys "newsboat" Enter
-    else
-        tmux new-window -t "$SESSION:8" -n info
-        tmux send-keys -t "$SESSION:8" "newsboat" Enter
-        INFO_CREATED=true
-    fi
-fi
-# Zoom the first pane so you start with mail full-screen
-if [ "$INFO_CREATED" = true ]; then
-    tmux select-pane -t "$SESSION:8.0"
-    tmux resize-pane -Z -t "$SESSION:8.0"
-fi
+## --- Window 8: info (DISABLED -- commented out) ---
+## All info apps stacked as panes, first one zoomed to full-screen.
+## prefix+o = cycle between aerc, khal, newsboat (stays full-screen)
+## prefix+z = unzoom to see all three, then zoom back
+# INFO_CREATED=false
+# if command -v aerc &> /dev/null; then
+#     tmux new-window -t "$SESSION:8" -n info
+#     tmux send-keys -t "$SESSION:8" "aerc" Enter
+#     INFO_CREATED=true
+# fi
+# if command -v khal &> /dev/null; then
+#     if [ "$INFO_CREATED" = true ]; then
+#         tmux split-window -v -t "$SESSION:8" -l 50%
+#         tmux send-keys "khal interactive" Enter
+#     else
+#         tmux new-window -t "$SESSION:8" -n info
+#         tmux send-keys -t "$SESSION:8" "khal interactive" Enter
+#         INFO_CREATED=true
+#     fi
+# fi
+# if command -v newsboat &> /dev/null; then
+#     if [ "$INFO_CREATED" = true ]; then
+#         tmux split-window -v -t "$SESSION:8" -l 33%
+#         tmux send-keys "newsboat" Enter
+#     else
+#         tmux new-window -t "$SESSION:8" -n info
+#         tmux send-keys -t "$SESSION:8" "newsboat" Enter
+#         INFO_CREATED=true
+#     fi
+# fi
+## Zoom the first pane so you start with mail full-screen
+# if [ "$INFO_CREATED" = true ]; then
+#     tmux select-pane -t "$SESSION:8.0"
+#     tmux resize-pane -Z -t "$SESSION:8.0"
+# fi
 
-# --- Window 9: music (ncmpcpp + cava) ---
-# Music player on the left (60%), audio visualizer on the right (40%).
-# These are side-by-side (not monocle) because cava is visual + music together.
-if command -v ncmpcpp &> /dev/null; then
-    tmux new-window -t "$SESSION:9" -n music
-    tmux send-keys -t "$SESSION:9" "ncmpcpp" Enter
-    if command -v cava &> /dev/null; then
-        tmux split-window -h -t "$SESSION:9" -l 40%
-        tmux send-keys -t "$SESSION:9.1" "cava" Enter
-        tmux select-pane -t "$SESSION:9.0"
-    fi
-fi
+## --- Window 9: music (DISABLED -- commented out) ---
+## Music player on the left (60%), audio visualizer on the right (40%).
+## These are side-by-side (not monocle) because cava is visual + music together.
+# if command -v ncmpcpp &> /dev/null; then
+#     tmux new-window -t "$SESSION:9" -n music
+#     tmux send-keys -t "$SESSION:9" "ncmpcpp" Enter
+#     if command -v cava &> /dev/null; then
+#         tmux split-window -h -t "$SESSION:9" -l 40%
+#         tmux send-keys -t "$SESSION:9.1" "cava" Enter
+#         tmux select-pane -t "$SESSION:9.0"
+#     fi
+# fi
 
 # --- Window 0: scratch (empty shell) ---
 # A spare shell for quick one-off commands. Out of the way at Alt+0.

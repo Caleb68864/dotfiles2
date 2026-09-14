@@ -220,16 +220,16 @@ windowrule = workspace 4 silent, match:class ^(discord)$
 
 ### Tmux Window Layout
 
-Windows use "smart" bindings — if closed, Alt+number recreates the app automatically via `bin/bin/tmux-smart-window`. Monocle windows (5, 7) stack multiple full-screen apps; cycle with `prefix+o`, zoom toggle with `prefix+z`.
+Windows use "smart" bindings — if closed, Alt+number recreates the app automatically via `bin/bin/tmux-smart-window`.
 
 | Key | Window | Apps |
 |-----|--------|------|
 | Alt+1-3 | working | tactical, agent, pi-workspace |
-| Alt+4 | (open) | user-created |
-| Alt+5 | comms | weechat + gomuks + scli (monocle) |
-| Alt+6 | notes | basalt (Obsidian vault) |
-| Alt+7 | info | aerc + khal + newsboat (monocle) |
-| Alt+8 | music | ncmpcpp + cava (split) |
+| Alt+4-5 | (open) | user-created |
+| Alt+6 | comms | (disabled — commented out) |
+| Alt+7 | notes | Claude Code (`--dangerously-skip-permissions`) in `~/Documents/Notes/Caleb's Vault` |
+| Alt+8 | info | (disabled — aerc + khal + newsboat commented out) |
+| Alt+9 | music | (disabled — ncmpcpp + cava commented out) |
 | Alt+0 | scratch | empty shell |
 
 ### Tmux Keybinding Summary
