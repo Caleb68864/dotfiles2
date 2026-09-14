@@ -306,7 +306,11 @@ if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
         # Session exists -- create a GROUPED session.
         # This shares all windows but lets this terminal look at a different
         # window independently from other terminals.
-        exec tmux new-session -t command-center
+        # destroy-unattached is set on THIS grouped session only (never
+        # globally -- a global keep-group kills the ungrouped base session
+        # as soon as it is built). The grouped session is destroyed when
+        # this terminal closes, so they don't pile up for tmux-resurrect.
+        exec tmux new-session -t command-center \; set-option destroy-unattached on
     else
         # Session does not exist yet -- run the layout builder script which
         # creates the session with all TUI app windows (mail, monitor, etc.)
@@ -395,3 +399,5 @@ cached_eval starship init zsh
 # in the dotfiles repo (like API keys, work-specific paths, etc.).
 # The file is NOT tracked by git, so it stays private.
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
+
+. "$HOME/.local/share/../bin/env"
