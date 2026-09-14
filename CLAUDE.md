@@ -227,7 +227,7 @@ Windows use "smart" bindings — if closed, Alt+number recreates the app automat
 | Alt+1-3 | working | tactical, agent, pi-workspace |
 | Alt+4-5 | (open) | user-created |
 | Alt+6 | comms | (disabled — commented out) |
-| Alt+7 | notes | Claude Code (`--dangerously-skip-permissions`) in `~/Documents/Notes/Caleb's Vault` |
+| Alt+7 | notes | Claude Code (`--dangerously-skip-permissions`) in `~/Documents/Notes/Caleb's Vault`. Skipped if the vault has no `.obsidian` dir or is otherwise empty |
 | Alt+8 | info | (disabled — aerc + khal + newsboat commented out) |
 | Alt+9 | music | (disabled — ncmpcpp + cava commented out) |
 | Alt+0 | scratch | empty shell |

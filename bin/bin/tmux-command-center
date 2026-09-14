@@ -112,8 +112,20 @@ fi
 # Opens a shell in the Obsidian vault and starts Claude Code with
 # permission prompts disabled so it can edit notes freely.
 NOTES_VAULT="$HOME/Documents/Notes/Caleb's Vault"
-tmux new-window -t "$SESSION:7" -n notes -c "$NOTES_VAULT"
-tmux send-keys -t "$SESSION:7" "claude --dangerously-skip-permissions" Enter
+# A vault is only "present" if it has an .obsidian dir plus at least one
+# other entry. On machines where the folder exists but is empty (not synced
+# yet), the notes window is skipped entirely.
+vault_is_ready() {
+    [ -d "$1/.obsidian" ] || return 1
+    for entry in "$1"/* "$1"/.[!.]*; do
+        [ -e "$entry" ] && [ "$entry" != "$1/.obsidian" ] && return 0
+    done
+    return 1
+}
+if vault_is_ready "$NOTES_VAULT"; then
+    tmux new-window -t "$SESSION:7" -n notes -c "$NOTES_VAULT"
+    tmux send-keys -t "$SESSION:7" "claude --dangerously-skip-permissions" Enter
+fi
 
 ## --- Window 8: info (DISABLED -- commented out) ---
 ## All info apps stacked as panes, first one zoomed to full-screen.
