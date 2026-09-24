@@ -110,7 +110,8 @@ fi
 
 # --- Window 7: notes (Claude Code in Caleb's Vault) ---
 # Opens a shell in the Obsidian vault and starts Claude Code with
-# permission prompts disabled so it can edit notes freely.
+# permission prompts disabled so it can edit notes freely, and Remote Control
+# enabled (session name "notes") so it is reachable from the phone.
 NOTES_VAULT="$HOME/Documents/Notes/Caleb's Vault"
 # A vault is only "present" if it has an .obsidian dir plus at least one
 # other entry. On machines where the folder exists but is empty (not synced
@@ -124,7 +125,7 @@ vault_is_ready() {
 }
 if vault_is_ready "$NOTES_VAULT"; then
     tmux new-window -t "$SESSION:7" -n notes -c "$NOTES_VAULT"
-    tmux send-keys -t "$SESSION:7" "claude --dangerously-skip-permissions" Enter
+    tmux send-keys -t "$SESSION:7" "claude --dangerously-skip-permissions --remote-control notes" Enter
 fi
 
 ## --- Window 8: info (DISABLED -- commented out) ---
