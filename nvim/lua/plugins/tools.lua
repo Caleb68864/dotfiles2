@@ -11,6 +11,18 @@
 --   - Track TODO/FIXME/HACK comments across your codebase
 -- ============================================================================
 
+-- Obsidian vaults this config knows about, filtered down to the ones that
+-- actually exist on this machine (used by the obsidian.nvim spec at the bottom).
+local function existing_obsidian_workspaces()
+  local workspaces = {
+    { name = "Logic", path = "~/Documents/Notes/Logic" },
+    { name = "Personal", path = "~/Documents/Notes/Caleb's Vault" },
+  }
+  return vim.tbl_filter(function(ws)
+    return vim.fn.isdirectory(vim.fn.expand(ws.path)) == 1
+  end, workspaces)
+end
+
 return {
   -- =========================================================================
   -- Neotest -- Run tests and see results without leaving Neovim
@@ -349,11 +361,14 @@ return {
       "nvim-lua/plenary.nvim",
       "nvim-telescope/telescope.nvim",
     },
+    -- obsidian.nvim throws FileNotFoundError during setup if ANY workspace path
+    -- is missing, which shows up as an error on every markdown file you open.
+    -- Not every machine has the vaults, so skip the plugin when none are there.
+    cond = function()
+      return #existing_obsidian_workspaces() > 0
+    end,
     opts = {
-      workspaces = {
-        { name = "Logic", path = "~/Documents/Notes/Logic" },
-        { name = "Personal", path = "~/Documents/Notes/Caleb's Vault" },
-      },
+      workspaces = existing_obsidian_workspaces(),
       -- Daily note settings (matches .obsidian/daily-notes.json in each vault)
       daily_notes = {
         folder = "Calendar Notes/Daily Notes",
