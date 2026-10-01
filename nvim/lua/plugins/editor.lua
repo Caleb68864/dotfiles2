@@ -147,6 +147,39 @@ return {
         -- Space+f+r = find recently opened files
       vim.keymap.set("n", "<leader>fs", builtin.grep_string, { desc = "[f]ind [s]tring under cursor" })
         -- Space+f+s = search for the word under your cursor across all files
+
+      -- Space+f+i = find files, but INSERT the chosen path instead of opening it.
+      -- Built for writing Claude Code prompts (Ctrl+G opens the prompt here):
+      -- each path goes in as "@relative/path", which Claude Code reads as a
+      -- file reference. Press Tab to mark several files, then Enter to insert
+      -- them all, separated by spaces.
+      local actions = require("telescope.actions")
+      local action_state = require("telescope.actions.state")
+      vim.keymap.set("n", "<leader>fi", function()
+        builtin.find_files({
+          prompt_title = "Insert @path",
+          attach_mappings = function(prompt_bufnr)
+            actions.select_default:replace(function()
+              -- Tab-marked files if there are any, otherwise the highlighted one.
+              local entries = action_state.get_current_picker(prompt_bufnr):get_multi_selection()
+              if #entries == 0 then
+                entries = { action_state.get_selected_entry() }
+              end
+              actions.close(prompt_bufnr)
+
+              local paths = {}
+              for _, entry in ipairs(entries) do
+                -- ":." makes the path relative to the working directory.
+                table.insert(paths, "@" .. vim.fn.fnamemodify(entry.path or entry[1], ":."))
+              end
+              if #paths > 0 then
+                vim.api.nvim_put({ table.concat(paths, " ") }, "c", true, true)
+              end
+            end)
+            return true  -- Keep every other default Telescope mapping
+          end,
+        })
+      end, { desc = "[f]ind file and [i]nsert @path" })
     end,
   },
 

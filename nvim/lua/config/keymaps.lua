@@ -121,7 +121,16 @@ vim.keymap.set("n", "<leader>?", function()
     "  ff  Find files        fg  Grep text in project",
     "  fb  Find buffers      fh  Find help docs",
     "  fr  Find recent files fs  Find string under cursor",
-    "  ft  Find TODOs",
+    "  ft  Find TODOs        fi  Insert @path (Tab = mark many)",
+    "",
+    "── Writing prompts (Ctrl+G from Claude Code) ──────────────",
+    "  Space+fi   Pick file(s), insert @path at the cursor",
+    "  Space+e    File tree: Y copy relative path, gy absolute,",
+    "             y name, g? all tree keys. Then p to paste",
+    "  Space+Y    Yazi in the working directory",
+    "  s + 2 chars       Flash: jump anywhere on screen",
+    "  Ctrl+Space        Grow selection by syntax node",
+    "  Space Space       Quick pad for reusable prompt text",
     "",
     "── Git (Space+g) ──────────────────────────────────────────",
     "  gd  Diffview open     gc  Diffview close",
@@ -177,8 +186,9 @@ vim.keymap.set("n", "<leader>?", function()
 
   -- Calculate floating window size and position (centered)
   local width = 63
-  local height = #lines
   local ui = vim.api.nvim_list_uis()[1]
+  -- Cap the height so the sheet still fits (and scrolls) on a short terminal.
+  local height = math.min(#lines, ui.height - 4)
   local row = math.floor((ui.height - height) / 2)
   local col = math.floor((ui.width - width) / 2)
 
