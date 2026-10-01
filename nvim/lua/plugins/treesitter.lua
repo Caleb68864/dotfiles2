@@ -39,6 +39,33 @@ return {
   -- the language parsers (the things that understand each programming language).
   build = ":TSUpdate",
 
+  -- Neovim 0.12 removed the `all = false` option that `master` registers its
+  -- query predicates and directives with, so handlers written for one node per
+  -- capture now receive a LIST of nodes and crash ("attempt to call method
+  -- 'range'") on any markdown file with a fenced code block. Until the port to
+  -- `main`, wrap those handlers so they get the single (last) node they expect.
+  -- `init` runs before the plugin loads, so the wrapper is in place in time.
+  init = function()
+    if vim.fn.has("nvim-0.12") == 0 then return end
+    local query = vim.treesitter.query
+    for _, fn in ipairs({ "add_predicate", "add_directive" }) do
+      local add = query[fn]
+      query[fn] = function(name, handler, opts)
+        if type(opts) == "table" and opts.all == false then
+          local inner = handler
+          handler = function(match, ...)
+            local single = {}
+            for id, nodes in pairs(match) do
+              single[id] = type(nodes) == "table" and nodes[#nodes] or nodes
+            end
+            return inner(single, ...)
+          end
+        end
+        return add(name, handler, opts)
+      end
+    end
+  end,
+
   config = function()
     -- Treesitter COMPILES a small C parser for each language. Linux always has
     -- a C compiler; Windows usually does not, and because `auto_install` is on

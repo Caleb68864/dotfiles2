@@ -17,6 +17,7 @@ local function existing_obsidian_workspaces()
   local workspaces = {
     { name = "Logic", path = "~/Documents/Notes/Logic" },
     { name = "Personal", path = "~/Documents/Notes/Caleb's Vault" },
+    { name = "Caleb", path = "~/Documents/Notes/Caleb" },
   }
   return vim.tbl_filter(function(ws)
     return vim.fn.isdirectory(vim.fn.expand(ws.path)) == 1
@@ -366,6 +367,17 @@ return {
     -- Not every machine has the vaults, so skip the plugin when none are there.
     cond = function()
       return #existing_obsidian_workspaces() > 0
+    end,
+    -- obsidian.nvim's UI (checkboxes, link concealing) needs conceallevel 1 or 2
+    -- and warns on every markdown file otherwise. The global default stays 0
+    -- (see options.lua), so raise it for markdown buffers only.
+    init = function()
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "markdown",
+        callback = function()
+          vim.opt_local.conceallevel = 2
+        end,
+      })
     end,
     opts = {
       workspaces = existing_obsidian_workspaces(),
