@@ -28,6 +28,15 @@ return {
   -- to start them and talk to them.
   {
     "neovim/nvim-lspconfig",
+    -- Lazy-loaded: the language server stack (this, Mason, fidget) starts
+    -- when you open a file in one of these languages -- not for a quick note
+    -- or a Claude Code prompt. If you install a server for another language
+    -- through :Mason, add its filetype here.
+    ft = {
+      "python", "cs", "lua", "sh", "bash", "json", "jsonc",
+      "javascript", "javascriptreact", "typescript", "typescriptreact",
+    },
+    cmd = { "LspInfo", "LspStart", "LspStop", "LspRestart" },
     dependencies = {
       "williamboman/mason.nvim",          -- Installs language servers
       "williamboman/mason-lspconfig.nvim", -- Bridges mason and lspconfig
@@ -44,6 +53,7 @@ return {
   -- what's installed.
   {
     "williamboman/mason.nvim",
+    cmd = "Mason",  -- Otherwise loaded by nvim-lspconfig (above)
     config = function()
       require("mason").setup({
         ui = {
@@ -66,6 +76,7 @@ return {
   -- them automatically.
   {
     "williamboman/mason-lspconfig.nvim",
+    lazy = true,  -- Loaded by nvim-lspconfig (above)
     config = function()
       -- Get the autocomplete capabilities from the completion plugin (nvim-cmp).
       -- This tells each language server "hey, our editor supports these
@@ -240,6 +251,7 @@ return {
   -- no idea why autocomplete isn't working yet (the server is still loading!).
   {
     "j-hui/fidget.nvim",
+    lazy = true,  -- Loaded by nvim-lspconfig (above)
     opts = {},  -- Use default settings (empty table means "just use defaults")
   },
 }

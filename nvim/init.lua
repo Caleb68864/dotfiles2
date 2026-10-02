@@ -81,6 +81,10 @@ scratch.enable_autosave()
 -- so it is safe (and free) to load on every platform.
 require("config.neovide")
 
+-- Claude Code prompts: when Ctrl+G in Claude Code opens the prompt here,
+-- start in insert mode at the end of it, ready to type.
+require("config.prompt").setup()
+
 -- ============================================================================
 -- Load plugins (auto-discovers all files in lua/plugins/)
 -- ============================================================================

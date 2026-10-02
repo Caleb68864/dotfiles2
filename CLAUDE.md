@@ -316,6 +316,7 @@ Modular config split across `nvim/lua/`:
 - `lua/config/options.lua` — Editor settings
 - `lua/config/keymaps.lua` — General keymaps (non-plugin)
 - `lua/config/autocommands.lua` — Autocommands
+- `lua/config/prompt.lua` — Claude Code prompt helpers (Ctrl+G editor): `@path` picker (`<leader>fi`, insert-mode `<C-f>`), start in insert mode
 - `lua/plugins/*.lua` — Plugin specs (auto-discovered by lazy.nvim):
   - `colorscheme.lua` — Tokyo Night
   - `treesitter.lua` — Syntax highlighting

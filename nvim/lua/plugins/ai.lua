@@ -28,19 +28,22 @@ return {
   -- where you can chat with an AI about your code.
   {
     "carderne/pi-nvim",
-    config = function()
-      require("pi-nvim").setup({})
-
-      -- Pi keymaps -- All start with Space+p (p for Pi)
+    -- Lazy-loaded: Pi starts the first time you use a :Pi command or key.
+    cmd = { "Pi", "PiSendSelection", "PiSendFile", "PiSendBuffer" },
+    -- Pi keymaps -- All start with Space+p (p for Pi)
+    keys = {
       -- Space+p+p = open the Pi prompt (type your question after ":Pi ")
-      vim.keymap.set("n", "<leader>pp", ":Pi ", { desc = "[p]i [p]rompt" })
+      { "<leader>pp", ":Pi ", desc = "[p]i [p]rompt" },
       -- Space+p+s = send the currently SELECTED text to Pi (in visual mode)
       -- Select some code, then press this to ask Pi about it
-      vim.keymap.set("v", "<leader>ps", ":PiSendSelection<CR>", { desc = "[p]i send [s]election" })
+      { "<leader>ps", ":PiSendSelection<CR>", mode = "v", desc = "[p]i send [s]election" },
       -- Space+p+f = send the entire current FILE to Pi
-      vim.keymap.set("n", "<leader>pf", ":PiSendFile<CR>", { desc = "[p]i send [f]ile" })
+      { "<leader>pf", ":PiSendFile<CR>", desc = "[p]i send [f]ile" },
       -- Space+p+b = send the entire current BUFFER (same as file, basically) to Pi
-      vim.keymap.set("n", "<leader>pb", ":PiSendBuffer<CR>", { desc = "[p]i send [b]uffer" })
+      { "<leader>pb", ":PiSendBuffer<CR>", desc = "[p]i send [b]uffer" },
+    },
+    config = function()
+      require("pi-nvim").setup({})
     end,
   },
 
@@ -55,6 +58,9 @@ return {
   -- "plenary.nvim" is a utility library that many plugins depend on.
   {
     "coder/claudecode.nvim",
+    -- Starts right AFTER startup instead of during it, so the WebSocket
+    -- server is still there for Claude Code but never delays opening a file.
+    event = "VeryLazy",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
       require("claudecode").setup({})

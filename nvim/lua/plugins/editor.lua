@@ -100,6 +100,29 @@ return {
     "nvim-telescope/telescope.nvim",
     enabled = not vim.env.PDA_MODE,  -- Skip on PDA (resource-constrained)
     branch = "0.1.x",  -- Use the stable 0.1 branch
+    -- Lazy-loaded: Telescope only starts the first time you press one of
+    -- these keys or run :Telescope. That keeps Neovim's startup fast.
+    cmd = "Telescope",
+    -- Telescope keymaps -- All start with Space+f (f for find)
+    keys = {
+      -- Space+f+f = find files by name in your project
+      { "<leader>ff", function() require("telescope.builtin").find_files() end, desc = "[f]ind [f]iles" },
+      -- Space+f+g = search for TEXT inside all files (like grep)
+      { "<leader>fg", function() require("telescope.builtin").live_grep() end, desc = "[f]ind by [g]rep" },
+      -- Space+f+b = switch between open files (buffers)
+      { "<leader>fb", function() require("telescope.builtin").buffers() end, desc = "[f]ind [b]uffers" },
+      -- Space+f+h = search Neovim's help documentation
+      { "<leader>fh", function() require("telescope.builtin").help_tags() end, desc = "[f]ind [h]elp" },
+      -- Space+f+r = find recently opened files
+      { "<leader>fr", function() require("telescope.builtin").oldfiles() end, desc = "[f]ind [r]ecent files" },
+      -- Space+f+s = search for the word under your cursor across all files
+      { "<leader>fs", function() require("telescope.builtin").grep_string() end, desc = "[f]ind [s]tring under cursor" },
+      -- Space+f+i (normal mode) or Ctrl+F (insert mode) = find files, but
+      -- INSERT the chosen "@relative/path" instead of opening it. Built for
+      -- writing Claude Code prompts -- see lua/config/prompt.lua.
+      { "<leader>fi", function() require("config.prompt").insert_paths() end, desc = "[f]ind file and [i]nsert @path" },
+      { "<C-f>", function() require("config.prompt").insert_paths() end, mode = "i", desc = "Find file and insert @path" },
+    },
     dependencies = {
       "nvim-lua/plenary.nvim",  -- Utility library (required by many plugins)
       -- fzf-native makes Telescope MUCH faster by using a compiled C program
@@ -132,54 +155,6 @@ return {
       -- Try to load the fzf extension for faster searching.
       -- "pcall" means "try this, and if it fails, don't crash" (safe call).
       pcall(require("telescope").load_extension, "fzf")
-
-      -- Telescope keymaps -- All start with Space+f (f for find)
-      local builtin = require("telescope.builtin")
-      vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "[f]ind [f]iles" })
-        -- Space+f+f = find files by name in your project
-      vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "[f]ind by [g]rep" })
-        -- Space+f+g = search for TEXT inside all files (like grep)
-      vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "[f]ind [b]uffers" })
-        -- Space+f+b = switch between open files (buffers)
-      vim.keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "[f]ind [h]elp" })
-        -- Space+f+h = search Neovim's help documentation
-      vim.keymap.set("n", "<leader>fr", builtin.oldfiles, { desc = "[f]ind [r]ecent files" })
-        -- Space+f+r = find recently opened files
-      vim.keymap.set("n", "<leader>fs", builtin.grep_string, { desc = "[f]ind [s]tring under cursor" })
-        -- Space+f+s = search for the word under your cursor across all files
-
-      -- Space+f+i = find files, but INSERT the chosen path instead of opening it.
-      -- Built for writing Claude Code prompts (Ctrl+G opens the prompt here):
-      -- each path goes in as "@relative/path", which Claude Code reads as a
-      -- file reference. Press Tab to mark several files, then Enter to insert
-      -- them all, separated by spaces.
-      local actions = require("telescope.actions")
-      local action_state = require("telescope.actions.state")
-      vim.keymap.set("n", "<leader>fi", function()
-        builtin.find_files({
-          prompt_title = "Insert @path",
-          attach_mappings = function(prompt_bufnr)
-            actions.select_default:replace(function()
-              -- Tab-marked files if there are any, otherwise the highlighted one.
-              local entries = action_state.get_current_picker(prompt_bufnr):get_multi_selection()
-              if #entries == 0 then
-                entries = { action_state.get_selected_entry() }
-              end
-              actions.close(prompt_bufnr)
-
-              local paths = {}
-              for _, entry in ipairs(entries) do
-                -- ":." makes the path relative to the working directory.
-                table.insert(paths, "@" .. vim.fn.fnamemodify(entry.path or entry[1], ":."))
-              end
-              if #paths > 0 then
-                vim.api.nvim_put({ table.concat(paths, " ") }, "c", true, true)
-              end
-            end)
-            return true  -- Keep every other default Telescope mapping
-          end,
-        })
-      end, { desc = "[f]ind file and [i]nsert @path" })
     end,
   },
 
@@ -195,19 +170,20 @@ return {
     "ThePrimeagen/harpoon",
     branch = "harpoon2",  -- Use the newer, rewritten version
     dependencies = { "nvim-lua/plenary.nvim" },
-    config = function()
-      local harpoon = require("harpoon")
-      harpoon:setup()
-
+    -- Lazy-loaded: Harpoon starts the first time you press one of its keys.
+    keys = {
       -- Space+h+a = ADD the current file to your harpoon list
-      vim.keymap.set("n", "<leader>ha", function() harpoon:list():add() end, { desc = "[h]arpoon [a]dd file" })
+      { "<leader>ha", function() require("harpoon"):list():add() end, desc = "[h]arpoon [a]dd file" },
       -- Space+h+l = show the LIST of harpooned files (you can reorder/remove here)
-      vim.keymap.set("n", "<leader>hl", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, { desc = "[h]arpoon [l]ist" })
+      { "<leader>hl", function() local h = require("harpoon"); h.ui:toggle_quick_menu(h:list()) end, desc = "[h]arpoon [l]ist" },
       -- Space+1 through Space+4 = jump INSTANTLY to harpooned file 1, 2, 3, or 4
-      vim.keymap.set("n", "<leader>1", function() harpoon:list():select(1) end, { desc = "Harpoon file 1" })
-      vim.keymap.set("n", "<leader>2", function() harpoon:list():select(2) end, { desc = "Harpoon file 2" })
-      vim.keymap.set("n", "<leader>3", function() harpoon:list():select(3) end, { desc = "Harpoon file 3" })
-      vim.keymap.set("n", "<leader>4", function() harpoon:list():select(4) end, { desc = "Harpoon file 4" })
+      { "<leader>1", function() require("harpoon"):list():select(1) end, desc = "Harpoon file 1" },
+      { "<leader>2", function() require("harpoon"):list():select(2) end, desc = "Harpoon file 2" },
+      { "<leader>3", function() require("harpoon"):list():select(3) end, desc = "Harpoon file 3" },
+      { "<leader>4", function() require("harpoon"):list():select(4) end, desc = "Harpoon file 4" },
+    },
+    config = function()
+      require("harpoon"):setup()
     end,
   },
 
@@ -286,6 +262,7 @@ return {
   -- ergonomic since your fingers don't have to move far.
   {
     "max397574/better-escape.nvim",
+    event = "InsertEnter",  -- Only needed once you start typing
     config = function()
       require("better_escape").setup()
     end,

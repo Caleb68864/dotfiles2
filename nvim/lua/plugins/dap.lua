@@ -32,6 +32,39 @@ return {
       "rcarriga/nvim-dap-ui",        -- Visual debugging interface
       "nvim-neotest/nvim-nio",       -- Async I/O library (required by dap-ui)
       "mfussenegger/nvim-dap-python", -- Python-specific debug configuration
+      "theHamsta/nvim-dap-virtual-text", -- Variable values shown inline while debugging
+    },
+    -- =======================================================================
+    -- Debug keymaps -- Keyboard shortcuts for debugging
+    -- =======================================================================
+    -- Lazy-loaded: the whole debugger stack (nvim-dap, the UI, the Python
+    -- adapter) only starts the first time you press one of these keys.
+    -- These use the F-keys (like a traditional IDE) for the most common
+    -- debugging actions.
+    keys = {
+      -- F5 = Start debugging (or continue if paused at a breakpoint)
+      { "<F5>", function() require("dap").continue() end, desc = "Debug: Start/Continue" },
+      -- F10 = Step OVER the current line (run it, but don't go inside functions)
+      { "<F10>", function() require("dap").step_over() end, desc = "Debug: Step Over" },
+      -- F11 = Step INTO a function call (go inside the function to see what it does)
+      { "<F11>", function() require("dap").step_into() end, desc = "Debug: Step Into" },
+      -- F12 = Step OUT of the current function (finish it and go back to the caller)
+      { "<F12>", function() require("dap").step_out() end, desc = "Debug: Step Out" },
+      -- Space+b = Toggle a BREAKPOINT on the current line
+      -- A breakpoint is a "stop here" marker. When the program reaches this
+      -- line, it pauses so you can inspect everything.
+      { "<leader>b", function() require("dap").toggle_breakpoint() end, desc = "Debug: Toggle [b]reakpoint" },
+      -- Space+B = Set a CONDITIONAL breakpoint
+      -- This only pauses if a condition is true (e.g., "x > 100").
+      -- Useful when a line runs 1000 times but you only care about one case.
+      { "<leader>B", function()
+        require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
+      end, desc = "Debug: Set conditional [B]reakpoint" },
+      -- Space+d+r = Open the debug REPL (an interactive console where you can
+      -- type expressions and see their values while paused)
+      { "<leader>dr", function() require("dap").repl.open() end, desc = "[d]ebug [r]epl" },
+      -- Space+d+l = Re-run the LAST debug session (same program, same settings)
+      { "<leader>dl", function() require("dap").run_last() end, desc = "[d]ebug [l]ast" },
     },
     config = function()
       local dap = require("dap")
@@ -82,43 +115,6 @@ return {
           end,
         },
       }
-
-      -- =======================================================================
-      -- Debug keymaps -- Keyboard shortcuts for debugging
-      -- =======================================================================
-      -- These use the F-keys (like a traditional IDE) for the most common
-      -- debugging actions.
-
-      -- F5 = Start debugging (or continue if paused at a breakpoint)
-      vim.keymap.set("n", "<F5>", dap.continue, { desc = "Debug: Start/Continue" })
-
-      -- F10 = Step OVER the current line (run it, but don't go inside functions)
-      vim.keymap.set("n", "<F10>", dap.step_over, { desc = "Debug: Step Over" })
-
-      -- F11 = Step INTO a function call (go inside the function to see what it does)
-      vim.keymap.set("n", "<F11>", dap.step_into, { desc = "Debug: Step Into" })
-
-      -- F12 = Step OUT of the current function (finish it and go back to the caller)
-      vim.keymap.set("n", "<F12>", dap.step_out, { desc = "Debug: Step Out" })
-
-      -- Space+b = Toggle a BREAKPOINT on the current line
-      -- A breakpoint is a "stop here" marker. When the program reaches this
-      -- line, it pauses so you can inspect everything.
-      vim.keymap.set("n", "<leader>b", dap.toggle_breakpoint, { desc = "Debug: Toggle [b]reakpoint" })
-
-      -- Space+B = Set a CONDITIONAL breakpoint
-      -- This only pauses if a condition is true (e.g., "x > 100").
-      -- Useful when a line runs 1000 times but you only care about one case.
-      vim.keymap.set("n", "<leader>B", function()
-        dap.set_breakpoint(vim.fn.input("Breakpoint condition: "))
-      end, { desc = "Debug: Set conditional [B]reakpoint" })
-
-      -- Space+d+r = Open the debug REPL (an interactive console where you can
-      -- type expressions and see their values while paused)
-      vim.keymap.set("n", "<leader>dr", dap.repl.open, { desc = "[d]ebug [r]epl" })
-
-      -- Space+d+l = Re-run the LAST debug session (same program, same settings)
-      vim.keymap.set("n", "<leader>dl", dap.run_last, { desc = "[d]ebug [l]ast" })
     end,
   },
 
@@ -134,6 +130,7 @@ return {
   -- Without this, you'd be debugging with just text commands (much harder).
   {
     "rcarriga/nvim-dap-ui",
+    lazy = true,  -- Loaded by nvim-dap (above) when you start debugging
     -- setup() is called in nvim-dap's config above (must happen before dapui is used)
   },
 
@@ -146,6 +143,7 @@ return {
   -- The "python" argument tells it to use the "python" command from your PATH.
   {
     "mfussenegger/nvim-dap-python",
+    lazy = true,  -- Loaded by nvim-dap (above) when you start debugging
     config = function()
       require("dap-python").setup("python")
     end,
@@ -163,6 +161,7 @@ return {
   -- to see its value.
   {
     "theHamsta/nvim-dap-virtual-text",
+    lazy = true,  -- Loaded by nvim-dap (above) when you start debugging
     dependencies = { "mfussenegger/nvim-dap", "nvim-treesitter/nvim-treesitter" },
     opts = {
       enabled = true,                      -- Turn on virtual text display

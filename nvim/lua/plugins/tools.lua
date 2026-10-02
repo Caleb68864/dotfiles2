@@ -43,6 +43,26 @@ return {
       "nvim-neotest/nvim-nio",              -- Async I/O library
       "nvim-neotest/neotest-python",        -- Python test adapter (pytest/unittest)
     },
+    -- Lazy-loaded: the test runner only starts the first time you press
+    -- one of these keys.
+    -- Test keymaps -- All start with Space+t (t for test)
+    keys = {
+      -- Space+t+t = run the NEAREST test to your cursor
+      { "<leader>tt", function() require("neotest").run.run() end, desc = "[t]est run neares[t]" },
+      -- Space+t+f = run ALL tests in the current file
+      { "<leader>tf", function() require("neotest").run.run(vim.fn.expand("%")) end, desc = "[t]est run [f]ile" },
+      -- Space+t+d = run the nearest test with the DEBUGGER attached
+      -- (so you can set breakpoints and step through the test)
+      { "<leader>td", function() require("neotest").run.run({strategy = "dap"}) end, desc = "[t]est [d]ebug nearest" },
+      -- Space+t+s = toggle the test SUMMARY panel (shows all tests and their status)
+      { "<leader>ts", function() require("neotest").summary.toggle() end, desc = "[t]est [s]ummary" },
+      -- Space+t+o = show the OUTPUT of the last test run (print statements, errors, etc.)
+      { "<leader>to", function() require("neotest").output.open({ enter = true }) end, desc = "[t]est [o]utput" },
+      -- Space+t+O = toggle the output PANEL (persistent, stays open)
+      { "<leader>tO", function() require("neotest").output_panel.toggle() end, desc = "[t]est [O]utput panel" },
+      -- Space+t+S = STOP a currently running test
+      { "<leader>tS", function() require("neotest").run.stop() end, desc = "[t]est [S]top" },
+    },
     config = function()
       local neotest = require("neotest")
       neotest.setup({
@@ -62,22 +82,6 @@ return {
         },
       })
 
-      -- Test keymaps -- All start with Space+t (t for test)
-      vim.keymap.set("n", "<leader>tt", function() neotest.run.run() end, { desc = "[t]est run neares[t]" })
-        -- Space+t+t = run the NEAREST test to your cursor
-      vim.keymap.set("n", "<leader>tf", function() neotest.run.run(vim.fn.expand("%")) end, { desc = "[t]est run [f]ile" })
-        -- Space+t+f = run ALL tests in the current file
-      vim.keymap.set("n", "<leader>td", function() neotest.run.run({strategy = "dap"}) end, { desc = "[t]est [d]ebug nearest" })
-        -- Space+t+d = run the nearest test with the DEBUGGER attached
-        -- (so you can set breakpoints and step through the test)
-      vim.keymap.set("n", "<leader>ts", function() neotest.summary.toggle() end, { desc = "[t]est [s]ummary" })
-        -- Space+t+s = toggle the test SUMMARY panel (shows all tests and their status)
-      vim.keymap.set("n", "<leader>to", function() neotest.output.open({ enter = true }) end, { desc = "[t]est [o]utput" })
-        -- Space+t+o = show the OUTPUT of the last test run (print statements, errors, etc.)
-      vim.keymap.set("n", "<leader>tO", function() neotest.output_panel.toggle() end, { desc = "[t]est [O]utput panel" })
-        -- Space+t+O = toggle the output PANEL (persistent, stays open)
-      vim.keymap.set("n", "<leader>tS", function() neotest.run.stop() end, { desc = "[t]est [S]top" })
-        -- Space+t+S = STOP a currently running test
     end,
   },
 
@@ -226,25 +230,29 @@ return {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
     },
+    -- Lazy-loaded: starts the first time you run :Refactor or press a key below.
+    cmd = "Refactor",
+    -- Refactoring keymaps -- All start with Space+r (r for refactor)
+    -- "x" mode means these work on SELECTED text (visual mode)
+    keys = {
+      -- Space+r+e = extract selected code into a NEW FUNCTION
+      { "<leader>re", ":Refactor extract ", mode = "x", desc = "[r]efactor [e]xtract function" },
+      -- Space+r+f = extract selected code into a function in a NEW FILE
+      { "<leader>rf", ":Refactor extract_to_file ", mode = "x", desc = "[r]efactor extract to [f]ile" },
+      -- Space+r+v = extract selected expression into a NEW VARIABLE
+      { "<leader>rv", ":Refactor extract_var ", mode = "x", desc = "[r]efactor extract [v]ariable" },
+      -- Space+r+i = INLINE a variable (replace the variable name with its value everywhere)
+      { "<leader>ri", ":Refactor inline_var", mode = { "n", "x" }, desc = "[r]efactor [i]nline variable" },
+      -- Space+r+I = INLINE a function (replace the function call with its body)
+      { "<leader>rI", ":Refactor inline_func", desc = "[r]efactor [I]nline function" },
+      -- Space+r+b = extract a code block into a new function
+      { "<leader>rb", ":Refactor extract_block", desc = "[r]efactor extract [b]lock" },
+      -- Space+r+b+f = extract a code block into a function in a new file
+      { "<leader>rbf", ":Refactor extract_block_to_file", desc = "[r]efactor extract [b]lock to [f]ile" },
+    },
     config = function()
       require("refactoring").setup({})
 
-      -- Refactoring keymaps -- All start with Space+r (r for refactor)
-      -- "x" mode means these work on SELECTED text (visual mode)
-      vim.keymap.set("x", "<leader>re", ":Refactor extract ", { desc = "[r]efactor [e]xtract function" })
-        -- Space+r+e = extract selected code into a NEW FUNCTION
-      vim.keymap.set("x", "<leader>rf", ":Refactor extract_to_file ", { desc = "[r]efactor extract to [f]ile" })
-        -- Space+r+f = extract selected code into a function in a NEW FILE
-      vim.keymap.set("x", "<leader>rv", ":Refactor extract_var ", { desc = "[r]efactor extract [v]ariable" })
-        -- Space+r+v = extract selected expression into a NEW VARIABLE
-      vim.keymap.set({ "n", "x" }, "<leader>ri", ":Refactor inline_var", { desc = "[r]efactor [i]nline variable" })
-        -- Space+r+i = INLINE a variable (replace the variable name with its value everywhere)
-      vim.keymap.set("n", "<leader>rI", ":Refactor inline_func", { desc = "[r]efactor [I]nline function" })
-        -- Space+r+I = INLINE a function (replace the function call with its body)
-      vim.keymap.set("n", "<leader>rb", ":Refactor extract_block", { desc = "[r]efactor extract [b]lock" })
-        -- Space+r+b = extract a code block into a new function
-      vim.keymap.set("n", "<leader>rbf", ":Refactor extract_block_to_file", { desc = "[r]efactor extract [b]lock to [f]ile" })
-        -- Space+r+b+f = extract a code block into a function in a new file
     end,
   },
 

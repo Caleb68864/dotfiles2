@@ -15,6 +15,8 @@
 return {
   -- The main completion plugin
   "hrsh7th/nvim-cmp",
+  -- Lazy-loaded: completion is only needed once you start typing.
+  event = "InsertEnter",
 
   -- These are the "sources" that feed suggestions into nvim-cmp.
   -- Each one provides a different kind of suggestion.
