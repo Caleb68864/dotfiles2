@@ -19,6 +19,7 @@ return {
   -- This gives you an at-a-glance view of what you've modified.
   {
     "lewis6991/gitsigns.nvim",
+    cond = not vim.g.claude_prompt,  -- Skipped in prompt mode (see config/prompt.lua)
     opts = {
       signs = {
         add = { text = "+" },           -- New line added

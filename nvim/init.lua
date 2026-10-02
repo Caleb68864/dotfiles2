@@ -67,6 +67,13 @@ vim.opt.rtp:prepend(lazypath)
 -- plugin specs both branch on it.
 require("config.platform")
 
+-- Prompt mode: is this Neovim editing a Claude Code prompt (Ctrl+G)? This
+-- must be decided BEFORE plugins load, because plugin specs read
+-- vim.g.claude_prompt to leave out code-only tools (LSP, debugger, formatter).
+local prompt = require("config.prompt")
+vim.g.claude_prompt = prompt.is_claude_prompt()
+prompt.setup()
+
 require("config.options")      -- Editor settings (line numbers, tabs, etc.)
 require("config.keymaps")      -- Custom keyboard shortcuts
 require("config.autocommands") -- Automatic actions (trim whitespace on save, etc.)
@@ -80,10 +87,6 @@ scratch.enable_autosave()
 -- Neovide GUI settings. This file returns immediately when not in Neovide,
 -- so it is safe (and free) to load on every platform.
 require("config.neovide")
-
--- Claude Code prompts: when Ctrl+G in Claude Code opens the prompt here,
--- start in insert mode at the end of it, ready to type.
-require("config.prompt").setup()
 
 -- ============================================================================
 -- Load plugins (auto-discovers all files in lua/plugins/)

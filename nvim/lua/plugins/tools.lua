@@ -36,6 +36,7 @@ return {
   -- languages through adapters.
   {
     "nvim-neotest/neotest",
+    cond = not vim.g.claude_prompt,  -- Skipped in prompt mode (see config/prompt.lua)
     dependencies = {
       "nvim-lua/plenary.nvim",              -- Utility library
       "nvim-treesitter/nvim-treesitter",    -- Understands code structure to find tests
@@ -96,6 +97,7 @@ return {
   -- and save, and it gets formatted perfectly every time.
   {
     "stevearc/conform.nvim",
+    cond = not vim.g.claude_prompt,  -- Skipped in prompt mode (see config/prompt.lua)
     event = { "BufReadPre", "BufNewFile" },  -- Load when opening any file
     config = function()
       require("conform").setup({
@@ -226,6 +228,7 @@ return {
   -- them correctly and instantly, updating all references.
   {
     "ThePrimeagen/refactoring.nvim",
+    cond = not vim.g.claude_prompt,  -- Skipped in prompt mode (see config/prompt.lua)
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
@@ -374,7 +377,8 @@ return {
     -- is missing, which shows up as an error on every markdown file you open.
     -- Not every machine has the vaults, so skip the plugin when none are there.
     cond = function()
-      return #existing_obsidian_workspaces() > 0
+      -- Not in prompt mode: a Claude Code prompt is not a vault note.
+      return not vim.g.claude_prompt and #existing_obsidian_workspaces() > 0
     end,
     -- obsidian.nvim's UI (checkboxes, link concealing) needs conceallevel 1 or 2
     -- and warns on every markdown file otherwise. The global default stays 0

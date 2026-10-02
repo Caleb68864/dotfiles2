@@ -316,7 +316,7 @@ Modular config split across `nvim/lua/`:
 - `lua/config/options.lua` — Editor settings
 - `lua/config/keymaps.lua` — General keymaps (non-plugin)
 - `lua/config/autocommands.lua` — Autocommands
-- `lua/config/prompt.lua` — Claude Code prompt helpers (Ctrl+G editor): `@path` picker (`<leader>fi`, insert-mode `<C-f>`), start in insert mode
+- `lua/config/prompt.lua` — Claude Code prompt mode (Ctrl+G editor). Sets `vim.g.claude_prompt`; specs use `cond = not vim.g.claude_prompt` to skip code-only plugins (LSP, DAP, neotest, conform, snippets, gitsigns). Adds the `@path` picker (`<leader>fi`, insert-mode `<C-f>`), `@` in nvim-tree, spell check and soft wrap. Force with `NVIM_PROMPT_MODE=1`
 - `lua/plugins/*.lua` — Plugin specs (auto-discovered by lazy.nvim):
   - `colorscheme.lua` — Tokyo Night
   - `treesitter.lua` — Syntax highlighting

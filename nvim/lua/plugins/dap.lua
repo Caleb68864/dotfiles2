@@ -22,6 +22,10 @@
 -- Skip DAP plugins entirely on PDA (resource-constrained mobile device).
 if vim.env.PDA_MODE then return {} end
 
+-- Skip entirely in prompt mode (Neovim opened by Claude Code's Ctrl+G to edit
+-- a prompt -- see lua/config/prompt.lua). None of this helps you write prose.
+if vim.g.claude_prompt then return {} end
+
 return {
   -- =========================================================================
   -- DAP Core -- The main debugging engine

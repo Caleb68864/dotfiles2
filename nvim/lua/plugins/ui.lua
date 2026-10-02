@@ -89,6 +89,7 @@ return {
   -- cursor is currently inside, making it even easier to see context.
   {
     "lukas-reineke/indent-blankline.nvim",
+    cond = not vim.g.claude_prompt,  -- Skipped in prompt mode (see config/prompt.lua)
     main = "ibl",  -- The module name to require (it's "ibl", not "indent-blankline")
     opts = {
       indent = { char = "│" },          -- The character used for indent lines (thin vertical bar)
@@ -106,6 +107,7 @@ return {
   -- color it actually is.
   {
     "NvChad/nvim-colorizer.lua",
+    cond = not vim.g.claude_prompt,  -- Skipped in prompt mode (see config/prompt.lua)
     opts = {
       filetypes = { "*" },  -- Enable in ALL file types
       user_default_options = {

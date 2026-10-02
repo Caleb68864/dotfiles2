@@ -55,6 +55,13 @@ return {
           vim.cmd.exe('"normal! \\<LeftMouse>"')
           vim.cmd.popup("PopUpNvimTree")
         end, opts("Context menu"))
+
+        -- @ inserts the file/folder under the cursor as "@relative/path" into
+        -- the window you came from, and stays in the tree so you can add
+        -- more. Built for writing Claude Code prompts -- see config/prompt.lua.
+        vim.keymap.set("n", "@", function()
+          require("config.prompt").insert_tree_node()
+        end, opts("Insert @path into previous window"))
       end
 
       require("nvim-tree").setup({
@@ -277,6 +284,7 @@ return {
   -- code structure (it knows where functions and classes start and end).
   {
     "kevinhwang91/nvim-ufo",
+    cond = not vim.g.claude_prompt,  -- Skipped in prompt mode (see config/prompt.lua)
     dependencies = {
       "kevinhwang91/promise-async",         -- Async library UFO needs
       "nvim-treesitter/nvim-treesitter",    -- Treesitter powers the smart folding

@@ -19,6 +19,10 @@
 -- Plus "fidget" which shows a little spinner when the LSP is working.
 -- ============================================================================
 
+-- Skip entirely in prompt mode (Neovim opened by Claude Code's Ctrl+G to edit
+-- a prompt -- see lua/config/prompt.lua). None of this helps you write prose.
+if vim.g.claude_prompt then return {} end
+
 return {
   -- =========================================================================
   -- LSP Core -- The main plugin that configures language servers
