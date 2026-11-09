@@ -265,7 +265,9 @@ for f in ~/.zsh/aliases-*.zsh(N); do source "$f"; done
 # Every time you change directories (cd, z, pushd, etc.), automatically
 # show the contents of the new directory. Saves you from always typing
 # "ls" after "cd" -- the files just appear automatically.
-chpwd() { ls }
+# Only in a real interactive terminal: in non-interactive shells (scripts,
+# Claude Code agents) eza could hang on every cd and stall the command.
+chpwd() { [[ -o interactive && -t 0 && -t 1 ]] && ls }
 
 
 # =============================================================================
